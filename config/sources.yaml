@@ -1,0 +1,762 @@
+# Fuentes de noticias a rastrear.
+# region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia)
+# stance: oficialista | oposicion (etiqueta editorial declarada por el usuario, no un juicio de valor propio)
+# rss: URL de feed RSS/Atom. Vacío = pendiente de investigar / requiere scraping puntual.
+# lang: idioma nativo del medio (el resumen final se emite en español independientemente de este campo)
+
+sources:
+  # Canadá
+  - id: toronto-star
+    name: Toronto Star
+    country: Canadá
+    region: north_america
+    stance: oficialista
+    lang: en
+    homepage: https://www.thestar.com
+    rss: "https://www.thestar.com/search/?q=&f=rss&t=article&l=50&s=start_time&sd=desc"
+  - id: national-observer
+    name: National Observer
+    country: Canadá
+    region: north_america
+    stance: oficialista
+    lang: en
+    homepage: https://www.nationalobserver.com
+    rss: "https://www.nationalobserver.com/front/rss"
+  - id: national-post
+    name: National Post
+    country: Canadá
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://nationalpost.com
+    rss: "https://nationalpost.com/feed/"
+  - id: toronto-sun
+    name: Toronto Sun
+    country: Canadá
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://torontosun.com
+    rss: "https://torontosun.com/feed/"
+  - id: rebel-news
+    name: Rebel News
+    country: Canadá
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://www.rebelnews.com
+    rss: "http://www.rebelnews.com/news.rss"
+
+  # Estados Unidos
+  - id: fox-news
+    name: Fox News
+    country: Estados Unidos
+    region: north_america
+    stance: oficialista
+    lang: en
+    homepage: https://www.foxnews.com
+    rss: "https://moxie.foxnews.com/google-publisher/latest.xml"
+  - id: breitbart-news
+    name: Breitbart News
+    country: Estados Unidos
+    region: north_america
+    stance: oficialista
+    lang: en
+    homepage: https://www.breitbart.com
+    rss: "http://feeds.feedburner.com/breitbart"
+  - id: nyt
+    name: The New York Times
+    country: Estados Unidos
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://www.nytimes.com
+    rss: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+  - id: washington-post
+    name: The Washington Post
+    country: Estados Unidos
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://www.washingtonpost.com
+    rss: "https://feeds.washingtonpost.com/rss/national"
+  - id: cnn
+    name: CNN
+    country: Estados Unidos
+    region: north_america
+    stance: oposicion
+    lang: en
+    homepage: https://www.cnn.com
+    rss: "NO_RSS"
+
+  # México
+  - id: la-jornada
+    name: La Jornada
+    country: México
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.jornada.com.mx
+    rss: "https://www.jornada.com.mx/rss/edicion.xml"
+  - id: sinembargo
+    name: SinEmbargo
+    country: México
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.sinembargo.mx
+    rss: "NO_RSS"
+  - id: reforma
+    name: Reforma
+    country: México
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.reforma.com
+    rss: "https://www.reforma.com/rss/portada.xml"
+  - id: latinus
+    name: Latinus
+    country: México
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://latinus.us
+    rss: "NO_RSS"
+  - id: animal-politico
+    name: Animal Político
+    country: México
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.animalpolitico.com
+    rss: "NO_RSS"
+
+  # Colombia
+  - id: revista-semana
+    name: Revista Semana
+    country: Colombia
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.semana.com
+    rss: "https://www.semana.com/arc/outboundfeeds/rss/"
+  - id: el-colombiano
+    name: El Colombiano
+    country: Colombia
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.elcolombiano.com
+    rss: "https://www.elcolombiano.com/rss/portada.xml"
+  - id: la-silla-vacia
+    name: La Silla Vacía
+    country: Colombia
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.lasillavacia.com
+    rss: "https://www.lasillavacia.com/feed/"
+  - id: voragine
+    name: Vorágine
+    country: Colombia
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://voragine.co
+    rss: "NO_RSS"
+  - id: cuestion-publica
+    name: Cuestión Pública
+    country: Colombia
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://cuestionpublica.com
+    rss: "https://cuestionpublica.com/feed/"
+
+  # Venezuela
+  - id: iguana-tv
+    name: Iguana TV
+    country: Venezuela
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://iguanatv.net
+    rss: "NO_RSS"
+  - id: mision-verdad
+    name: Misión Verdad
+    country: Venezuela
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://misionverdad.com
+    rss: "https://misionverdad.com/rss.xml"
+  - id: efecto-cocuyo
+    name: Efecto Cocuyo
+    country: Venezuela
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://efectococuyo.com
+    rss: "https://efectococuyo.com/feed/"
+  - id: armando-info
+    name: Armando.info
+    country: Venezuela
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://armando.info
+    rss: "https://armando.info/feed/"
+  - id: el-pitazo
+    name: El Pitazo
+    country: Venezuela
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://elpitazo.net
+    rss: "https://elpitazo.net/feed/"
+
+  # Brasil
+  - id: brasil-247
+    name: Brasil 247
+    country: Brasil
+    region: latin_america
+    stance: oficialista
+    lang: pt
+    homepage: https://www.brasil247.com
+    rss: "https://www.brasil247.com/rss"
+  - id: revista-forum
+    name: Revista Fórum
+    country: Brasil
+    region: latin_america
+    stance: oficialista
+    lang: pt
+    homepage: https://revistaforum.com.br
+    rss: "https://revistaforum.com.br/feed"
+  - id: revista-oeste
+    name: Revista Oeste
+    country: Brasil
+    region: latin_america
+    stance: oposicion
+    lang: pt
+    homepage: https://revistaoeste.com
+    rss: "https://revistaoeste.com/feed/"
+  - id: gazeta-do-povo
+    name: Gazeta do Povo
+    country: Brasil
+    region: latin_america
+    stance: oposicion
+    lang: pt
+    homepage: https://www.gazetadopovo.com.br
+    rss: "https://www.gazetadopovo.com.br/feed/rss/ultimas-noticias.xml"
+  - id: jovem-pan
+    name: Jovem Pan
+    country: Brasil
+    region: latin_america
+    stance: oposicion
+    lang: pt
+    homepage: https://jovempan.com.br
+    rss: "https://jovempan.com.br/feed"
+
+  # Perú
+  - id: willax
+    name: Willax
+    country: Perú
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://willax.tv
+    rss: "NO_RSS"
+  - id: expreso
+    name: Expreso
+    country: Perú
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.expreso.com.pe
+    rss: "NO_RSS"
+  - id: la-republica-pe
+    name: La República
+    country: Perú
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://larepublica.pe
+    rss: "https://larepublica.pe/rss.xml"
+  - id: wayka
+    name: Wayka
+    country: Perú
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://wayka.pe
+    rss: "NO_RSS"
+  - id: el-foco
+    name: El Foco
+    country: Perú
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://elfoco.pe
+    rss: "NO_RSS"
+
+  # Chile
+  - id: el-libero
+    name: El Líbero
+    country: Chile
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.ellibero.cl
+    rss: "NO_RSS"
+  - id: emol
+    name: Emol
+    country: Chile
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.emol.com
+    rss: "NO_RSS"
+  - id: ciper-chile
+    name: Ciper Chile
+    country: Chile
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.ciperchile.cl
+    rss: "https://www.ciperchile.cl/feed"
+  - id: el-mostrador
+    name: El Mostrador
+    country: Chile
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.elmostrador.cl
+    rss: "NO_RSS"
+  - id: interferencia
+    name: Interferencia
+    country: Chile
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://interferencia.cl
+    rss: "https://interferencia.cl/rss.xml"
+
+  # Argentina
+  - id: la-derecha-diario
+    name: La Derecha Diario
+    country: Argentina
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.laderechadiario.com
+    rss: "NO_RSS"
+  - id: la-nacion
+    name: La Nación
+    country: Argentina
+    region: latin_america
+    stance: oficialista
+    lang: es
+    homepage: https://www.lanacion.com.ar
+    rss: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/"
+  - id: pagina12
+    name: Página/12
+    country: Argentina
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.pagina12.com.ar
+    rss: "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
+  - id: el-destape
+    name: El Destape
+    country: Argentina
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.eldestapeweb.com
+    rss: "NO_RSS"
+  - id: c5n
+    name: C5N
+    country: Argentina
+    region: latin_america
+    stance: oposicion
+    lang: es
+    homepage: https://www.c5n.com
+    rss: "NO_RSS"
+
+  # China
+  - id: xinhua
+    name: Xinhua
+    country: China
+    region: east_asia
+    stance: oficialista
+    lang: zh
+    homepage: https://www.xinhuanet.com
+    rss: "http://www.xinhuanet.com/english/rss/worldrss.xml"
+  - id: global-times
+    name: Global Times
+    country: China
+    region: east_asia
+    stance: oficialista
+    lang: en
+    homepage: https://www.globaltimes.cn
+    rss: "https://www.globaltimes.cn/rss/outbrain.xml"
+  - id: china-digital-times
+    name: China Digital Times
+    country: China
+    region: east_asia
+    stance: oposicion
+    lang: en
+    homepage: https://chinadigitaltimes.net
+    rss: "https://chinadigitaltimes.net/feed/"
+  - id: epoch-times
+    name: The Epoch Times
+    country: China
+    region: east_asia
+    stance: oposicion
+    lang: en
+    homepage: https://www.theepochtimes.com
+    rss: "NO_RSS"
+  - id: rfa
+    name: Radio Free Asia
+    country: China
+    region: east_asia
+    stance: oposicion
+    lang: en
+    homepage: https://www.rfa.org
+    rss: "https://www.rfa.org/english/rss2.xml"
+
+  # Japón
+  - id: yomiuri
+    name: Yomiuri Shimbun
+    country: Japón
+    region: east_asia
+    stance: oficialista
+    lang: ja
+    homepage: https://www.yomiuri.co.jp
+    rss: "NO_RSS"
+  - id: sankei
+    name: Sankei Shimbun
+    country: Japón
+    region: east_asia
+    stance: oficialista
+    lang: ja
+    homepage: https://www.sankei.com
+    rss: "NO_RSS"
+  - id: asahi
+    name: Asahi Shimbun
+    country: Japón
+    region: east_asia
+    stance: oposicion
+    lang: ja
+    homepage: https://www.asahi.com
+    rss: "https://www.asahi.com/rss/asahi/newsheadlines.rdf"
+  - id: mainichi
+    name: Mainichi Shimbun
+    country: Japón
+    region: east_asia
+    stance: oposicion
+    lang: ja
+    homepage: https://mainichi.jp
+    rss: "NO_RSS"
+  - id: tokyo-shimbun
+    name: Tokyo Shimbun
+    country: Japón
+    region: east_asia
+    stance: oposicion
+    lang: ja
+    homepage: https://www.tokyo-np.co.jp
+    rss: "NO_RSS"
+
+  # Corea del Sur
+  - id: chosun-ilbo
+    name: Chosun Ilbo
+    country: Corea del Sur
+    region: east_asia
+    stance: oficialista
+    lang: ko
+    homepage: https://www.chosun.com
+    rss: "NO_RSS"
+  - id: donga
+    name: Dong-a Ilbo
+    country: Corea del Sur
+    region: east_asia
+    stance: oficialista
+    lang: ko
+    homepage: https://www.donga.com
+    rss: "https://rss.donga.com/total.xml"
+  - id: hankyoreh
+    name: Hankyoreh
+    country: Corea del Sur
+    region: east_asia
+    stance: oposicion
+    lang: ko
+    homepage: https://www.hani.co.kr
+    rss: "https://english.hani.co.kr/rss/"
+  - id: kyunghyang
+    name: Kyunghyang Shinmun
+    country: Corea del Sur
+    region: east_asia
+    stance: oposicion
+    lang: ko
+    homepage: https://www.khan.co.kr
+    rss: "https://www.khan.co.kr/rss/rssdata/total_news.xml"
+  - id: ohmynews
+    name: Ohmynews
+    country: Corea del Sur
+    region: east_asia
+    stance: oposicion
+    lang: ko
+    homepage: https://www.ohmynews.com
+    rss: "https://rss.ohmynews.com/rss/ohmynews.xml"
+
+  # Rusia
+  - id: rt
+    name: RT
+    country: Rusia
+    region: eurasia
+    stance: oficialista
+    lang: ru
+    homepage: https://www.rt.com
+    rss: "https://www.rt.com/rss/"
+  - id: sputnik
+    name: Sputnik
+    country: Rusia
+    region: eurasia
+    stance: oficialista
+    lang: ru
+    homepage: https://sputnikglobe.com
+    rss: "https://sputnikglobe.com/export/rss2/archive/index.xml"
+  - id: meduza
+    name: Meduza
+    country: Rusia
+    region: eurasia
+    stance: oposicion
+    lang: ru
+    homepage: https://meduza.io
+    rss: "https://meduza.io/rss/en/all"
+  - id: novaya-gazeta-europe
+    name: Novaya Gazeta Europe
+    country: Rusia
+    region: eurasia
+    stance: oposicion
+    lang: ru
+    homepage: https://novayagazeta.eu
+    rss: "https://novayagazeta.eu/feed/rss"
+  - id: moscow-times
+    name: The Moscow Times
+    country: Rusia
+    region: eurasia
+    stance: oposicion
+    lang: en
+    homepage: https://www.themoscowtimes.com
+    rss: "https://www.themoscowtimes.com/rss/news"
+
+  # Inglaterra (Reino Unido)
+  - id: the-guardian
+    name: The Guardian
+    country: Reino Unido
+    region: europe
+    stance: oficialista
+    lang: en
+    homepage: https://www.theguardian.com
+    rss: "https://www.theguardian.com/uk/rss"
+  - id: daily-mirror
+    name: Daily Mirror
+    country: Reino Unido
+    region: europe
+    stance: oficialista
+    lang: en
+    homepage: https://www.mirror.co.uk
+    rss: "https://www.mirror.co.uk/news/?service=rss"
+  - id: daily-telegraph
+    name: The Daily Telegraph
+    country: Reino Unido
+    region: europe
+    stance: oposicion
+    lang: en
+    homepage: https://www.telegraph.co.uk
+    rss: "https://www.telegraph.co.uk/rss.xml"
+  - id: daily-mail
+    name: Daily Mail
+    country: Reino Unido
+    region: europe
+    stance: oposicion
+    lang: en
+    homepage: https://www.dailymail.co.uk
+    rss: "https://www.dailymail.co.uk/articles.rss"
+  - id: the-sun
+    name: The Sun
+    country: Reino Unido
+    region: europe
+    stance: oposicion
+    lang: en
+    homepage: https://www.thesun.co.uk
+    rss: "https://www.thesun.co.uk/feed/"
+
+  # Alemania
+  - id: der-spiegel
+    name: Der Spiegel
+    country: Alemania
+    region: europe
+    stance: oficialista
+    lang: de
+    homepage: https://www.spiegel.de
+    rss: "https://www.spiegel.de/schlagzeilen/index.rss"
+  - id: sueddeutsche
+    name: Süddeutsche Zeitung
+    country: Alemania
+    region: europe
+    stance: oficialista
+    lang: de
+    homepage: https://www.sueddeutsche.de
+    rss: "https://rss.sueddeutsche.de/rss/Topthemen"
+  - id: die-welt
+    name: Die Welt
+    country: Alemania
+    region: europe
+    stance: oposicion
+    lang: de
+    homepage: https://www.welt.de
+    rss: "https://www.welt.de/feeds/latest.rss"
+  - id: bild
+    name: Bild
+    country: Alemania
+    region: europe
+    stance: oposicion
+    lang: de
+    homepage: https://www.bild.de
+    rss: "https://www.bild.de/feed/alles.xml"
+  - id: faz
+    name: Frankfurter Allgemeine Zeitung (FAZ)
+    country: Alemania
+    region: europe
+    stance: oposicion
+    lang: de
+    homepage: https://www.faz.net
+    rss: "https://www.faz.net/rss/aktuell/"
+
+  # España
+  - id: el-pais
+    name: El País
+    country: España
+    region: europe
+    stance: oficialista
+    lang: es
+    homepage: https://elpais.com
+    rss: "https://elpais.com/rss/elpais/portada.xml"
+  - id: eldiario-es
+    name: elDiario.es
+    country: España
+    region: europe
+    stance: oficialista
+    lang: es
+    homepage: https://www.eldiario.es
+    rss: "https://www.eldiario.es/rss/"
+  - id: el-mundo
+    name: El Mundo
+    country: España
+    region: europe
+    stance: oposicion
+    lang: es
+    homepage: https://www.elmundo.es
+    rss: "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml"
+  - id: abc-es
+    name: ABC
+    country: España
+    region: europe
+    stance: oposicion
+    lang: es
+    homepage: https://www.abc.es
+    rss: "https://www.abc.es/rss/feeds/abc_ultima.xml"
+  - id: el-confidencial
+    name: El Confidencial
+    country: España
+    region: europe
+    stance: oposicion
+    lang: es
+    homepage: https://www.elconfidencial.com
+    rss: "https://rss.elconfidencial.com/"
+
+  # Italia
+  - id: il-giornale
+    name: Il Giornale
+    country: Italia
+    region: europe
+    stance: oficialista
+    lang: it
+    homepage: https://www.ilgiornale.it
+    rss: "https://www.ilgiornale.it/arc/outboundfeeds/rss/"
+  - id: libero
+    name: Libero
+    country: Italia
+    region: europe
+    stance: oficialista
+    lang: it
+    homepage: https://www.liberoquotidiano.it
+    rss: "https://www.liberoquotidiano.it/rss.xml"
+  - id: la-repubblica
+    name: La Repubblica
+    country: Italia
+    region: europe
+    stance: oposicion
+    lang: it
+    homepage: https://www.repubblica.it
+    rss: "https://www.repubblica.it/rss/homepage/rss2.0.xml"
+  - id: il-fatto-quotidiano
+    name: Il Fatto Quotidiano
+    country: Italia
+    region: europe
+    stance: oposicion
+    lang: it
+    homepage: https://www.ilfattoquotidiano.it
+    rss: "https://www.ilfattoquotidiano.it/feed/"
+  - id: domani
+    name: Domani
+    country: Italia
+    region: europe
+    stance: oposicion
+    lang: it
+    homepage: https://www.editorialedomani.it
+    rss: "https://www.editorialedomani.it/rss"
+
+  # Francia
+  - id: le-monde
+    name: Le Monde
+    country: Francia
+    region: europe
+    stance: oficialista
+    lang: fr
+    homepage: https://www.lemonde.fr
+    rss: "https://www.lemonde.fr/rss/une.xml"
+  - id: le-parisien
+    name: Le Parisien
+    country: Francia
+    region: europe
+    stance: oficialista
+    lang: fr
+    homepage: https://www.leparisien.fr
+    rss: "https://feeds.leparisien.fr/leparisien/rss"
+  - id: le-figaro
+    name: Le Figaro
+    country: Francia
+    region: europe
+    stance: oposicion
+    lang: fr
+    homepage: https://www.lefigaro.fr
+    rss: "https://www.lefigaro.fr/rss/figaro_actualites.xml"
+  - id: mediapart
+    name: Mediapart
+    country: Francia
+    region: europe
+    stance: oposicion
+    lang: fr
+    homepage: https://www.mediapart.fr
+    rss: "https://www.mediapart.fr/articles/feed"
+  - id: liberation
+    name: Libération
+    country: Francia
+    region: europe
+    stance: oposicion
+    lang: fr
+    homepage: https://www.liberation.fr
+    rss: "https://www.liberation.fr/arc/outboundfeeds/rss/"

@@ -1,0 +1,54 @@
+.disclosure {
+  margin-top: 0.4rem;
+}
+
+.summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+  user-select: none;
+  width: fit-content;
+}
+
+.summary:hover {
+  color: #222;
+}
+
+.grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem 1.5rem;
+  padding: 0.75rem 0 1rem;
+  border-top: 1px solid #e2e2e2;
+}
+
+.countryName {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0 0 0.3rem;
+}
+
+.mediaList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .summary {
+    color: #aaa;
+  }
+  .summary:hover {
+    color: #eee;
+  }
+  .grid {
+    border-top-color: #333;
+  }
+  .mediaList {
+    color: #999;
+  }
+}

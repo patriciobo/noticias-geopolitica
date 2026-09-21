@@ -1,0 +1,45 @@
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.date {
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  margin-bottom: 1.5rem;
+}
+
+.markdown h2 {
+  margin-top: 2.5rem;
+  border-bottom: 1px solid #e2e2e2;
+  padding-bottom: 0.4rem;
+}
+
+.markdown h3 {
+  margin-top: 1.5rem;
+}
+
+.markdown p,
+.markdown li {
+  line-height: 1.6;
+}
+
+.markdown ul {
+  padding-left: 1.4rem;
+}
+
+.crossCoverage {
+  display: inline-block;
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .crossCoverage {
+    background: #1e2a3f;
+  }
+}

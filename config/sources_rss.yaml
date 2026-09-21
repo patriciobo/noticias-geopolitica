@@ -1,0 +1,134 @@
+# Investigación de feeds RSS/Atom públicos para cada `id` de sources.yaml.
+# Mismo orden y mismos ids que sources.yaml. Verificado con WebFetch/curl (rigor rápido, no exhaustivo).
+# NO_RSS = no se encontró feed público funcional; se anota alternativa liviana si existe
+# (sitemap, wp-json, RSS de feedburner de terceros, cuenta de X/Twitter). No se sugiere
+# scraping agresivo ni bypass de paywall/anti-bot: eso queda para scraping puntual respetuoso
+# de robots.txt más adelante.
+# Para medios en chino/japonés/coreano se priorizó, cuando existe, el feed de la edición en
+# inglés (se indica en comentario); si no hay edición en inglés se usó el feed nativo (idioma anotado).
+
+# --- Canadá ---
+toronto-star: "https://www.thestar.com/search/?q=&f=rss&t=article&l=50&s=start_time&sd=desc"
+national-observer: "https://www.nationalobserver.com/front/rss"
+national-post: "https://nationalpost.com/feed/"
+toronto-sun: "https://torontosun.com/feed/"
+rebel-news: "http://www.rebelnews.com/news.rss"
+
+# --- Estados Unidos ---
+fox-news: "https://moxie.foxnews.com/google-publisher/latest.xml"
+breitbart-news: "http://feeds.feedburner.com/breitbart"
+nyt: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+washington-post: "https://feeds.washingtonpost.com/rss/national"  # WaPo discontinuó el feed general de homepage (~2023); esta sección "national" es el equivalente activo más cercano
+cnn: "NO_RSS"  # feeds legacy de rss.cnn.com/edition.cnn.com responden XML válido pero están congelados (sin items nuevos desde 2023-2024), no sirven para polling diario; sin alternativa liviana confirmada
+
+# --- México ---
+la-jornada: "https://www.jornada.com.mx/rss/edicion.xml"
+sinembargo: "NO_RSS"  # feed existe (sinembargo.mx/feed) pero Cloudflare bloquea todo UA automatizado (403 incluso a Googlebot); alt: X/Twitter @sinembargomx
+reforma: "https://www.reforma.com/rss/portada.xml"
+latinus: "NO_RSS"  # portal /rss/ existe pero el generador (rss.asp) está roto/404; alt: X/Twitter @latinus_us o canal de YouTube
+animal-politico: "NO_RSS"  # /feed/ y /rss devuelven HTML, no XML (feed deshabilitado); alt: sitemap.xml (200 confirmado) o X/Twitter @pajaropolitico
+
+# --- Colombia ---
+revista-semana: "https://www.semana.com/arc/outboundfeeds/rss/"
+el-colombiano: "https://www.elcolombiano.com/rss/portada.xml"
+la-silla-vacia: "https://www.lasillavacia.com/feed/"
+voragine: "NO_RSS"  # /feed/ bloqueado por Cloudflare JS challenge de forma consistente; alt: sitemap.xml (200 confirmado)
+cuestion-publica: "https://cuestionpublica.com/feed/"
+
+# --- Venezuela ---
+iguana-tv: "NO_RSS"  # dominio iguanatv.net no resuelve; sitio real es laiguana.tv, cuyo /feed/ y ?feed=rss2 redirigen a home (feed deshabilitado); alt: API wp-json https://www.laiguana.tv/wp-json/wp/v2/posts (200 confirmado)
+mision-verdad: "https://misionverdad.com/rss.xml"
+efecto-cocuyo: "https://efectococuyo.com/feed/"
+armando-info: "https://armando.info/feed/"
+el-pitazo: "https://elpitazo.net/feed/"
+
+# --- Brasil ---
+brasil-247: "https://www.brasil247.com/rss"
+revista-forum: "https://revistaforum.com.br/feed"
+revista-oeste: "https://revistaoeste.com/feed/"
+gazeta-do-povo: "https://www.gazetadopovo.com.br/feed/rss/ultimas-noticias.xml"
+jovem-pan: "https://jovempan.com.br/feed"
+
+# --- Perú ---
+willax: "NO_RSS"  # sitio de TV; todas las rutas (incluida home) bloqueadas por Cloudflare challenge, no se pudo verificar existencia; alt: X/Twitter @willaxtv
+expreso: "NO_RSS"  # dominio entero bloqueado por Cloudflare challenge (403 en /feed/, /rss, sitemap.xml, home); probablemente tenga feed pero no se pudo verificar; alt: revisar manualmente en navegador, o X/Twitter @expreso
+la-republica-pe: "https://larepublica.pe/rss.xml"
+wayka: "NO_RSS"  # medio pequeño sin fines de lucro; /feed y /feed/ devuelven Cloudflare JS challenge; alt: X/Twitter @wayka_pe
+el-foco: "NO_RSS"  # medio pequeño de investigación; /feed y /feed/ devuelven Cloudflare JS challenge; alt: X/Twitter @elfoco_pe
+
+# --- Chile ---
+el-libero: "NO_RSS"  # /feed y /rss redirigen a home (feed deshabilitado); alt: sitemap https://www.ellibero.cl/sitemap.xml
+emol: "NO_RSS"  # rutas /rss legacy ahora redirigen (302) a páginas HTML, no se encontró XML; alt: sitemap.xml (también envuelto en HTML) o X/Twitter @emol
+ciper-chile: "https://www.ciperchile.cl/feed"
+el-mostrador: "NO_RSS"  # /feed, /feed/, /rss, ?feed=rss2, wp-json, ninguno devolvió XML; alt: sitemap https://www.elmostrador.cl/sitemap.xml
+interferencia: "https://interferencia.cl/rss.xml"
+
+# --- Argentina ---
+la-derecha-diario: "NO_RSS"  # /feed devuelve HTML, no un feed tipo WordPress; alt: X/Twitter @laderechadiario
+la-nacion: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/"
+pagina12: "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
+el-destape: "NO_RSS"  # /feed y /rss devuelven 404; alt: sitemap https://www.eldestapeweb.com/sitemap.xml
+c5n: "NO_RSS"  # /feed, /rss, wp-json, todos 404; alt: sitemap https://www.c5n.com/sitemap.xml
+
+# --- China ---
+xinhua: "http://www.xinhuanet.com/english/rss/worldrss.xml"  # edición en inglés, XML válido confirmado
+global-times: "https://www.globaltimes.cn/rss/outbrain.xml"  # inglés (nativo del sitio)
+china-digital-times: "https://chinadigitaltimes.net/feed/"  # inglés (nativo)
+epoch-times: "NO_RSS"  # rediseño del sitio eliminó feeds públicos (/feed, /rss dan 404); alt: sitemap.xml o X/Twitter @EpochTimes
+rfa: "https://www.rfa.org/english/rss2.xml"  # inglés, XML válido confirmado
+
+# --- Japón ---
+yomiuri: "NO_RSS"  # japannews.yomiuri.co.jp/feed/ existe pero bloqueado por AWS WAF bot-challenge (HTTP 202, no verificable); alt: X/Twitter @The_Japan_News
+sankei: "NO_RSS"  # no se encontró RSS público en sankei.com; alt: sitemap.xml o X/Twitter @Sankei_news
+asahi: "https://www.asahi.com/rss/asahi/newsheadlines.rdf"  # japonés (nativo; la edición en inglés AJW no tiene feed público)
+mainichi: "NO_RSS"  # mainichi.jp/rss/etc/english.rss es una página HTML de aterrizaje, no un feed; no se encontró URL de feed en inglés funcional; alt: página mainichi.jp/rss o X/Twitter @themainichi
+tokyo-shimbun: "NO_RSS"  # robots.txt prohíbe explícitamente bots de RSS (AwarioRssBot); alt: sitemap https://www.tokyo-np.co.jp/sitemap.xml
+
+# --- Corea del Sur ---
+chosun-ilbo: "NO_RSS"  # RSS de english.chosun.com discontinuado (redirige a chosun.com/english, sin feed); alt: X/Twitter @Chosunilbo_en
+donga: "https://rss.donga.com/total.xml"  # coreano (nativo; no se encontró feed en inglés separado)
+hankyoreh: "https://english.hani.co.kr/rss/"  # edición en inglés, XML válido confirmado
+kyunghyang: "https://www.khan.co.kr/rss/rssdata/total_news.xml"  # coreano (nativo)
+ohmynews: "https://rss.ohmynews.com/rss/ohmynews.xml"  # coreano (nativo; no se encontró feed dedicado de OhmyNews International en inglés)
+
+# --- Rusia ---
+rt: "https://www.rt.com/rss/"  # inglés (nativo)
+sputnik: "https://sputnikglobe.com/export/rss2/archive/index.xml"  # inglés (edición global)
+meduza: "https://meduza.io/rss/en/all"  # edición en inglés, XML válido confirmado
+novaya-gazeta-europe: "https://novayagazeta.eu/feed/rss"  # ruso (nativo), XML válido confirmado
+moscow-times: "https://www.themoscowtimes.com/rss/news"  # inglés (nativo)
+
+# --- Reino Unido ---
+the-guardian: "https://www.theguardian.com/uk/rss"
+daily-mirror: "https://www.mirror.co.uk/news/?service=rss"
+daily-telegraph: "https://www.telegraph.co.uk/rss.xml"
+daily-mail: "https://www.dailymail.co.uk/articles.rss"
+the-sun: "https://www.thesun.co.uk/feed/"  # feed público documentado; devuelve página de "device verification" anti-bot a clientes no-navegador, revisar en producción con UA de navegador
+
+# --- Alemania ---
+der-spiegel: "https://www.spiegel.de/schlagzeilen/index.rss"
+sueddeutsche: "https://rss.sueddeutsche.de/rss/Topthemen"
+die-welt: "https://www.welt.de/feeds/latest.rss"
+bild: "https://www.bild.de/feed/alles.xml"
+faz: "https://www.faz.net/rss/aktuell/"
+
+# --- España ---
+el-pais: "https://elpais.com/rss/elpais/portada.xml"
+eldiario-es: "https://www.eldiario.es/rss/"
+el-mundo: "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml"
+abc-es: "https://www.abc.es/rss/feeds/abc_ultima.xml"
+el-confidencial: "https://rss.elconfidencial.com/"
+
+# --- Italia ---
+il-giornale: "https://www.ilgiornale.it/arc/outboundfeeds/rss/"
+libero: "https://www.liberoquotidiano.it/rss.xml"
+la-repubblica: "https://www.repubblica.it/rss/homepage/rss2.0.xml"
+il-fatto-quotidiano: "https://www.ilfattoquotidiano.it/feed/"
+domani: "https://www.editorialedomani.it/rss"
+
+# --- Francia ---
+le-monde: "https://www.lemonde.fr/rss/une.xml"
+le-parisien: "https://feeds.leparisien.fr/leparisien/rss"
+le-figaro: "https://www.lefigaro.fr/rss/figaro_actualites.xml"  # feed público documentado; devuelve página de consentimiento/anti-bot a clientes no-navegador, revisar en producción con UA de navegador
+mediapart: "https://www.mediapart.fr/articles/feed"
+liberation: "https://www.liberation.fr/arc/outboundfeeds/rss/"

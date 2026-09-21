@@ -1,0 +1,135 @@
+# Gazetteer para el prefiltro barato (etapa 1). Matching simple por substring,
+# case-insensitive, sobre título+snippet. Editable sin tocar código.
+
+countries:
+  - Canada
+  - Canadá
+  - United States
+  - Estados Unidos
+  - U.S.
+  - Mexico
+  - México
+  - Colombia
+  - Venezuela
+  - Brazil
+  - Brasil
+  - Peru
+  - Perú
+  - Chile
+  - Argentina
+  - China
+  - Japan
+  - Japón
+  - South Korea
+  - Corea del Sur
+  - Russia
+  - Rusia
+  - United Kingdom
+  - Reino Unido
+  - Germany
+  - Alemania
+  - Spain
+  - España
+  - Italy
+  - Italia
+  - France
+  - Francia
+  - European Union
+  - Unión Europea
+
+# Empresas multinacionales de referencia (ampliable). No es exhaustivo:
+# el prefiltro solo necesita indicios, la clasificación fina la hace el LLM.
+companies:
+  - Apple
+  - Amazon
+  - Google
+  - Microsoft
+  - Tesla
+  - Meta
+  - Nvidia
+  - ExxonMobil
+  - Chevron
+  - Shell
+  - TotalEnergies
+  - BP
+  - Petrobras
+  - PetroChina
+  - Sinopec
+  - Pemex
+  - YPF
+  - Ecopetrol
+  - PDVSA
+  - Vale
+  - BHP
+  - Rio Tinto
+  - Glencore
+  - Toyota
+  - Volkswagen
+  - Stellantis
+  - Samsung
+  - Hyundai
+  - Foxconn
+  - Huawei
+  - TSMC
+  - Alibaba
+  - Tencent
+  - SoftBank
+  - Mitsubishi
+  - Siemens
+  - BASF
+  - Bayer
+  - Airbus
+  - Boeing
+  - Pfizer
+  - Novartis
+  - Roche
+  - Nestlé
+  - Unilever
+  - LVMH
+  - Inditex
+  - JPMorgan
+  - Goldman Sachs
+  - HSBC
+  - Blackstone
+  - BlackRock
+
+keywords:
+  - tariff
+  - arancel
+  - sanction
+  - sanción
+  - embargo
+  - treaty
+  - tratado
+  - free trade
+  - libre comercio
+  - trade agreement
+  - acuerdo comercial
+  - trade war
+  - guerra comercial
+  - merger
+  - fusión
+  - acquisition
+  - adquisición
+  - supply chain
+  - cadena de suministro
+  - export ban
+  - import ban
+  - antitrust
+  - regulación
+  - regulation
+  - OPEC
+  - OPEP
+  - WTO
+  - OMC
+  - IMF
+  - FMI
+  - World Bank
+  - Banco Mundial
+  - G7
+  - G20
+  - BRICS
+  - currency
+  - divisa
+  - central bank
+  - banco central
