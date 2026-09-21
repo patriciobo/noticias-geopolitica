@@ -1,0 +1,47 @@
+name: Informe diario
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # 10:00 UTC = 07:00 Argentina
+  workflow_dispatch: # botón "Run workflow" para probar a mano
+
+permissions:
+  contents: write # para commitear el reporte generado
+
+concurrency:
+  group: daily-report
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+
+      - name: Generar reporte
+        working-directory: core
+        env:
+          LLM_PROVIDER: gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SOURCES_PATH: ../config/sources.yaml
+          GAZETTEER_PATH: ../config/gazetteer.yaml
+          OUT_DIR: ../reports
+        run: go run ./cmd/ingest
+
+      - name: Commitear reporte
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports
+          if git diff --cached --quiet; then
+            echo "Sin cambios que commitear"
+          else
+            git commit -m "chore: informe del $(date -u +%F)"
+            git push
+          fi
