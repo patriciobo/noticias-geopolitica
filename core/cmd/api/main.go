@@ -56,7 +56,7 @@ func listDates(outDir string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	var dates []string
+	dates := []string{} // no nil: sin reportes debe serializar como [], no null
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
