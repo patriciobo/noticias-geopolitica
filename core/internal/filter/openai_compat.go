@@ -83,13 +83,18 @@ func (c *OpenAICompatClassifier) Classify(ctx context.Context, a model.Article, 
 	return cls, nil
 }
 
-// maxRateLimitRetries and rateLimitBackoff handle free-tier rate limits
-// (Gemini's free tier RPM is low enough that a burst of concurrent classify
-// calls routinely trips 429s) — retry with backoff instead of dropping the
-// article silently.
+// maxRateLimitRetries and rateLimitBackoff handle transient failures: rate
+// limits (Gemini's free tier RPM is low enough that a burst of concurrent
+// classify calls routinely trips 429s) and server-side overload (502/503,
+// which Gemini also returns under load) — retry with backoff instead of
+// dropping the article silently.
 const maxRateLimitRetries = 6
 
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
+
+func isRetryableStatus(code int) bool {
+	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
+}
 
 func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatRequest) (string, error) {
 	payload, err := json.Marshal(reqBody)
@@ -118,7 +123,7 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 			return "", err
 		}
 
-		if statusCode != http.StatusTooManyRequests || attempt >= maxRateLimitRetries {
+		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
 			break
 		}
 		select {

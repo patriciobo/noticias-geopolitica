@@ -32,11 +32,16 @@ func NewOpenAICompatSynthesizer(baseURL, apiKey, modelName string) *OpenAICompat
 	}
 }
 
-// maxRateLimitRetries and rateLimitBackoff handle free-tier rate limits —
-// same policy as filter.OpenAICompatClassifier.
+// maxRateLimitRetries and rateLimitBackoff handle transient failures (rate
+// limits and 502/503 server overload) — same policy as
+// filter.OpenAICompatClassifier.
 const maxRateLimitRetries = 6
 
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
+
+func isRetryableStatus(code int) bool {
+	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
+}
 
 type compatChatRequest struct {
 	Model       string          `json:"model"`
@@ -98,7 +103,7 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 			return "", err
 		}
 
-		if statusCode != http.StatusTooManyRequests || attempt >= maxRateLimitRetries {
+		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
 			break
 		}
 		select {
