@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Abstract from "./Abstract";
 import RegionBanner from "./RegionBanner";
 import NewsLinks from "./NewsLinks";
 import SourcesDisclosure from "./SourcesDisclosure";
-import { splitNewsLinks } from "@/lib/newsLinks";
+import { splitAbstract, splitNewsLinks } from "@/lib/newsLinks";
 import { REGION_THEME } from "@/lib/regionTheme";
 import type { SourceSummary } from "@/lib/api";
 import styles from "./ReportView.module.css";
@@ -81,10 +82,12 @@ export default function ReportView({
   markdown: string;
   sources: SourceSummary[];
 }) {
+  const { abstract, body } = splitAbstract(markdown);
   return (
     <article className={styles.article}>
       <p className={styles.date}>Edición del {formatDate(date)}</p>
-      <ReportBody markdown={markdown} sources={sources} />
+      {abstract && <Abstract markdown={abstract} />}
+      <ReportBody markdown={body} sources={sources} />
     </article>
   );
 }

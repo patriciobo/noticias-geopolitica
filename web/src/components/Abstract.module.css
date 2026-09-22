@@ -1,0 +1,36 @@
+.box {
+  margin: 0.9rem 0 1.25rem;
+  padding: 0.85rem 1.1rem;
+  border-left: 4px solid #16a34a;
+  background: #f0fdf4;
+  border-radius: 0 8px 8px 0;
+}
+
+.label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #15803d;
+  margin-bottom: 0.35rem;
+}
+
+.content p,
+.content li {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.content p:last-child {
+  margin-bottom: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .box {
+    background: #0f1f14;
+    border-left-color: #22c55e;
+  }
+  .label {
+    color: #4ade80;
+  }
+}

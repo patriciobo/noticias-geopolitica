@@ -52,6 +52,30 @@ export function splitNewsLinks(markdown: string): {
   return { body, groups: parsed };
 }
 
+const ABSTRACT_HEADING = "## Resumen ejecutivo";
+
+/**
+ * Separa la sección "Resumen ejecutivo" (LLM, primera del reporte) del resto
+ * del markdown, para mostrarla como copete siempre visible, incluso cuando
+ * el informe completo está colapsado. Ediciones viejas no la traen: en ese
+ * caso devuelve abstract null y el markdown intacto.
+ */
+export function splitAbstract(markdown: string): {
+  abstract: string | null;
+  body: string;
+} {
+  const trimmed = markdown.trimStart();
+  if (!trimmed.startsWith(ABSTRACT_HEADING)) return { abstract: null, body: markdown };
+
+  const afterHeading = trimmed.slice(ABSTRACT_HEADING.length);
+  const nextIdx = afterHeading.indexOf("\n## ");
+  const abstract = (nextIdx === -1 ? afterHeading : afterHeading.slice(0, nextIdx)).trim();
+  if (!abstract) return { abstract: null, body: markdown };
+
+  const body = nextIdx === -1 ? "" : afterHeading.slice(nextIdx + 1);
+  return { abstract, body };
+}
+
 export function hostnameOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");

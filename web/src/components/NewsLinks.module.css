@@ -1,13 +1,59 @@
 .section {
   margin-top: 2.5rem;
-  padding: 1.25rem 1.25rem 0.5rem;
   border: 1px solid #dbe4f3;
   border-radius: 12px;
   background: #f7f9fd;
 }
 
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
 .heading {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #dbe4f3;
+  color: #1e3a8a;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+.toggle {
+  margin-left: auto;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-right: 2px solid #667;
+  border-bottom: 2px solid #667;
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.section[open] > .summary .toggle {
+  transform: rotate(-135deg);
+}
+
+.section[open] > .summary {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #dbe4f3;
+}
+
+.body {
+  padding: 0 1.25rem 1rem;
 }
 
 .intro {
@@ -30,7 +76,7 @@
   border-bottom: 1px solid #dbe4f3;
 }
 
-.count {
+.regionCount {
   margin-left: auto;
   font-size: 0.75rem;
   font-weight: 600;
@@ -89,12 +135,17 @@
     color: #9aa4b5;
   }
   .region,
-  .item {
+  .item,
+  .section[open] > .summary {
     border-bottom-color: #26324a;
   }
-  .count {
+  .count,
+  .regionCount {
     background: #26324a;
     color: #bcd0ff;
+  }
+  .toggle {
+    border-color: #99a;
   }
   .title {
     color: #7aa2ff;

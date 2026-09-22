@@ -1,4 +1,6 @@
 import type { ReportResponse } from "@/lib/api";
+import { splitAbstract } from "@/lib/newsLinks";
+import Abstract from "./Abstract";
 import { ReportBody, formatDate } from "./ReportView";
 import styles from "./DayEntry.module.css";
 
@@ -8,7 +10,11 @@ function linkCount(markdown: string): number {
   return (markdown.slice(idx).match(/^- \[/gm) ?? []).length;
 }
 
-/** Una edición diaria del blog, con borde propio para separarla de las demás. */
+/**
+ * Una edición diaria del blog, con borde propio para separarla de las demás.
+ * El resumen ejecutivo va siempre visible (fuera del <details>), así se lee
+ * sin abrir el informe completo — también en las ediciones plegadas.
+ */
 export default function DayEntry({
   report,
   latest = false,
@@ -16,6 +22,7 @@ export default function DayEntry({
   report: ReportResponse;
   latest?: boolean;
 }) {
+  const { abstract, body } = splitAbstract(report.markdown);
   const links = linkCount(report.markdown);
   const meta = [
     `${report.source_count} medios consultados`,
@@ -32,21 +39,28 @@ export default function DayEntry({
           <h2 className={styles.date}>{formatDate(report.date)}</h2>
           <p className={styles.meta}>{meta}</p>
         </header>
-        <ReportBody markdown={report.markdown} sources={report.sources} />
+        {abstract && <Abstract markdown={abstract} />}
+        <ReportBody markdown={body} sources={report.sources} />
       </article>
     );
   }
 
   return (
-    <details className={styles.entry} id={report.date}>
-      <summary className={styles.summary}>
+    <article className={styles.entry} id={report.date}>
+      <header className={`${styles.header} ${styles.headerRow}`}>
         <span className={styles.date}>{formatDate(report.date)}</span>
         <span className={styles.meta}>{meta}</span>
-        <span className={styles.toggle} aria-hidden="true" />
-      </summary>
-      <div className={styles.content}>
-        <ReportBody markdown={report.markdown} sources={report.sources} />
-      </div>
-    </details>
+      </header>
+      {abstract && <Abstract markdown={abstract} />}
+      <details className={styles.details}>
+        <summary className={styles.summary}>
+          Ver informe completo
+          <span className={styles.toggle} aria-hidden="true" />
+        </summary>
+        <div className={styles.content}>
+          <ReportBody markdown={body} sources={report.sources} />
+        </div>
+      </details>
+    </article>
   );
 }

@@ -93,8 +93,15 @@ Priorizá que se lea rápido y se escanee fácil, no que suene a ensayo:
 - Negrita ("**...**") para el país, empresa o dato clave al arranque de cada bullet,
   así se puede escanear la lista sin leer cada palabra.
 
-Escribí el post del día en Markdown, con EXACTAMENTE estas tres secciones,
+Escribí el post del día en Markdown, con EXACTAMENTE estas cuatro secciones,
 en este orden:
+
+## Resumen ejecutivo
+
+Un párrafo de dos o tres líneas (sin bullets ni subtítulos) con el vistazo
+más rápido posible del día, para quien no va a leer el informe completo: lo
+más relevante de las tres secciones que siguen, en lenguaje llano. No cites
+textual lo que vas a repetir más abajo, resumí con tus palabras.
 
 ## Resumen por región
 
