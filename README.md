@@ -124,7 +124,7 @@ que agregar más candidatos no tiene costo si terminan sin usarse.
 ```
 OPENROUTER_API_KEY=
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CLASSIFY_MODELS=poolside/laguna-s-2.1:free,otro/modelo:free
+OPENROUTER_CLASSIFY_MODELS=google/gemma-4-26b-a4b-it:free,otro/modelo:free
 OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,otro/modelo:free
 ```
 

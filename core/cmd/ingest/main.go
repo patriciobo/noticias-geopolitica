@@ -185,7 +185,7 @@ func main() {
 		// distintas por paso: clasificar dispara muchas llamadas
 		// concurrentes chicas, sintetizar es una sola llamada grande que
 		// tolera un modelo más pesado.
-		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "poolside/laguna-s-2.1:free")
+		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "google/gemma-4-26b-a4b-it:free")
 		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free")
 		// OpenRouter recomienda estos headers para su free tier (ranking /
 		// prioridad de cupo); no son estrictamente obligatorios.
