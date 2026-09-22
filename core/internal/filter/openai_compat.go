@@ -96,6 +96,14 @@ func isRetryableStatus(code int) bool {
 	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
 }
 
+// isHardQuotaExceeded distingue un 429 de cuota de plan agotada (diaria o
+// mensual, no se resetea en segundos) de un 429 de burst momentáneo (se
+// resetea solo). Reintentar con backoff no sirve para el primer caso —
+// Gemini frasea ese error con "check your plan and billing".
+func isHardQuotaExceeded(body []byte) bool {
+	return bytes.Contains(bytes.ToLower(body), []byte("check your plan and billing"))
+}
+
 func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatRequest) (string, error) {
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
@@ -123,6 +131,9 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 			return "", err
 		}
 
+		if statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body) {
+			break
+		}
 		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
 			break
 		}
@@ -135,6 +146,13 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 
 	var cr compatChatResponse
 	if err := json.Unmarshal(body, &cr); err != nil {
+		// Gemini a veces envuelve el error en un array ([{"error": {...}}])
+		// en vez del objeto plano que usa el resto — probamos esa forma
+		// antes de rendirnos a un mensaje genérico.
+		var arr []compatChatResponse
+		if json.Unmarshal(body, &arr) == nil && len(arr) > 0 && arr[0].Error != nil {
+			return "", fmt.Errorf("%s", arr[0].Error.Message)
+		}
 		return "", fmt.Errorf("respuesta inesperada (status %d): %s", statusCode, truncate(string(body), 300))
 	}
 	if cr.Error != nil {

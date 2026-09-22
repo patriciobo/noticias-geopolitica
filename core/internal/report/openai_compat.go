@@ -43,6 +43,20 @@ func isRetryableStatus(code int) bool {
 	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
 }
 
+// isHardQuotaExceeded distingue un 429 de cuota de plan agotada (diaria o
+// mensual, no se resetea en segundos) de un 429 de burst momentáneo (se
+// resetea solo) — mismo criterio que filter.OpenAICompatClassifier.
+func isHardQuotaExceeded(body []byte) bool {
+	return bytes.Contains(bytes.ToLower(body), []byte("check your plan and billing"))
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "…"
+}
+
 type compatChatRequest struct {
 	Model       string          `json:"model"`
 	Messages    []compatMessage `json:"messages"`
@@ -103,6 +117,9 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 			return "", err
 		}
 
+		if statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body) {
+			break
+		}
 		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
 			break
 		}
@@ -115,7 +132,14 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 
 	var cr compatChatResponse
 	if err := json.Unmarshal(body, &cr); err != nil {
-		return "", fmt.Errorf("openai-compat synthesizer: respuesta inesperada (status %d)", statusCode)
+		// Gemini a veces envuelve el error en un array ([{"error": {...}}])
+		// en vez del objeto plano que usa el resto — probamos esa forma
+		// antes de rendirnos a un mensaje genérico.
+		var arr []compatChatResponse
+		if json.Unmarshal(body, &arr) == nil && len(arr) > 0 && arr[0].Error != nil {
+			return "", fmt.Errorf("openai-compat synthesizer: %s", arr[0].Error.Message)
+		}
+		return "", fmt.Errorf("openai-compat synthesizer: respuesta inesperada (status %d): %s", statusCode, truncate(string(body), 300))
 	}
 	if cr.Error != nil {
 		return "", fmt.Errorf("openai-compat synthesizer: %s", cr.Error.Message)
