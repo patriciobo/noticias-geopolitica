@@ -56,3 +56,38 @@ func TestFallbackClassifierPropagatesSecondaryError(t *testing.T) {
 		t.Errorf("expected secondary error to propagate, got %v", err)
 	}
 }
+
+// countingClassifier cuenta cuántas veces se llamó — usado para verificar
+// que, tras la primera falla, Primary no se vuelve a invocar.
+type countingClassifier struct {
+	calls *int
+	cls   model.Classification
+	err   error
+}
+
+func (c countingClassifier) Classify(ctx context.Context, a model.Article, pre PrefilterResult) (model.Classification, error) {
+	*c.calls++
+	return c.cls, c.err
+}
+
+func TestFallbackClassifierStopsCallingDeadPrimary(t *testing.T) {
+	primaryCalls := 0
+	f := &FallbackClassifier{
+		Primary:   countingClassifier{calls: &primaryCalls, err: errors.New("cuota agotada")},
+		Secondary: stubClassifier{cls: model.Classification{Reason: "secondary"}},
+	}
+
+	for i := 0; i < 5; i++ {
+		got, err := f.Classify(context.Background(), model.Article{}, PrefilterResult{})
+		if err != nil {
+			t.Fatalf("call %d: unexpected error: %v", i, err)
+		}
+		if got.Reason != "secondary" {
+			t.Errorf("call %d: expected secondary result, got %q", i, got.Reason)
+		}
+	}
+
+	if primaryCalls != 1 {
+		t.Errorf("expected primary to be called exactly once (dies after first failure), got %d calls", primaryCalls)
+	}
+}
