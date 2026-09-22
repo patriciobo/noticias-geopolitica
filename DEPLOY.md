@@ -40,6 +40,9 @@ El workflow ya está en `.github/workflows/daily.yml`.
 
 1. Repo → *Settings → Secrets and variables → Actions → New repository secret*:
    `GEMINI_API_KEY` = tu key.
+   Opcional: `OPENROUTER_API_KEY` = key de openrouter.ai/keys — fallback
+   automático si Gemini falla (cuota agotada, caída), usa un modelo free.
+   Sin este secret el pipeline sigue andando solo con Gemini, como antes.
 2. Repo → *Settings → Actions → General → Workflow permissions* →
    **Read and write permissions** (para que pueda commitear).
 3. Repo → *Actions → Informe diario → Run workflow* para probarlo a mano.

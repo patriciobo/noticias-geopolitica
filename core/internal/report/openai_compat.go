@@ -21,6 +21,9 @@ type OpenAICompatSynthesizer struct {
 	APIKey  string
 	Model   string
 	Client  *http.Client
+	// ExtraHeaders manda headers adicionales en cada request — OpenRouter
+	// recomienda HTTP-Referer/X-Title para identificarse en su free tier.
+	ExtraHeaders map[string]string
 }
 
 func NewOpenAICompatSynthesizer(baseURL, apiKey, modelName string) *OpenAICompatSynthesizer {
@@ -105,6 +108,9 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+s.APIKey)
+		for k, v := range s.ExtraHeaders {
+			req.Header.Set(k, v)
+		}
 
 		resp, err := s.Client.Do(req)
 		if err != nil {

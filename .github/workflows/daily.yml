@@ -32,6 +32,11 @@ jobs:
         env:
           LLM_PROVIDER: gemini
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Fallback si Gemini falla (cuota agotada, caída): cae a un
+          # modelo free de OpenRouter en vez de perder la corrida del
+          # día. Opcional — sin el secret, el pipeline sigue andando
+          # solo con Gemini como antes.
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SOURCES_PATH: ../config/sources.yaml
           GAZETTEER_PATH: ../config/gazetteer.yaml
           OUT_DIR: ../reports

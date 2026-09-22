@@ -22,6 +22,9 @@ type OpenAICompatClassifier struct {
 	APIKey  string
 	Model   string
 	Client  *http.Client
+	// ExtraHeaders manda headers adicionales en cada request — OpenRouter
+	// recomienda HTTP-Referer/X-Title para identificarse en su free tier.
+	ExtraHeaders map[string]string
 }
 
 func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatClassifier {
@@ -119,6 +122,9 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+c.APIKey)
+		for k, v := range c.ExtraHeaders {
+			req.Header.Set(k, v)
+		}
 
 		resp, err := c.Client.Do(req)
 		if err != nil {

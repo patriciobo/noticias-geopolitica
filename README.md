@@ -105,6 +105,28 @@ OLLAMA_CLASSIFY_MODEL=qwen3:1.7b
 OLLAMA_SYNTHESIZE_MODEL=qwen3.5:9b
 ```
 
+### Fallback: OpenRouter
+
+Independiente del proveedor principal de arriba, si `OPENROUTER_API_KEY` está
+configurada, `cmd/ingest` envuelve el classifier y el synthesizer con
+`filter.FallbackClassifier`/`report.FallbackSynthesizer`: si el proveedor
+principal falla (cuota agotada, caída, lo que sea — ya reintentó puertas
+adentro lo que tenía que reintentar), cae a un modelo free de OpenRouter en
+vez de perder la corrida del día entero. Sin esa key, el pipeline sigue
+andando exactamente igual que antes, con un solo proveedor.
+
+```
+OPENROUTER_API_KEY=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_CLASSIFY_MODEL=deepseek/deepseek-chat-v3.1:free
+OPENROUTER_SYNTHESIZE_MODEL=deepseek/deepseek-chat-v3.1:free
+```
+
+Key en [openrouter.ai/keys](https://openrouter.ai/keys). El id de modelo free
+rota con el tiempo — confirmá el vigente en
+[openrouter.ai/models](https://openrouter.ai/models) (filtro "Free") antes de
+confiar en el default.
+
 Costo aproximado corriendo 1 vez/día (~100 clasificaciones + 1 síntesis):
 Gemini free tier ≈ $0 (dentro del límite de tasa), gpt-5-nano/DeepSeek ≈
 $0.25-0.60/mes, Claude Haiku+Sonnet ≈ $4.30/mes. El volumen de este proyecto

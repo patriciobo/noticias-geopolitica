@@ -153,6 +153,33 @@ func main() {
 		log.Fatalf("LLM_PROVIDER desconocido: %q (usá claude, gemini, openai_compat u ollama)", provider)
 	}
 
+	// Fallback opcional: si el proveedor principal falla (cuota agotada,
+	// caída), cae a un modelo free de OpenRouter en vez de perder la
+	// corrida del día. Se activa solo si hay key — no reemplaza al
+	// proveedor principal, se suma como red de contención.
+	if openrouterKey := os.Getenv("OPENROUTER_API_KEY"); openrouterKey != "" {
+		baseURL := envOrDefault("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+		// Confirmá el slug vigente en openrouter.ai/models (filtro "Free")
+		// antes de confiar en el default — los ids de modelos free rotan.
+		classifyModel := envOrDefault("OPENROUTER_CLASSIFY_MODEL", "deepseek/deepseek-chat-v3.1:free")
+		synthModel := envOrDefault("OPENROUTER_SYNTHESIZE_MODEL", "deepseek/deepseek-chat-v3.1:free")
+		// OpenRouter recomienda estos headers para su free tier (ranking /
+		// prioridad de cupo); no son estrictamente obligatorios.
+		headers := map[string]string{
+			"HTTP-Referer": envOrDefault("OPENROUTER_REFERER", "https://github.com/patriciobo/noticias-geopolitica"),
+			"X-Title":      "noticias",
+		}
+
+		orClassifier := filter.NewOpenAICompatClassifier(baseURL, openrouterKey, classifyModel)
+		orClassifier.ExtraHeaders = headers
+		orSynth := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, synthModel)
+		orSynth.ExtraHeaders = headers
+
+		classifier = &filter.FallbackClassifier{Primary: classifier, Secondary: orClassifier}
+		synth = &report.FallbackSynthesizer{Primary: synth, Secondary: orSynth}
+		log.Printf("fallback OpenRouter configurado — clasificación: %s, síntesis: %s", classifyModel, synthModel)
+	}
+
 	sources, err := ingest.LoadSources(sourcesPath)
 	if err != nil {
 		log.Fatalf("cargando sources: %v", err)
