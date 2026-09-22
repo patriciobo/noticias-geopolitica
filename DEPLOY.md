@@ -69,8 +69,18 @@ Caveats:
    - **Instance type:** Free
    - **Health Check Path:** `/health`
 3. Deploy. Probá `https://<tu-servicio>.onrender.com/reports/latest`.
+4. Copiá el **Deploy Hook** de esta pantalla (Settings → Deploy, ícono de
+   copiar al lado del campo, es secreto) y agregalo en GitHub como el
+   secret `RENDER_DEPLOY_HOOK_URL` (mismo lugar que `GEMINI_API_KEY`, paso 1).
 
-Cada commit del workflow redeploya la API automáticamente (auto-deploy on).
+El auto-deploy "On Commit" de Render (webhook de GitHub) puede dejar de
+avisarle a Render sin ningún error visible — nos pasó, un reporte quedó
+pusheado pero invisible en producción varios días. Por eso el workflow
+dispara el deploy directo con el Deploy Hook al final de "Commitear reporte"
+(paso 4 de arriba) en vez de depender solo de esa integración. Es opcional:
+sin el secret, el pipeline sigue andando y queda a cargo del auto-deploy de
+Render — pero si eso se rompe de nuevo, no hay forma de enterarse salvo
+notando que el blog no actualiza.
 
 `OUT_DIR=./reports` es relativo al directorio desde el que arranca el proceso
 (raíz del repo en Render); si tu servicio usa otro *Root Directory*, ajustalo.
@@ -104,6 +114,7 @@ Vercel.
 | Síntoma | Causa probable |
 |---|---|
 | El job falla con `GEMINI_API_KEY no está configurada` | Falta el secret o está mal escrito. |
+| El reporte se generó y commiteó pero no aparece en el blog | Render no redeployó. Revisá *Events* en Render — si el último deploy live es viejo, el webhook de GitHub dejó de avisarle; usá *Manual Deploy* para el reporte pendiente y configurá `RENDER_DEPLOY_HOOK_URL` (paso 2.4) para que no dependa más de ese webhook. |
 | `git push` rechazado en el job | Permisos de workflow en *Read only* (paso 1.2) o rama protegida. |
 | El blog dice "No se pudo conectar con la API" | `NOTICIAS_API_URL` mal seteada, o Render dormido (reintentá en 1 min). |
 | El blog dice "Todavía no se generó ningún reporte" | `reports/` vacío en el repo o `OUT_DIR` mal configurado en Render. |
