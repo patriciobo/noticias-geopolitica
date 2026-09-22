@@ -159,6 +159,23 @@ go run ./cmd/api          # sirve GET /reports/latest, /reports, /reports/{fecha
 Con una key configurada en `core/.env` (o exportada) usa ese proveedor. Sin
 ninguna, usa Ollama local gratis (necesita `ollama serve` corriendo).
 
+`OUT_DIR` default es `./out` (gitignored) — separado a propósito de
+`reports/` en la raíz del repo, que es lo que escribe el job de GitHub
+Actions (`OUT_DIR=../reports`, ver `.github/workflows/daily.yml`) y lo que
+está realmente commiteado/en producción. Corriendo local sin tocar
+`OUT_DIR`, `cmd/api` sirve tus pruebas en `./out`, no los reportes reales —
+para ver esos últimos con la API local:
+
+```bash
+OUT_DIR=../reports go run ./cmd/api
+```
+
+No pongas `OUT_DIR=../reports` de forma permanente en `core/.env`: una
+corrida de prueba de `cmd/ingest` con esa config escribiría directo en la
+carpeta versionada por git, mezclando basura de pruebas con el historial
+compartido. Pasalo puntual según qué necesites: testear el pipeline (`./out`,
+default, descartable) o ver lo que está commiteado (`../reports`).
+
 Para que corra todos los días, agendá `ingest` con cron (ej. 07:00) y dejá
 `cmd/api` y el blog levantados; el blog lee siempre el disco vía la API, así que
 la edición nueva aparece sin redeploy:
