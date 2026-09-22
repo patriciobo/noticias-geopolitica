@@ -176,6 +176,10 @@ func main() {
 
 		orClassifier := filter.NewOpenAICompatClassifier(baseURL, openrouterKey, classifyModel)
 		orClassifier.ExtraHeaders = headers
+		// Varios modelos free de OpenRouter no soportan response_format y
+		// tiran error en vez de ignorarlo — el prompt ya pide JSON puro
+		// por texto, alcanza sin el parámetro forzado.
+		orClassifier.DisableJSONMode = true
 		orSynth := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, synthModel)
 		orSynth.ExtraHeaders = headers
 

@@ -25,6 +25,13 @@ type OpenAICompatClassifier struct {
 	// ExtraHeaders manda headers adicionales en cada request — OpenRouter
 	// recomienda HTTP-Referer/X-Title para identificarse en su free tier.
 	ExtraHeaders map[string]string
+	// DisableJSONMode saltea el parámetro response_format: json_object.
+	// Varios modelos free chicos de OpenRouter no lo soportan y tiran
+	// "Provider returned error" en vez de ignorarlo. El prompt ya le pide
+	// JSON puro por texto, así que funciona igual sin el parámetro — solo
+	// se pierde la garantía dura del formato, compensada abajo con un
+	// parseo más tolerante.
+	DisableJSONMode bool
 }
 
 func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatClassifier {
@@ -70,8 +77,10 @@ func (c *OpenAICompatClassifier) Classify(ctx context.Context, a model.Article, 
 			{Role: "system", Content: classifySystemPrompt},
 			{Role: "user", Content: userMsg},
 		},
-		ResponseFormat: &compatRespFmt{Type: "json_object"},
-		Temperature:    0,
+		Temperature: 0,
+	}
+	if !c.DisableJSONMode {
+		reqBody.ResponseFormat = &compatRespFmt{Type: "json_object"}
 	}
 
 	text, err := c.chat(ctx, reqBody)
@@ -81,9 +90,32 @@ func (c *OpenAICompatClassifier) Classify(ctx context.Context, a model.Article, 
 
 	var cls model.Classification
 	if err := json.Unmarshal([]byte(text), &cls); err != nil {
+		// Sin response_format forzado, un modelo puede envolver el JSON en
+		// prosa o en fences de markdown pese a la instrucción — probamos
+		// extraer el objeto antes de rendirnos.
+		if err2 := json.Unmarshal([]byte(extractJSONObject(text)), &cls); err2 == nil {
+			return cls, nil
+		}
 		return model.Classification{}, fmt.Errorf("openai-compat classifier: could not parse model output as JSON: %w (output: %s)", err, truncate(text, 300))
 	}
 	return cls, nil
+}
+
+// extractJSONObject pela fences de markdown (```json ... ```) y se queda
+// con la primera llave abierta hasta la última cerrada — suficiente para
+// rescatar un objeto JSON que vino acompañado de texto que no se pidió.
+func extractJSONObject(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.TrimPrefix(s, "```json")
+	s = strings.TrimPrefix(s, "```")
+	s = strings.TrimSuffix(s, "```")
+	s = strings.TrimSpace(s)
+	start := strings.IndexByte(s, '{')
+	end := strings.LastIndexByte(s, '}')
+	if start == -1 || end == -1 || end < start {
+		return s
+	}
+	return s[start : end+1]
 }
 
 // maxRateLimitRetries and rateLimitBackoff handle transient failures: rate
