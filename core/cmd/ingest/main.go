@@ -159,10 +159,14 @@ func main() {
 	// proveedor principal, se suma como red de contención.
 	if openrouterKey := os.Getenv("OPENROUTER_API_KEY"); openrouterKey != "" {
 		baseURL := envOrDefault("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-		// Confirmá el slug vigente en openrouter.ai/models (filtro "Free")
-		// antes de confiar en el default — los ids de modelos free rotan.
-		classifyModel := envOrDefault("OPENROUTER_CLASSIFY_MODEL", "deepseek/deepseek-chat-v3.1:free")
-		synthModel := envOrDefault("OPENROUTER_SYNTHESIZE_MODEL", "deepseek/deepseek-chat-v3.1:free")
+		// Confirmá que sigan vigentes en openrouter.ai/models (filtro "Free")
+		// antes de confiar en el default — los ids de modelos free rotan
+		// (el anterior, deepseek/deepseek-chat-v3.1:free, dejó de ser free).
+		// Modelos distintos para cada paso: así no comparten el mismo
+		// límite de tasa del free tier entre clasificar (muchas llamadas
+		// concurrentes chicas) y sintetizar (una sola llamada grande).
+		classifyModel := envOrDefault("OPENROUTER_CLASSIFY_MODEL", "poolside/laguna-s-2.1:free")
+		synthModel := envOrDefault("OPENROUTER_SYNTHESIZE_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
 		// OpenRouter recomienda estos headers para su free tier (ranking /
 		// prioridad de cupo); no son estrictamente obligatorios.
 		headers := map[string]string{

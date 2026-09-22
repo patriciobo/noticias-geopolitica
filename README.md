@@ -118,9 +118,13 @@ andando exactamente igual que antes, con un solo proveedor.
 ```
 OPENROUTER_API_KEY=
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CLASSIFY_MODEL=deepseek/deepseek-chat-v3.1:free
-OPENROUTER_SYNTHESIZE_MODEL=deepseek/deepseek-chat-v3.1:free
+OPENROUTER_CLASSIFY_MODEL=poolside/laguna-s-2.1:free
+OPENROUTER_SYNTHESIZE_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
 ```
+
+Modelo distinto para cada paso, así no comparten el mismo límite de tasa del
+free tier: clasificar dispara varias llamadas chicas en paralelo, sintetizar
+es una sola llamada grande — un modelo más pesado ahí tolera ser más lento.
 
 Key en [openrouter.ai/keys](https://openrouter.ai/keys). El id de modelo free
 rota con el tiempo — confirmá el vigente en
