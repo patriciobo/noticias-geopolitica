@@ -17,42 +17,43 @@ func (s stubSynthesizer) Synthesize(ctx context.Context, items []model.Classifie
 	return s.markdown, s.err
 }
 
-func TestFallbackSynthesizerUsesPrimaryOnSuccess(t *testing.T) {
-	f := &FallbackSynthesizer{
-		Primary:   stubSynthesizer{markdown: "primary"},
-		Secondary: stubSynthesizer{markdown: "secondary"},
-	}
-	got, err := f.Synthesize(context.Background(), nil)
+func TestChainSynthesizerUsesFirstOnSuccess(t *testing.T) {
+	c := NewChainSynthesizer(
+		stubSynthesizer{markdown: "first"},
+		stubSynthesizer{markdown: "second"},
+	)
+	got, err := c.Synthesize(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got != "primary" {
-		t.Errorf("expected primary result, got %q", got)
+	if got != "first" {
+		t.Errorf("expected first link's result, got %q", got)
 	}
 }
 
-func TestFallbackSynthesizerFallsBackOnPrimaryError(t *testing.T) {
-	f := &FallbackSynthesizer{
-		Primary:   stubSynthesizer{err: errors.New("cuota agotada")},
-		Secondary: stubSynthesizer{markdown: "secondary"},
-	}
-	got, err := f.Synthesize(context.Background(), nil)
+func TestChainSynthesizerFallsThroughOnError(t *testing.T) {
+	c := NewChainSynthesizer(
+		stubSynthesizer{err: errors.New("caído")},
+		stubSynthesizer{err: errors.New("también caído")},
+		stubSynthesizer{markdown: "third"},
+	)
+	got, err := c.Synthesize(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if got != "secondary" {
-		t.Errorf("expected secondary result, got %q", got)
+	if got != "third" {
+		t.Errorf("expected third link's result, got %q", got)
 	}
 }
 
-func TestFallbackSynthesizerPropagatesSecondaryError(t *testing.T) {
-	wantErr := errors.New("secondary también falló")
-	f := &FallbackSynthesizer{
-		Primary:   stubSynthesizer{err: errors.New("primary falló")},
-		Secondary: stubSynthesizer{err: wantErr},
-	}
-	_, err := f.Synthesize(context.Background(), nil)
+func TestChainSynthesizerErrorsWhenAllFail(t *testing.T) {
+	wantErr := errors.New("último error")
+	c := NewChainSynthesizer(
+		stubSynthesizer{err: errors.New("primero falló")},
+		stubSynthesizer{err: wantErr},
+	)
+	_, err := c.Synthesize(context.Background(), nil)
 	if !errors.Is(err, wantErr) {
-		t.Errorf("expected secondary error to propagate, got %v", err)
+		t.Errorf("expected last error to propagate, got %v", err)
 	}
 }

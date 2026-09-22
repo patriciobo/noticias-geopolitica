@@ -109,27 +109,39 @@ OLLAMA_SYNTHESIZE_MODEL=qwen3.5:9b
 
 Independiente del proveedor principal de arriba, si `OPENROUTER_API_KEY` está
 configurada, `cmd/ingest` envuelve el classifier y el synthesizer con
-`filter.FallbackClassifier`/`report.FallbackSynthesizer`: si el proveedor
-principal falla (cuota agotada, caída, lo que sea — ya reintentó puertas
-adentro lo que tenía que reintentar), cae a un modelo free de OpenRouter en
-vez de perder la corrida del día entero. Sin esa key, el pipeline sigue
-andando exactamente igual que antes, con un solo proveedor.
+`filter.ChainClassifier`/`report.ChainSynthesizer`: una cadena de proveedores
+probados en orden — el principal primero, después cada modelo free de
+OpenRouter de la lista — hasta que uno responda. Sin esa key, el pipeline
+sigue andando exactamente igual que antes, con un solo proveedor.
+
+Por qué una cadena y no un solo fallback: un modelo free individual de
+OpenRouter puede fallar puntualmente (`Provider returned error`, timeout) sin
+que el proveedor esté caído — con un solo candidato eso pierde el artículo, con
+varios prueba el siguiente. Cada link que falla se banca para el resto de la
+corrida (no vuelve a pagar el viaje de red a algo ya confirmado caído), así
+que agregar más candidatos no tiene costo si terminan sin usarse.
 
 ```
 OPENROUTER_API_KEY=
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CLASSIFY_MODEL=poolside/laguna-s-2.1:free
-OPENROUTER_SYNTHESIZE_MODEL=nvidia/nemotron-3-ultra-550b-a55b:free
+OPENROUTER_CLASSIFY_MODELS=poolside/laguna-s-2.1:free,otro/modelo:free
+OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,otro/modelo:free
 ```
 
-Modelo distinto para cada paso, así no comparten el mismo límite de tasa del
-free tier: clasificar dispara varias llamadas chicas en paralelo, sintetizar
-es una sola llamada grande — un modelo más pesado ahí tolera ser más lento.
+Lista distinta por paso, separada por comas: clasificar dispara varias
+llamadas chicas en paralelo, sintetizar es una sola llamada grande — un
+modelo más pesado ahí tolera ser más lento.
 
-Key en [openrouter.ai/keys](https://openrouter.ai/keys). El id de modelo free
-rota con el tiempo — confirmá el vigente en
+Key en [openrouter.ai/keys](https://openrouter.ai/keys). Los ids de modelos
+free rotan con el tiempo — confirmá los vigentes en
 [openrouter.ai/models](https://openrouter.ai/models) (filtro "Free") antes de
-confiar en el default.
+confiar en los defaults; un id vencido en la lista simplemente se banca al
+primer fallo y no rompe nada, pero tampoco suma cobertura real.
+
+Importante: el límite gratis de OpenRouter (50/día sin crédito comprado,
+1000/día con $10 de crédito) es **por cuenta, compartido entre todos los
+modelos `:free`** — agregar más modelos a la lista no multiplica ese
+presupuesto diario, solo da resistencia a que uno específico falle.
 
 Costo aproximado corriendo 1 vez/día (~100 clasificaciones + 1 síntesis):
 Gemini free tier ≈ $0 (dentro del límite de tasa), gpt-5-nano/DeepSeek ≈

@@ -17,48 +17,8 @@ func (s stubClassifier) Classify(ctx context.Context, a model.Article, pre Prefi
 	return s.cls, s.err
 }
 
-func TestFallbackClassifierUsesPrimaryOnSuccess(t *testing.T) {
-	f := &FallbackClassifier{
-		Primary:   stubClassifier{cls: model.Classification{Reason: "primary"}},
-		Secondary: stubClassifier{cls: model.Classification{Reason: "secondary"}},
-	}
-	got, err := f.Classify(context.Background(), model.Article{}, PrefilterResult{})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got.Reason != "primary" {
-		t.Errorf("expected primary result, got %q", got.Reason)
-	}
-}
-
-func TestFallbackClassifierFallsBackOnPrimaryError(t *testing.T) {
-	f := &FallbackClassifier{
-		Primary:   stubClassifier{err: errors.New("cuota agotada")},
-		Secondary: stubClassifier{cls: model.Classification{Reason: "secondary"}},
-	}
-	got, err := f.Classify(context.Background(), model.Article{}, PrefilterResult{})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got.Reason != "secondary" {
-		t.Errorf("expected secondary result, got %q", got.Reason)
-	}
-}
-
-func TestFallbackClassifierPropagatesSecondaryError(t *testing.T) {
-	wantErr := errors.New("secondary también falló")
-	f := &FallbackClassifier{
-		Primary:   stubClassifier{err: errors.New("primary falló")},
-		Secondary: stubClassifier{err: wantErr},
-	}
-	_, err := f.Classify(context.Background(), model.Article{}, PrefilterResult{})
-	if !errors.Is(err, wantErr) {
-		t.Errorf("expected secondary error to propagate, got %v", err)
-	}
-}
-
 // countingClassifier cuenta cuántas veces se llamó — usado para verificar
-// que, tras la primera falla, Primary no se vuelve a invocar.
+// qué links se siguen (o dejan de) invocar.
 type countingClassifier struct {
 	calls *int
 	cls   model.Classification
@@ -70,24 +30,85 @@ func (c countingClassifier) Classify(ctx context.Context, a model.Article, pre P
 	return c.cls, c.err
 }
 
-func TestFallbackClassifierStopsCallingDeadPrimary(t *testing.T) {
-	primaryCalls := 0
-	f := &FallbackClassifier{
-		Primary:   countingClassifier{calls: &primaryCalls, err: errors.New("cuota agotada")},
-		Secondary: stubClassifier{cls: model.Classification{Reason: "secondary"}},
+func TestChainClassifierUsesFirstOnSuccess(t *testing.T) {
+	c := NewChainClassifier(
+		stubClassifier{cls: model.Classification{Reason: "first"}},
+		stubClassifier{cls: model.Classification{Reason: "second"}},
+	)
+	got, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
+	if got.Reason != "first" {
+		t.Errorf("expected first link's result, got %q", got.Reason)
+	}
+}
+
+func TestChainClassifierFallsThroughOnError(t *testing.T) {
+	c := NewChainClassifier(
+		stubClassifier{err: errors.New("caído")},
+		stubClassifier{err: errors.New("también caído")},
+		stubClassifier{cls: model.Classification{Reason: "third"}},
+	)
+	got, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.Reason != "third" {
+		t.Errorf("expected third link's result, got %q", got.Reason)
+	}
+}
+
+func TestChainClassifierErrorsWhenAllFail(t *testing.T) {
+	wantErr := errors.New("último error")
+	c := NewChainClassifier(
+		stubClassifier{err: errors.New("primero falló")},
+		stubClassifier{err: wantErr},
+	)
+	_, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
+	if !errors.Is(err, wantErr) {
+		t.Errorf("expected last error to propagate, got %v", err)
+	}
+}
+
+func TestChainClassifierStopsCallingDeadLinks(t *testing.T) {
+	firstCalls, secondCalls := 0, 0
+	c := NewChainClassifier(
+		countingClassifier{calls: &firstCalls, err: errors.New("caído")},
+		countingClassifier{calls: &secondCalls, cls: model.Classification{Reason: "second"}},
+	)
 
 	for i := 0; i < 5; i++ {
-		got, err := f.Classify(context.Background(), model.Article{}, PrefilterResult{})
+		got, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
 		if err != nil {
 			t.Fatalf("call %d: unexpected error: %v", i, err)
 		}
-		if got.Reason != "secondary" {
-			t.Errorf("call %d: expected secondary result, got %q", i, got.Reason)
+		if got.Reason != "second" {
+			t.Errorf("call %d: expected second link's result, got %q", i, got.Reason)
 		}
 	}
 
-	if primaryCalls != 1 {
-		t.Errorf("expected primary to be called exactly once (dies after first failure), got %d calls", primaryCalls)
+	if firstCalls != 1 {
+		t.Errorf("expected first link called exactly once (dies after first failure), got %d calls", firstCalls)
+	}
+	if secondCalls != 5 {
+		t.Errorf("expected second link called every time, got %d calls", secondCalls)
+	}
+}
+
+func TestChainClassifierAllDeadReturnsFastWithoutCalling(t *testing.T) {
+	calls := 0
+	c := NewChainClassifier(countingClassifier{calls: &calls, err: errors.New("caído")})
+
+	// primera llamada: banca el único link
+	if _, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{}); err == nil {
+		t.Fatal("expected error on first call")
+	}
+	// segunda llamada: no debería invocar el link de nuevo
+	if _, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{}); err == nil {
+		t.Fatal("expected error on second call")
+	}
+	if calls != 1 {
+		t.Errorf("expected the dead link to be called only once total, got %d calls", calls)
 	}
 }

@@ -47,6 +47,21 @@ func envOrDefaultInt(key string, def int) int {
 	return n
 }
 
+// envOrDefaultList lee una lista separada por comas (espacios alrededor de
+// cada item se descartan, items vacíos se saltean). Sin la env var, usa def
+// como si fuera la única entrada.
+func envOrDefaultList(key, def string) []string {
+	raw := envOrDefault(key, def)
+	var out []string
+	for _, item := range strings.Split(raw, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
 // loadDotEnv reads KEY=VALUE pairs from an optional .env file and applies
 // them via os.Setenv, without overriding variables already set in the real
 // environment. Missing file is not an error — .env is just a convenience,
@@ -154,19 +169,24 @@ func main() {
 	}
 
 	// Fallback opcional: si el proveedor principal falla (cuota agotada,
-	// caída), cae a un modelo free de OpenRouter en vez de perder la
-	// corrida del día. Se activa solo si hay key — no reemplaza al
-	// proveedor principal, se suma como red de contención.
+	// caída), cae a una cadena de modelos free de OpenRouter en vez de
+	// perder la corrida del día. Se activa solo si hay key — no reemplaza
+	// al proveedor principal, se suma como red de contención. Varios
+	// modelos en la cadena (no solo uno) porque un modelo free individual
+	// puede fallar puntualmente ("Provider returned error", timeout) sin
+	// que el proveedor entero esté caído — con más de un candidato, eso
+	// no pierde el artículo.
 	if openrouterKey := os.Getenv("OPENROUTER_API_KEY"); openrouterKey != "" {
 		baseURL := envOrDefault("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-		// Confirmá que sigan vigentes en openrouter.ai/models (filtro "Free")
-		// antes de confiar en el default — los ids de modelos free rotan
-		// (el anterior, deepseek/deepseek-chat-v3.1:free, dejó de ser free).
-		// Modelos distintos para cada paso: así no comparten el mismo
-		// límite de tasa del free tier entre clasificar (muchas llamadas
-		// concurrentes chicas) y sintetizar (una sola llamada grande).
-		classifyModel := envOrDefault("OPENROUTER_CLASSIFY_MODEL", "poolside/laguna-s-2.1:free")
-		synthModel := envOrDefault("OPENROUTER_SYNTHESIZE_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
+		// Lista separada por comas. Confirmá que sigan vigentes en
+		// openrouter.ai/models (filtro "Free") antes de confiar en el
+		// default — los ids de modelos free rotan (deepseek-chat-v3.1:free
+		// dejó de ser free a mitad de esta implementación). Listas
+		// distintas por paso: clasificar dispara muchas llamadas
+		// concurrentes chicas, sintetizar es una sola llamada grande que
+		// tolera un modelo más pesado.
+		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "poolside/laguna-s-2.1:free")
+		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free")
 		// OpenRouter recomienda estos headers para su free tier (ranking /
 		// prioridad de cupo); no son estrictamente obligatorios.
 		headers := map[string]string{
@@ -174,18 +194,28 @@ func main() {
 			"X-Title":      "noticias",
 		}
 
-		orClassifier := filter.NewOpenAICompatClassifier(baseURL, openrouterKey, classifyModel)
-		orClassifier.ExtraHeaders = headers
-		// Varios modelos free de OpenRouter no soportan response_format y
-		// tiran error en vez de ignorarlo — el prompt ya pide JSON puro
-		// por texto, alcanza sin el parámetro forzado.
-		orClassifier.DisableJSONMode = true
-		orSynth := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, synthModel)
-		orSynth.ExtraHeaders = headers
+		classifyChain := []filter.Classifier{classifier}
+		for _, m := range classifyModels {
+			c := filter.NewOpenAICompatClassifier(baseURL, openrouterKey, m)
+			c.ExtraHeaders = headers
+			// Varios modelos free de OpenRouter no soportan response_format
+			// y tiran error en vez de ignorarlo — el prompt ya pide JSON
+			// puro por texto, alcanza sin el parámetro forzado.
+			c.DisableJSONMode = true
+			classifyChain = append(classifyChain, c)
+		}
+		classifier = filter.NewChainClassifier(classifyChain...)
 
-		classifier = &filter.FallbackClassifier{Primary: classifier, Secondary: orClassifier}
-		synth = &report.FallbackSynthesizer{Primary: synth, Secondary: orSynth}
-		log.Printf("fallback OpenRouter configurado — clasificación: %s, síntesis: %s", classifyModel, synthModel)
+		synthChain := []report.Synthesizer{synth}
+		for _, m := range synthModels {
+			s := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, m)
+			s.ExtraHeaders = headers
+			synthChain = append(synthChain, s)
+		}
+		synth = report.NewChainSynthesizer(synthChain...)
+
+		log.Printf("fallback OpenRouter configurado — clasificación: %s, síntesis: %s",
+			strings.Join(classifyModels, ", "), strings.Join(synthModels, ", "))
 	}
 
 	sources, err := ingest.LoadSources(sourcesPath)
