@@ -10,7 +10,10 @@ permissions:
 
 concurrency:
   group: daily-report
-  cancel-in-progress: false
+  # true: un dispatch nuevo cancela corridas viejas encoladas en vez de
+  # amontonarse — evita que una corrida vieja ejecute contra un commit
+  # desactualizado y choque el push contra main.
+  cancel-in-progress: true
 
 jobs:
   ingest:
