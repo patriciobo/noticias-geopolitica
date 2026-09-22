@@ -41,7 +41,21 @@ jobs:
           git add reports
           if git diff --cached --quiet; then
             echo "Sin cambios que commitear"
-          else
-            git commit -m "chore: informe del $(date -u +%F)"
-            git push
+            exit 0
           fi
+          git commit -m "chore: informe del $(date -u +%F)"
+
+          # El push puede chocar con un push manual hecho al mismo tiempo
+          # (main se movió desde el checkout). Reintenta con rebase en vez
+          # de perder el reporte generado.
+          for i in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rechazado (intento $i), reintentando tras rebase..."
+            git fetch origin main
+            git rebase origin/main
+            sleep $((i * 5))
+          done
+          echo "no se pudo pushear el reporte tras varios intentos" >&2
+          exit 1
