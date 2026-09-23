@@ -38,6 +38,24 @@
   font-size: 0.95rem;
 }
 
+/* Fuera de pantalla en vez de display:none: algunos bots saltean campos
+   con display:none, pero completan los que "existen" en el layout. */
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.captcha {
+  flex-basis: 100%;
+}
+
+.captcha:empty {
+  display: none;
+}
+
 .error {
   flex-basis: 100%;
   margin: 0.35rem 0 0;

@@ -14,8 +14,16 @@ export type ReportResponse = {
 
 export class ReportNotFoundError extends Error {}
 
+// Cada cuántos segundos se revalidan las páginas y los fetches a la API.
+// Los reportes salen una vez por día: con 5 minutos de cache, un pico de
+// visitas (ej. un posteo que se viraliza) lo absorbe el CDN de Vercel en
+// vez de pegarle a Render (instancia gratis que se duerme) por cada
+// visitante. Las páginas exportan el mismo valor como `revalidate` —
+// tiene que ser un literal ahí, por eso no se importa esta constante.
+export const REVALIDATE_SECONDS = 300;
+
 async function apiFetch(path: string): Promise<Response> {
-  const res = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE_URL}${path}`, { next: { revalidate: REVALIDATE_SECONDS } });
   if (res.status === 404) {
     throw new ReportNotFoundError(`No se encontró recurso en ${path}`);
   }
@@ -51,16 +59,31 @@ export type SubscribeResult = { ok: true } | { ok: false; message: string };
 // en vez de a NOTICIAS_API_URL directo: esa var es server-only (Vercel no
 // deja exponerla con NEXT_PUBLIC_ en este proyecto) y de paso evita tener
 // que configurar CORS en core/cmd/api — la route interna reenvía server-side.
-export async function subscribeEmail(email: string): Promise<SubscribeResult> {
+export type SubscribePayload = {
+  email: string;
+  turnstileToken?: string; // respuesta del captcha de Cloudflare Turnstile, si está habilitado
+  website?: string; // honeypot: campo oculto que un humano deja vacío
+};
+
+export async function subscribeEmail(payload: SubscribePayload): Promise<SubscribeResult> {
   try {
     const res = await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       if (res.status === 400) {
         return { ok: false, message: "Ese email no parece válido." };
+      }
+      if (res.status === 403) {
+        return { ok: false, message: "No pudimos verificar que no seas un bot. Recargá la página y probá de nuevo." };
+      }
+      if (res.status === 429) {
+        return { ok: false, message: "Demasiados intentos. Probá de nuevo en un rato." };
+      }
+      if (res.status === 503) {
+        return { ok: false, message: "Las suscripciones están pausadas momentáneamente. Probá más tarde." };
       }
       return { ok: false, message: "No se pudo completar la suscripción. Probá de nuevo." };
     }

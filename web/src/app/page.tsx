@@ -15,6 +15,9 @@ export const metadata = {
     "Resumen diario de la actualidad internacional y su impacto en el comercio y las empresas multinacionales.",
 };
 
+// Ver REVALIDATE_SECONDS en lib/api.ts (acá tiene que ser un literal).
+export const revalidate = 300;
+
 // Cuántas ediciones muestra el feed (más recientes primero).
 const MAX_EDITIONS = 30;
 
@@ -64,7 +67,7 @@ export default async function Home() {
           Un informe por día: comercio, industria y empresas multinacionales,
           con enlaces a las notas originales de cada medio.
         </p>
-        <SubscribeForm />
+        <SubscribeForm turnstileSiteKey={process.env.TURNSTILE_SITE_KEY} />
       </header>
       <div className={styles.feed}>
         <DayEntry report={latest} latest />
