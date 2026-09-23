@@ -1,0 +1,28 @@
+# Actualizaciones automáticas de dependencias (y de las actions fijadas por
+# SHA en .github/workflows). Agrupadas y semanales para no llenar el repo
+# de PRs; las de seguridad llegan igual apenas se publican.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /core
+    schedule:
+      interval: weekly
+    groups:
+      go:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

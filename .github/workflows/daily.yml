@@ -5,8 +5,8 @@ on:
     - cron: "13 10 * * *" # ~10:13 UTC = ~07:13 Argentina — evita el tope de hora, donde GitHub retrasa o saltea crons por carga
   workflow_dispatch: # botón "Run workflow" para probar a mano
 
-permissions:
-  contents: write # para commitear el reporte generado
+# Por defecto sin permisos; el job pide solo los que usa.
+permissions: {}
 
 concurrency:
   group: daily-report
@@ -19,10 +19,17 @@ jobs:
   ingest:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write # para commitear el reporte generado
+      id-token: write # para firmar la atestación con Sigstore (OIDC de GitHub)
+      attestations: write # para publicar la atestación en el repo
     steps:
-      - uses: actions/checkout@v4
+      # Actions fijadas por SHA de commit (no por tag, que se puede mover):
+      # un tag comprometido no puede cambiar el código que corre acá con
+      # acceso a los secrets. Dependabot las mantiene actualizadas.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: core/go.mod
           cache-dependency-path: core/go.sum
@@ -48,6 +55,19 @@ jobs:
           # al paso de newsletter para que no tenga que recalcularlo y
           # arriesgarse a desalinearse si corre cerca de medianoche.
           echo "report_date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
+
+      # Prueba pública de origen: firma (Sigstore) el hash de cada archivo
+      # de la edición, atado a este workflow y a este commit. Cualquiera
+      # puede verificar que el archivo publicado es exactamente el que
+      # generó el pipeline, sin ediciones a mano posteriores:
+      #   gh attestation verify reports/AAAA-MM-DD.md -R <dueño>/<repo>
+      - name: Firmar la edición (atestación de origen)
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: |
+            reports/${{ steps.ingest.outputs.report_date }}.md
+            reports/${{ steps.ingest.outputs.report_date }}.sources.json
+            reports/${{ steps.ingest.outputs.report_date }}.audit.json
 
       - name: Commitear reporte
         id: commit

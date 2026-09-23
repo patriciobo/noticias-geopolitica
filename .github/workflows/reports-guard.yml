@@ -1,0 +1,58 @@
+name: Integridad de los informes
+
+# Marca en rojo, a la vista de todos, cualquier commit que no sea del bot
+# del pipeline y que modifique o borre un informe ya publicado. No impide
+# nada (el dueño del repo siempre puede pushear), pero deja la edición
+# manual expuesta públicamente en el historial — y la atestación firmada
+# de cada edición (ver daily.yml) deja de coincidir con el archivo editado.
+# Si alguna vez hay que corregir un informe, que sea con una nota visible
+# en el propio informe, no en silencio.
+
+on:
+  push:
+    branches: [main]
+    paths: ["reports/**"]
+  pull_request:
+    paths: ["reports/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Verificar que solo el bot modifique informes publicados
+        env:
+          BEFORE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          AFTER: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "Sin commit base (primer push de la rama), nada que comparar."
+            exit 0
+          fi
+
+          failed=0
+          for c in $(git rev-list "$BEFORE..$AFTER"); do
+            author=$(git log -1 --format='%ae' "$c")
+            [ "$author" = "$BOT_EMAIL" ] && continue
+            # M = modificado, D = borrado, R = renombrado. Agregar (A) un
+            # archivo nuevo no se marca: no altera nada ya publicado.
+            touched=$(git diff-tree --no-commit-id --name-status -r "$c" -- reports/ | grep -E '^(M|D|R)' || true)
+            if [ -n "$touched" ]; then
+              echo "::error::El commit $c (autor: $author) modifica informes ya publicados:"
+              echo "$touched"
+              failed=1
+            fi
+          done
+
+          if [ "$failed" = 1 ]; then
+            exit 1
+          fi
+          echo "OK: ningún informe publicado fue modificado fuera del pipeline."
