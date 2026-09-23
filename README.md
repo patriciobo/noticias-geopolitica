@@ -269,23 +269,43 @@ las rutas de `/subscribers*` (el resto de la API sigue igual); sin
 las dos, el pipeline diario (`.github/workflows/daily.yml`) sigue publicando
 el reporte exactamente igual que antes.
 
-Variables nuevas:
+**Doble opt-in.** El alta no activa a nadie: `cmd/api` guarda el email como
+pendiente y le manda un mail de confirmación (Brevo). Solo quien hace click
+en ese mail recibe el newsletter; las altas sin confirmar se borran a los 7
+días. Así nadie puede anotar direcciones ajenas. Los suscriptores que ya
+existían antes de este cambio quedan confirmados por la migración.
+Confirmación y baja son en dos pasos (el link del mail muestra un botón y la
+acción es un POST), para que los antivirus de correo que abren todos los
+links no confirmen ni den de baja solos. El newsletter lleva los headers
+`List-Unsubscribe` / `List-Unsubscribe-Post` (baja en un click, RFC 8058).
+
+Variables:
 
 ```
 # core/cmd/api y core/cmd/newsletter
 DATABASE_URL=postgres://...          # connection string de Neon (o cualquier Postgres)
-BREVO_API_KEY=                       # API key de Brevo (transactional)
+BREVO_API_KEY=                       # API key de Brevo (transactional) — en cmd/api, para el mail de confirmación
 BREVO_SENDER_EMAIL=                  # remitente verificado en Brevo
-BREVO_SENDER_NAME=Noticias Internacionales
+BREVO_SENDER_NAME=Radar Global
+API_BASE_URL=https://tu-api.onrender.com   # host de los links de confirmación y baja
+SITE_URL=https://tu-blog.vercel.app        # host del header/CTA y del link a la edición completa
+
+# core/cmd/api — protección de las altas
+INTERNAL_API_SECRET=                 # secreto compartido con web/ (el mismo valor en Vercel); sin él, POST /subscribers acepta cualquier origen
+SUBSCRIPTIONS_ENABLED=true           # "false" pausa las altas nuevas (kill switch ante abuso)
+CONFIRM_EMAILS_PER_DAY=100           # tope global de mails de confirmación por 24h (protege la cuota de Brevo)
+CONFIRM_RESEND_AFTER_MINUTES=60      # mínimo entre dos mails de confirmación al mismo email
+SUBSCRIBE_PER_HOUR=5                 # altas por IP por hora
+RATE_LIMIT_PER_MINUTE=120            # requests por IP por minuto, toda la API
 
 # core/cmd/newsletter
-API_BASE_URL=https://tu-api.onrender.com   # con qué host arma el link de unsubscribe
-SITE_URL=https://tu-blog.vercel.app        # con qué host arma el header/CTA y el link a la edición completa
 REPORT_DATE=2026-09-23                     # opcional; sin setear usa "hoy" (UTC)
-```
 
-`web/` no necesita ninguna variable nueva: `/api/subscribe` reusa
-`NOTICIAS_API_URL`, la misma que ya usan `fetchLatestReport` y compañía.
+# web/ (Vercel)
+INTERNAL_API_SECRET=                 # el mismo valor que en cmd/api
+TURNSTILE_SITE_KEY=                  # Cloudflare Turnstile (captcha); sin las dos keys, el form anda sin captcha
+TURNSTILE_SECRET_KEY=
+```
 
 `DATABASE_URL` tiene que estar seteada en **dos lugares** por separado: en el
 servicio de Render (para que `cmd/api` sirva `/subscribers`) y como secret de
@@ -302,6 +322,61 @@ curl -X POST localhost:8080/subscribers -H 'Content-Type: application/json' -d '
 # con un reports/{fecha}.md ya generado:
 DATABASE_URL=... BREVO_API_KEY=... REPORT_DATE=2026-09-23 go run ./cmd/newsletter
 ```
+
+## Integridad de los informes
+
+El objetivo es que nadie tenga que creer en nuestra palabra de que las
+noticias no se manipulan: todo se puede verificar desde afuera. La versión
+para lectores está en `/metodologia` del blog.
+
+- **Registro de auditoría por edición** (`reports/FECHA.audit.json`): cada
+  titular descargado y su destino (descartado por el prefiltro, descartado o
+  aceptado por el clasificador con su motivo, o error), los modelos usados,
+  el hash SHA-256 de cada prompt de sistema, el commit del código y el link
+  al log de la corrida en Actions. `cmd/api` expone el resumen como
+  `provenance` en `/reports/*` y el blog lo muestra en "Cómo se hizo esta
+  edición".
+- **Firma de cada edición**: `daily.yml` genera una atestación Sigstore
+  (`actions/attest-build-provenance`) del `.md`, `.sources.json` y
+  `.audit.json`. Cualquiera puede comprobar que el archivo publicado es el
+  que generó el workflow, sin cambios posteriores:
+  `gh attestation verify reports/AAAA-MM-DD.md -R patriciobo/noticias-geopolitica`.
+- **Guardia de integridad** (`.github/workflows/reports-guard.yml`): falla
+  en público si un commit que no es del bot modifica o borra un informe ya
+  publicado.
+- **Lista de medios pública**: `GET /sources` y `config/sources.yaml`, con
+  país, región y orientación editorial.
+
+### Defensas contra prompt injection
+
+Los titulares vienen de terceros y llegan al LLM, así que se tratan como
+dato no confiable:
+
+- `internal/ingest/clean.go`: saca saltos de línea y caracteres de control
+  (un titular no puede hacerse pasar por otro item de la lista), limita el
+  largo y descarta links que no sean http(s).
+- Los prompts de clasificación y síntesis aclaran que el contenido de los
+  medios es material a procesar, no instrucciones.
+- `report.StripUnknownLinks`: del texto del LLM se sacan los enlaces que no
+  correspondan a una nota procesada. La sección "Noticias utilizadas" la
+  arma el código, no el modelo.
+
+## Seguridad
+
+Ver `SECURITY.md` para reportar vulnerabilidades. Resumen de lo que hay:
+
+- **API** (`core/cmd/api`): timeouts de servidor, rate limit por IP,
+  headers de seguridad (CSP estricta, `Referrer-Policy: no-referrer` porque
+  las URLs de confirmación y baja llevan tokens), `Cache-Control` en
+  `/reports*`.
+- **Altas**: honeypot + Cloudflare Turnstile + chequeo de origen en
+  `web/src/app/api/subscribe/route.ts`; secreto compartido, rate limit por
+  IP, tope diario global y doble opt-in en `cmd/api`.
+- **Blog**: CSP, HSTS, `X-Frame-Options`, `Permissions-Policy`; páginas
+  cacheadas con ISR (5 minutos), así un pico de tráfico lo absorbe el CDN de
+  Vercel y no la instancia gratis de Render.
+- **Repo**: actions fijadas por SHA, permisos mínimos por job, CodeQL y
+  Dependabot.
 
 ## Cómo probar la aplicación
 

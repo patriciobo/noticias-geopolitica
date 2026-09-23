@@ -101,9 +101,10 @@ desde un monitor gratis (UptimeRobot, cron-job.org) lo mantiene despierto.
    (sin `/` final).
 4. Deploy.
 
-El blog pide los datos en cada visita (`cache: "no-store"`), así que la edición
-nueva aparece apenas Render termina de redeployar; no hace falta redeployar
-Vercel.
+El blog cachea las páginas 5 minutos (ISR, `revalidate = 300`): la edición
+nueva aparece a más tardar 5 minutos después de que Render termina de
+redeployar, sin redeployar Vercel. Esa cache es lo que evita que un pico de
+visitas le pegue a Render (gratis, se duerme) una vez por visitante.
 
 ## Paso 4 — Newsletter (Neon + Brevo, opcional)
 
@@ -119,6 +120,13 @@ enteramente opcional. Si querés habilitarlo:
    API → API Keys → Generate a new API key*.
 3. **Render** (donde corre `cmd/api`) → *Environment* → agregá:
    - `DATABASE_URL` = el connection string de Neon.
+   - `BREVO_API_KEY` y `BREVO_SENDER_EMAIL` = los mismos del paso 4 (la API
+     manda el mail de confirmación del doble opt-in; sin Brevo, las altas
+     nuevas quedan deshabilitadas).
+   - `API_BASE_URL` = la URL de este mismo servicio en Render (links de
+     confirmación y baja) y `SITE_URL` = la URL del blog.
+   - `INTERNAL_API_SECRET` = un valor aleatorio largo (por ejemplo, la
+     salida de `openssl rand -hex 32`). El mismo valor va en Vercel (paso 5).
 4. **GitHub** (Settings → Secrets and variables → Actions) → agregá, además
    de los secrets del paso 1:
    - `DATABASE_URL` = el mismo connection string de Neon (sí, otra vez —
@@ -131,12 +139,19 @@ enteramente opcional. Si querés habilitarlo:
      tu blog en Vercel (para el header, el botón de suscripción y el link
      "Ver edición completa" del email).
 
-No hace falta nada nuevo en Vercel: el form de suscripción pega a una route
-interna de Next.js (`web/src/app/api/subscribe/route.ts`, mismo origen, sin
-CORS) que reenvía server-side usando `NOTICIAS_API_URL` — la misma variable
-que ya configuraste en el paso 3 de arriba. Si tu plan de Vercel no te deja
-crear variables `NEXT_PUBLIC_*`, no importa: no se necesita ninguna para
-este feature.
+5. **Vercel** → *Settings → Environment Variables* → agregá:
+   - `INTERNAL_API_SECRET` = el mismo valor que en Render. Si no coinciden,
+     Render rechaza las altas (403) y el form muestra un error genérico.
+   - `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` = de Cloudflare →
+     *Turnstile → Add widget* (gratis; dominio: el de tu blog, modo
+     *Managed*). Sin las dos, el form funciona sin captcha — no recomendado
+     en producción.
+   Redeployá Vercel después de cargarlas.
+
+El form de suscripción pega a una route interna de Next.js
+(`web/src/app/api/subscribe/route.ts`, mismo origen, sin CORS) que verifica
+el captcha y reenvía server-side usando `NOTICIAS_API_URL`. No hace falta
+ninguna variable `NEXT_PUBLIC_*`.
 
 **`DATABASE_URL` va en dos lugares distintos y hay que cargarla en los dos**:
 Render (para que `cmd/api` sirva `POST /subscribers`) y GitHub Actions (para
@@ -144,6 +159,30 @@ que `cmd/newsletter` corra en el cron diario). Son procesos separados que no
 comparten variables de entorno entre sí — cargar solo uno dejaría la otra
 mitad del feature rota en silencio (el form suscribe gente bien, pero nunca
 les llega el correo, o viceversa).
+
+## Paso 5 — Seguridad (configuración manual, una sola vez)
+
+Lo que el código no puede configurar solo:
+
+1. **GitHub → Settings → Code security**: activá *Private vulnerability
+   reporting* (lo usa `SECURITY.md`), *Dependabot alerts*, *Secret scanning*
+   y *Push protection*.
+2. **GitHub → Settings → Rules → Rulesets → New branch ruleset** sobre
+   `main`: *Restrict deletions* y *Block force pushes*. No agregues
+   *Require a pull request*: el bot pushea el informe directo a `main`.
+3. **GitHub → Settings → Actions → General**: *Require approval for all
+   outside collaborators* en los workflows de forks.
+4. **2FA** en GitHub, Render, Vercel, Neon, Brevo, Cloudflare y Google AI
+   Studio. Límites de gasto o cuota en las keys de LLM (Gemini, OpenRouter).
+5. **Dominio del remitente en Brevo**: autenticá SPF, DKIM y DMARC
+   (*Senders, Domains & Dedicated IPs → Domains*). Sin eso, Gmail y Yahoo
+   mandan el newsletter a spam o lo rechazan.
+6. **Monitoreo**: un monitor gratis (UptimeRobot, cron-job.org) sobre
+   `/health` cada 10 minutos, que además mantiene despierta la instancia de
+   Render.
+
+Ante abuso de las altas: `SUBSCRIPTIONS_ENABLED=false` en Render las pausa
+sin tocar el resto de la API.
 
 ## Verificación de punta a punta
 
