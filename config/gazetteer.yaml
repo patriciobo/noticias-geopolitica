@@ -36,6 +36,14 @@ countries:
   - Francia
   - European Union
   - Unión Europea
+  - South Africa
+  - Sudáfrica
+  - Egypt
+  - Egipto
+  - Nigeria
+  - Australia
+  - New Zealand
+  - Nueva Zelanda
 
 # Empresas multinacionales de referencia (ampliable). No es exhaustivo:
 # el prefiltro solo necesita indicios, la clasificación fina la hace el LLM.

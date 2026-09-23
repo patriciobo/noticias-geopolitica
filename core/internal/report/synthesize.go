@@ -116,9 +116,10 @@ más de un medio, no incluyas este subtítulo. Este bloque es un índice rápido
 desarrollo completo de cada historia sigue yendo en su región correspondiente, como se
 indica abajo, no lo repitas dos veces con el mismo nivel de detalle.
 
-Después, escribí SIEMPRE exactamente 5 subtítulos "### <región>", uno por cada región
-en el mismo orden en que aparecen los bloques "REGIÓN: ..." del mensaje, incluso si esa
-región no tiene artículos. Para una región sin artículos, escribí una única línea: "Sin
+Después, escribí SIEMPRE un subtítulo "### <región>" por CADA región listada en el
+mensaje (todas, sin saltear ninguna), en el mismo orden en que aparecen los bloques
+"REGIÓN: ..." del mensaje, incluso si esa región no tiene artículos. Para una región sin
+artículos, escribí una única línea: "Sin
 novedades relevantes hoy." — no inventes ni extrapoles contenido de otras regiones para
 rellenarla. Para una región con artículos, un bullet por país o hecho relevante (no un
 párrafo corrido), con el país o tema en negrita al inicio. Contrastá cuando la cobertura
@@ -167,13 +168,17 @@ var regionLabels = map[string]string{
 	"europe":        "Europa",
 	"east_asia":     "Asia Oriental",
 	"eurasia":       "Eurasia",
+	"africa":        "África",
+	"oceania":       "Oceanía",
 }
 
 // regionOrder fija el orden editorial en que aparecen las regiones en el
-// reporte (Américas → Europa → Asia/Eurasia), en vez de depender del orden
-// de iteración de un map (no determinístico en Go) o de qué regiones tengan
-// artículos ese día — buildUserPrompt itera esta lista completa siempre.
-var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia"}
+// reporte (Américas → Europa → Asia/Eurasia → África/Oceanía), en vez de
+// depender del orden de iteración de un map (no determinístico en Go) o de
+// qué regiones tengan artículos ese día — buildUserPrompt itera esta lista
+// completa siempre. África y Oceanía van al final para no reordenar el
+// resto: agregarlas ahí es el cambio mínimo sobre el orden ya existente.
+var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia", "africa", "oceania"}
 
 func regionLabel(region string) string {
 	if label, ok := regionLabels[region]; ok {
@@ -313,7 +318,7 @@ func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 // ensureAllRegionsPresent repara determinísticamente el caso en que el LLM,
 // pese a la instrucción del prompt, igual omitió el subtítulo de alguna
 // región en "Resumen por región": inserta un bloque de placeholder para
-// garantizar que las 5 regiones aparezcan siempre. No falla el pipeline si
+// garantizar que todas las regiones de regionOrder aparezcan siempre. No falla el pipeline si
 // tiene que reparar algo — es un problema cosmético del LLM, no un motivo
 // para no publicar el reporte del día.
 func ensureAllRegionsPresent(report string) string {

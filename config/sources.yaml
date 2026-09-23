@@ -1,5 +1,5 @@
 # Fuentes de noticias a rastrear.
-# region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia)
+# region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia, africa, oceania)
 # stance: oficialista | oposicion (etiqueta editorial declarada por el usuario, no un juicio de valor propio)
 # rss: URL de feed RSS/Atom. Vacío = pendiente de investigar / requiere scraping puntual.
 # lang: idioma nativo del medio (el resumen final se emite en español independientemente de este campo)
@@ -760,3 +760,213 @@ sources:
     lang: fr
     homepage: https://www.liberation.fr
     rss: "https://www.liberation.fr/arc/outboundfeeds/rss/"
+
+  # Sudáfrica
+  - id: sabc-news
+    name: SABC News
+    country: Sudáfrica
+    region: africa
+    stance: oficialista
+    lang: en
+    homepage: https://www.sabcnews.com
+    rss: "https://www.sabcnews.com/sabcnews/feed/"
+  - id: iol
+    name: IOL
+    country: Sudáfrica
+    region: africa
+    stance: oficialista
+    lang: en
+    homepage: https://www.iol.co.za
+    rss: NO_RSS
+  - id: daily-maverick
+    name: Daily Maverick
+    country: Sudáfrica
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://www.dailymaverick.co.za
+    rss: "https://www.dailymaverick.co.za/dmrss/"
+  - id: news24
+    name: News24
+    country: Sudáfrica
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://www.news24.com
+    rss: NO_RSS
+  - id: mail-guardian
+    name: Mail & Guardian
+    country: Sudáfrica
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://mg.co.za
+    rss: "https://mg.co.za/rss/"
+
+  # Egipto
+  - id: al-ahram
+    name: Al-Ahram
+    country: Egipto
+    region: africa
+    stance: oficialista
+    lang: ar
+    homepage: https://gate.ahram.org.eg
+    rss: NO_RSS
+  - id: youm7
+    name: Youm7
+    country: Egipto
+    region: africa
+    stance: oficialista
+    lang: ar
+    homepage: https://www.youm7.com
+    rss: "https://www.youm7.com/rss/SectionRss?SectionID=65"
+  - id: mada-masr
+    name: Mada Masr
+    country: Egipto
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://www.madamasr.com
+    rss: "https://www.madamasr.com/en/feed/"
+  - id: almasry-alyoum
+    name: Al-Masry Al-Youm
+    country: Egipto
+    region: africa
+    stance: oposicion
+    lang: ar
+    homepage: https://www.almasryalyoum.com
+    rss: NO_RSS
+  - id: darb
+    name: Darb
+    country: Egipto
+    region: africa
+    stance: oposicion
+    lang: ar
+    homepage: https://daaarb.com
+    rss: "https://daaarb.com/feed/"
+
+  # Nigeria
+  - id: nta
+    name: NTA
+    country: Nigeria
+    region: africa
+    stance: oficialista
+    lang: en
+    homepage: https://nta.ng
+    rss: NO_RSS
+  - id: voice-of-nigeria
+    name: Voice of Nigeria
+    country: Nigeria
+    region: africa
+    stance: oficialista
+    lang: en
+    homepage: https://von.gov.ng
+    rss: "https://von.gov.ng/feed/"
+  - id: premium-times
+    name: Premium Times
+    country: Nigeria
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://www.premiumtimesng.com
+    rss: "https://www.premiumtimesng.com/feed"
+  - id: sahara-reporters
+    name: Sahara Reporters
+    country: Nigeria
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://saharareporters.com
+    rss: "https://saharareporters.com/rss.xml"
+  - id: thecable
+    name: TheCable
+    country: Nigeria
+    region: africa
+    stance: oposicion
+    lang: en
+    homepage: https://www.thecable.ng
+    rss: NO_RSS
+
+  # Australia
+  - id: the-australian
+    name: The Australian
+    country: Australia
+    region: oceania
+    stance: oficialista
+    lang: en
+    homepage: https://www.theaustralian.com.au
+    rss: NO_RSS
+  - id: sky-news-australia
+    name: Sky News Australia
+    country: Australia
+    region: oceania
+    stance: oficialista
+    lang: en
+    homepage: https://www.skynews.com.au
+    rss: NO_RSS
+  - id: guardian-australia
+    name: The Guardian Australia
+    country: Australia
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://www.theguardian.com/au
+    rss: "https://www.theguardian.com/au/rss"
+  - id: crikey
+    name: Crikey
+    country: Australia
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://www.crikey.com.au
+    rss: "https://www.crikey.com.au/feed/"
+  - id: new-matilda
+    name: New Matilda
+    country: Australia
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://newmatilda.com
+    rss: NO_RSS
+
+  # Nueva Zelanda
+  - id: nz-herald
+    name: The New Zealand Herald
+    country: Nueva Zelanda
+    region: oceania
+    stance: oficialista
+    lang: en
+    homepage: https://www.nzherald.co.nz
+    rss: NO_RSS
+  - id: 1news
+    name: 1News (TVNZ)
+    country: Nueva Zelanda
+    region: oceania
+    stance: oficialista
+    lang: en
+    homepage: https://www.1news.co.nz
+    rss: NO_RSS
+  - id: the-spinoff
+    name: The Spinoff
+    country: Nueva Zelanda
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://thespinoff.co.nz
+    rss: "https://thespinoff.co.nz/feed"
+  - id: newsroom-nz
+    name: Newsroom
+    country: Nueva Zelanda
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://www.newsroom.co.nz
+    rss: NO_RSS
+  - id: scoop
+    name: Scoop
+    country: Nueva Zelanda
+    region: oceania
+    stance: oposicion
+    lang: en
+    homepage: https://www.scoop.co.nz
+    rss: NO_RSS

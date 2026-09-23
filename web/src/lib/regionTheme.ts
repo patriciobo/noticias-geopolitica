@@ -10,4 +10,6 @@ export const REGION_THEME: Record<string, RegionTheme> = {
   Europa: { emoji: "🏛️" },
   "Asia Oriental": { emoji: "🏯" },
   Eurasia: { emoji: "🌍" },
+  África: { emoji: "🌍" },
+  Oceanía: { emoji: "🌏" },
 };

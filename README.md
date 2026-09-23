@@ -1,6 +1,6 @@
 # noticias
 
-Backend independiente que rastrea 90 medios de 17 países, filtra titulares con
+Backend independiente que rastrea 115 medios de 23 países, filtra titulares con
 potencial internacional/multinacional, y publica un reporte diario en español
 formal de Argentina con tres secciones: resumen por región, clima internacional
 (comercio/industria/materias primas), y empresas potencialmente afectadas por
@@ -11,7 +11,7 @@ Resumen por región de cada edición.
 ## Arquitectura
 
 ```
-config/sources.yaml       90 medios: país, región, orientación editorial, RSS
+config/sources.yaml       115 medios: país, región, orientación editorial, RSS
 config/sources_rss.yaml   audit trail de la investigación de feeds (fuente de sources.yaml, con notas)
 config/gazetteer.yaml     países/empresas/keywords para el prefiltro barato
 
@@ -56,12 +56,12 @@ Lo que pasa ambas etapas se sintetiza (`internal/report/synthesize.go`, Claude
 Sonnet) en el reporte final de tres secciones, en español formal de Argentina
 (voseo, registro profesional).
 
-## Estado de los feeds (90 medios)
+## Estado de los feeds (115 medios)
 
 Investigado y verificado con requests reales (`go run ./cmd/checkfeeds`):
 
-- **64 con RSS funcionando** (RSS 2.0, Atom o RDF/RSS 1.0)
-- **22 sin feed público** (`NO_RSS` en `sources.yaml`) — bloqueados por
+- **75 con RSS funcionando** (RSS 2.0, Atom o RDF/RSS 1.0)
+- **35 sin feed público** (`NO_RSS` en `sources.yaml`) — bloqueados por
   Cloudflare, feed discontinuado, o dominio mal configurado. Alternativa
   liviana anotada en `config/sources_rss.yaml` (sitemap, wp-json, cuenta de
   X) para resolver con scraping puntual más adelante, sin bypass de
@@ -70,6 +70,11 @@ Investigado y verificado con requests reales (`go run ./cmd/checkfeeds`):
   `le-figaro` y `the-sun` (bloqueo anti-bot real, no solo por UA),
   `toronto-star` (429, rate limit — probablemente se resuelve solo corriendo
   una vez por día en vez de en ráfaga).
+
+Regiones cubiertas: `north_america`, `latin_america`, `europe`, `east_asia`,
+`eurasia`, `africa` y `oceania` (las últimas dos, agregadas junto con
+Sudáfrica/Egipto/Nigeria y Australia/Nueva Zelanda) — ver `regionLabels` en
+`core/internal/report/synthesize.go`.
 
 ## Proveedor de LLM: Claude, Gemini, cualquier API compatible con OpenAI, u Ollama local
 
@@ -275,7 +280,7 @@ smoke test de feeds sin costo, corrida real del pipeline, y el blog).
 
 ## Estado
 
-- [x] Config de 90 medios con región/orientación editorial
+- [x] Config de 115 medios con región/orientación editorial
 - [x] `config/sources.yaml` — campo `rss` completo (64/90 con feed real, 22 `NO_RSS` documentados)
 - [x] Ingesta RSS/Atom/RDF genérica, con soporte de charset no-UTF8
 - [x] Prefiltro por gazetteer
@@ -312,8 +317,8 @@ go run ./cmd/checkfeeds
 Hace un request real a cada feed configurado y muestra un titular de
 ejemplo por medio que responde, más la lista de los que fallaron al final.
 Sirve para revalidar el estado de los feeds sin gastar créditos de API.
-Último resultado conocido: 64 OK, 22 `NO_RSS` (esperado), 4 casos
-límite (ver arriba).
+Último resultado conocido: 75 OK, 35 `NO_RSS` (esperado), el resto son los
+casos límite (ver arriba).
 
 ### 3. Corrida real del pipeline (consume créditos de la API de Claude)
 

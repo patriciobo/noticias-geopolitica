@@ -132,3 +132,38 @@ le-parisien: "https://feeds.leparisien.fr/leparisien/rss"
 le-figaro: "https://www.lefigaro.fr/rss/figaro_actualites.xml"  # feed público documentado; devuelve página de consentimiento/anti-bot a clientes no-navegador, revisar en producción con UA de navegador
 mediapart: "https://www.mediapart.fr/articles/feed"
 liberation: "https://www.liberation.fr/arc/outboundfeeds/rss/"
+
+# --- Sudáfrica ---
+sabc-news: "https://www.sabcnews.com/sabcnews/feed/"
+iol: "NO_RSS"  # homepage es una SPA (Next.js) sin autodiscovery; /rss/za-news y variantes devuelven 404
+daily-maverick: "https://www.dailymaverick.co.za/dmrss/"
+news24: "NO_RSS"  # el <link rel="alternative"> del homepage apunta a feeds.24.com, dominio que no resuelve (DNS muerto)
+mail-guardian: "https://mg.co.za/rss/"
+
+# --- Egipto ---
+al-ahram: "NO_RSS"  # sin autodiscovery ni endpoint público encontrado en el gate árabe (gate.ahram.org.eg)
+youm7: "https://www.youm7.com/rss/SectionRss?SectionID=65"  # content-type mal declarado (text/html) pero el body es RSS 2.0 válido
+mada-masr: "https://www.madamasr.com/en/feed/"  # feed de la edición en inglés
+almasry-alyoum: "NO_RSS"  # sin autodiscovery ni endpoint público encontrado
+darb: "https://daaarb.com/feed/"
+
+# --- Nigeria ---
+nta: "NO_RSS"  # sin autodiscovery ni /feed funcional
+voice-of-nigeria: "https://von.gov.ng/feed/"
+premium-times: "https://www.premiumtimesng.com/feed"
+sahara-reporters: "https://saharareporters.com/rss.xml"
+thecable: "NO_RSS"  # sin autodiscovery ni /feed funcional
+
+# --- Australia ---
+the-australian: "NO_RSS"  # medio pago (paywall), sin feed público
+sky-news-australia: "NO_RSS"  # sin autodiscovery ni endpoint encontrado
+guardian-australia: "https://www.theguardian.com/au/rss"
+crikey: "https://www.crikey.com.au/feed/"
+new-matilda: "NO_RSS"  # sin autodiscovery ni /feed funcional
+
+# --- Nueva Zelanda ---
+nz-herald: "NO_RSS"  # sin autodiscovery; el endpoint legacy rss.nzherald.co.nz ya no responde
+1news: "NO_RSS"  # sin autodiscovery ni endpoint encontrado
+the-spinoff: "https://thespinoff.co.nz/feed"
+newsroom-nz: "NO_RSS"  # sin autodiscovery ni endpoint encontrado
+scoop: "NO_RSS"  # sin autodiscovery; endpoints legacy de feeds.scoop.co.nz no confirmados
