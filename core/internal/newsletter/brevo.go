@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
 const brevoAPIURL = "https://api.brevo.com/v3/smtp/email"
 
-// maxVersionsPerCall limita el tamaño de cada llamada batch a Brevo.
-// Defensivo: hoy la lista de suscriptores es chica, pero evita un límite
-// sorpresa de la API más adelante sin tener que tocar este código.
-const maxVersionsPerCall = 500
+// sendConcurrency limita cuántos envíos a Brevo corren en paralelo. Con el
+// tope del plan gratis (300/día) la lista nunca es enorme; unos pocos en
+// paralelo alcanzan sin acercarse a los rate limits de la API.
+const sendConcurrency = 4
 
 // Brevo manda el correo vía la API transaccional de Brevo — mismo patrón
 // simple que el resto del proyecto (struct de request/response +
@@ -38,11 +39,13 @@ func NewBrevo(apiKey, senderEmail, senderName string) *Brevo {
 	}
 }
 
-// Recipient es un destinatario ya resuelto: su email y el HTML final que le
-// corresponde (con su propio link de unsubscribe ya embebido).
+// Recipient es un destinatario ya resuelto: su email, el HTML final que le
+// corresponde (con su propio link de unsubscribe ya embebido) y la URL de
+// baja en un click para los headers List-Unsubscribe.
 type Recipient struct {
-	Email       string
-	HTMLContent string
+	Email          string
+	HTMLContent    string
+	UnsubscribeURL string
 }
 
 type brevoContact struct {
@@ -54,16 +57,12 @@ type brevoRecipient struct {
 	Email string `json:"email"`
 }
 
-type brevoMessageVersion struct {
-	To          []brevoRecipient `json:"to"`
-	HTMLContent string           `json:"htmlContent"`
-}
-
 type brevoRequest struct {
-	Sender          brevoContact          `json:"sender"`
-	Subject         string                `json:"subject"`
-	HTMLContent     string                `json:"htmlContent"`
-	MessageVersions []brevoMessageVersion `json:"messageVersions"`
+	Sender      brevoContact      `json:"sender"`
+	To          []brevoRecipient  `json:"to"`
+	Subject     string            `json:"subject"`
+	HTMLContent string            `json:"htmlContent"`
+	Headers     map[string]string `json:"headers,omitempty"`
 }
 
 type brevoErrorResponse struct {
@@ -71,50 +70,75 @@ type brevoErrorResponse struct {
 	Message string `json:"message"`
 }
 
-// Send manda subject+contenido a cada recipient, en batches de
-// maxVersionsPerCall vía el mecanismo messageVersions de Brevo (una sola
-// llamada HTTP por batch en vez de una por destinatario: menos round-trips
-// y menor superficie de fallo parcial). Un batch que falla no aborta los
-// siguientes — se cuentan enviados/fallidos y se devuelven ambos números
-// junto con el primer error, para que el caller decida si loguear o fallar.
+// unsubscribeHeaders arma los headers de baja en un click (RFC 2369 +
+// RFC 8058). Gmail y Yahoo los exigen a remitentes masivos, y los clientes
+// muestran un botón "Desuscribirse" nativo — mucho mejor que un reporte de
+// spam, que es lo que hace la gente cuando no encuentra cómo darse de baja.
+func unsubscribeHeaders(unsubscribeURL string) map[string]string {
+	if unsubscribeURL == "" {
+		return nil
+	}
+	return map[string]string{
+		"List-Unsubscribe":      "<" + unsubscribeURL + ">",
+		"List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+	}
+}
+
+// Send manda subject+contenido a cada recipient, un request por
+// destinatario: los headers List-Unsubscribe llevan el token de cada uno y
+// Brevo no permite headers distintos por messageVersion. Un envío que
+// falla no aborta los demás — se cuentan enviados/fallidos y se devuelven
+// ambos números junto con el primer error, para que el caller decida si
+// loguear o fallar.
 func (b *Brevo) Send(ctx context.Context, subject string, recipients []Recipient) (sent, failed int, err error) {
 	if b.APIKey == "" {
 		return 0, 0, fmt.Errorf("newsletter: no hay BREVO_API_KEY configurada")
 	}
 
-	var firstErr error
-	for start := 0; start < len(recipients); start += maxVersionsPerCall {
-		end := min(start+maxVersionsPerCall, len(recipients))
-		batch := recipients[start:end]
-
-		if sendErr := b.sendBatch(ctx, subject, batch); sendErr != nil {
-			failed += len(batch)
-			if firstErr == nil {
-				firstErr = sendErr
+	var (
+		mu       sync.Mutex
+		wg       sync.WaitGroup
+		firstErr error
+		sem      = make(chan struct{}, sendConcurrency)
+	)
+	for _, r := range recipients {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(r Recipient) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			sendErr := b.send(ctx, r.Email, subject, r.HTMLContent, unsubscribeHeaders(r.UnsubscribeURL))
+			mu.Lock()
+			defer mu.Unlock()
+			if sendErr != nil {
+				failed++
+				if firstErr == nil {
+					firstErr = sendErr
+				}
+				return
 			}
-			continue
-		}
-		sent += len(batch)
+			sent++
+		}(r)
 	}
+	wg.Wait()
 	return sent, failed, firstErr
 }
 
-func (b *Brevo) sendBatch(ctx context.Context, subject string, batch []Recipient) error {
-	versions := make([]brevoMessageVersion, 0, len(batch))
-	for _, r := range batch {
-		versions = append(versions, brevoMessageVersion{
-			To:          []brevoRecipient{{Email: r.Email}},
-			HTMLContent: r.HTMLContent,
-		})
+// SendOne manda un único mail transaccional (ej. la confirmación de alta).
+func (b *Brevo) SendOne(ctx context.Context, to, subject, html string) error {
+	if b.APIKey == "" {
+		return fmt.Errorf("newsletter: no hay BREVO_API_KEY configurada")
 	}
+	return b.send(ctx, to, subject, html, nil)
+}
 
+func (b *Brevo) send(ctx context.Context, to, subject, html string, headers map[string]string) error {
 	reqBody := brevoRequest{
-		Sender:  brevoContact{Email: b.SenderEmail, Name: b.SenderName},
-		Subject: subject,
-		// Fallback exigido por la API a nivel de request; cada messageVersion
-		// lo pisa con su HTML personalizado (link de unsubscribe propio).
-		HTMLContent:     batch[0].HTMLContent,
-		MessageVersions: versions,
+		Sender:      brevoContact{Email: b.SenderEmail, Name: b.SenderName},
+		To:          []brevoRecipient{{Email: to}},
+		Subject:     subject,
+		HTMLContent: html,
+		Headers:     headers,
 	}
 	payload, err := json.Marshal(reqBody)
 	if err != nil {

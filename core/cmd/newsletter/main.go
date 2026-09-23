@@ -66,6 +66,14 @@ func main() {
 	}
 	populated, empty := newsletter.SplitRegions(regionSummary)
 
+	// Altas que nunca se confirmaron no se guardan para siempre (ver
+	// subscriber.ConfirmTokenTTL). Un fallo acá no frena el envío.
+	if purged, err := repo.PurgeStalePending(ctx); err != nil {
+		log.Printf("no se pudieron purgar altas pendientes vencidas: %v", err)
+	} else if purged > 0 {
+		log.Printf("purgadas %d altas pendientes sin confirmar", purged)
+	}
+
 	active, err := repo.ListActive(ctx)
 	if err != nil {
 		log.Fatalf("no se pudo listar suscriptores activos: %v", err)
@@ -92,7 +100,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("no se pudo renderizar el email para %s: %v", s.Email, err)
 		}
-		recipients = append(recipients, newsletter.Recipient{Email: s.Email, HTMLContent: html})
+		recipients = append(recipients, newsletter.Recipient{Email: s.Email, HTMLContent: html, UnsubscribeURL: data.UnsubscribeURL})
 	}
 
 	brevo := newsletter.NewBrevo(brevoKey, senderEmail, senderName)

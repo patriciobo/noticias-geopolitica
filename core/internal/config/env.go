@@ -4,7 +4,9 @@
 package config
 
 import (
+	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -41,4 +43,20 @@ func EnvOrDefault(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// EnvInt devuelve la variable de entorno key como entero positivo, o def si
+// no está seteada o no es un entero positivo válido (en ese caso lo loguea,
+// para que un typo en la config no pase desapercibido).
+func EnvInt(key string, def int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		log.Printf("%s=%q no es un entero positivo, uso %d", key, v, def)
+		return def
+	}
+	return n
 }

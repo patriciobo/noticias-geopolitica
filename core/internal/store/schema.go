@@ -28,6 +28,20 @@ CREATE TABLE IF NOT EXISTS subscribers (
 CREATE UNIQUE INDEX IF NOT EXISTS subscribers_email_idx ON subscribers (email);
 CREATE UNIQUE INDEX IF NOT EXISTS subscribers_unsub_token_idx ON subscribers (unsubscribe_token);
 CREATE INDEX IF NOT EXISTS subscribers_active_idx ON subscribers (unsubscribed_at) WHERE unsubscribed_at IS NULL;
+
+-- Doble opt-in. confirmed_at se agrega con DEFAULT now() para que las filas
+-- que ya existían antes de este cambio queden confirmadas (se suscribieron
+-- con el flujo viejo, sin confirmación), y enseguida se le saca el default:
+-- de acá en adelante toda alta nueva arranca en NULL (pendiente) hasta que
+-- la persona haga click en el mail de confirmación. Re-correr esto es no-op
+-- (ADD COLUMN IF NOT EXISTS no toca una columna que ya existe).
+ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ NULL DEFAULT now();
+ALTER TABLE subscribers ALTER COLUMN confirmed_at DROP DEFAULT;
+ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS confirm_token TEXT NULL;
+ALTER TABLE subscribers ADD COLUMN IF NOT EXISTS confirm_sent_at TIMESTAMPTZ NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS subscribers_confirm_token_idx ON subscribers (confirm_token) WHERE confirm_token IS NOT NULL;
+CREATE INDEX IF NOT EXISTS subscribers_confirm_sent_idx ON subscribers (confirm_sent_at) WHERE confirm_sent_at IS NOT NULL;
 `
 	if _, err := db.ExecContext(ctx, ddl); err != nil {
 		return fmt.Errorf("no se pudo aplicar el schema de subscribers: %w", err)
