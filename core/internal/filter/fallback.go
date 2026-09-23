@@ -52,3 +52,70 @@ func (c *ChainClassifier) Classify(ctx context.Context, a model.Article, pre Pre
 	}
 	return model.Classification{}, fmt.Errorf("los %d proveedores configurados fallaron, último error: %w", len(c.links), lastErr)
 }
+
+// ClassifyBatch aplica la misma cadena de fallback que Classify, pero a
+// nivel de lote: cada link se prueba con TODO lo que sigue pendiente, y solo
+// lo que le falló a ese link pasa al siguiente. Un link se marca muerto para
+// el resto de la corrida únicamente cuando le falló el batch COMPLETO que
+// recibió — un fallo puntual de uno o dos items (ej. el modelo se salteó un
+// índice y el top-up individual también falló) no lo banca: sería tirar por
+// la borda un proveedor que en los hechos está funcionando bien, empujando
+// tráfico de más al fallback (con cupo mucho más chico) sin necesidad.
+func (c *ChainClassifier) ClassifyBatch(ctx context.Context, items []BatchItem) []BatchResult {
+	results := make([]BatchResult, len(items))
+	pending := items
+	pendingIdx := make([]int, len(items))
+	for i := range pendingIdx {
+		pendingIdx[i] = i
+	}
+
+	var lastErr error
+	for i, link := range c.links {
+		if len(pending) == 0 {
+			break
+		}
+		if c.dead[i].Load() {
+			continue
+		}
+
+		linkResults := ClassifyBatch(ctx, link, pending)
+
+		var stillPending []BatchItem
+		var stillPendingIdx []int
+		failCount := 0
+		for j, r := range linkResults {
+			origIdx := pendingIdx[j]
+			if r.Err != nil {
+				failCount++
+				lastErr = r.Err
+				stillPending = append(stillPending, pending[j])
+				stillPendingIdx = append(stillPendingIdx, origIdx)
+				continue
+			}
+			results[origIdx] = r
+		}
+
+		switch {
+		case failCount == 0:
+			// todo el batch salió bien en este link
+		case failCount == len(pending):
+			log.Printf("classify batch: proveedor %d/%d falló para los %d items del batch (%v), probando el siguiente", i+1, len(c.links), failCount, lastErr)
+			c.dead[i].Store(true)
+		default:
+			log.Printf("classify batch: proveedor %d/%d falló para %d/%d items del batch, probando el siguiente para esos", i+1, len(c.links), failCount, len(pending))
+		}
+
+		pending = stillPending
+		pendingIdx = stillPendingIdx
+	}
+
+	for _, origIdx := range pendingIdx {
+		if lastErr == nil {
+			results[origIdx] = BatchResult{Err: fmt.Errorf("los %d proveedores configurados ya habían fallado antes en esta corrida", len(c.links))}
+			continue
+		}
+		results[origIdx] = BatchResult{Err: fmt.Errorf("los %d proveedores configurados fallaron, último error: %w", len(c.links), lastErr)}
+	}
+
+	return results
+}

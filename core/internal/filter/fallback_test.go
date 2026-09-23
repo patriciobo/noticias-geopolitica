@@ -96,6 +96,124 @@ func TestChainClassifierStopsCallingDeadLinks(t *testing.T) {
 	}
 }
 
+// stubBatchClassifier implementa batchClassifier directamente, con fallos
+// por título en vez de por posición — así sigue siendo válido aunque
+// ChainClassifier le pase un subconjunto más chico en la segunda vuelta.
+type stubBatchClassifier struct {
+	calls   *int
+	fail    map[string]bool
+	failErr error
+}
+
+func (s stubBatchClassifier) Classify(ctx context.Context, a model.Article, pre PrefilterResult) (model.Classification, error) {
+	if s.fail[a.Title] {
+		return model.Classification{}, s.failErr
+	}
+	return model.Classification{Reason: "ok:" + a.Title}, nil
+}
+
+func (s stubBatchClassifier) ClassifyBatch(ctx context.Context, items []BatchItem) []BatchResult {
+	if s.calls != nil {
+		*s.calls++
+	}
+	out := make([]BatchResult, len(items))
+	for i, it := range items {
+		if s.fail[it.Article.Title] {
+			out[i] = BatchResult{Err: s.failErr}
+			continue
+		}
+		out[i] = BatchResult{Classification: model.Classification{Reason: "ok:" + it.Article.Title}}
+	}
+	return out
+}
+
+func TestClassifyBatchFallsBackToSequentialWhenNotSupported(t *testing.T) {
+	c := stubClassifier{cls: model.Classification{Reason: "seq"}}
+	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
+
+	results := ClassifyBatch(context.Background(), c, items)
+
+	if len(results) != 2 {
+		t.Fatalf("got %d results, want 2", len(results))
+	}
+	for i, r := range results {
+		if r.Err != nil || r.Classification.Reason != "seq" {
+			t.Errorf("item %d: got %+v", i, r)
+		}
+	}
+}
+
+func TestChainClassifierBatchAllSucceed(t *testing.T) {
+	calls := 0
+	c := NewChainClassifier(stubBatchClassifier{calls: &calls})
+	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
+
+	results := c.ClassifyBatch(context.Background(), items)
+
+	if len(results) != 2 {
+		t.Fatalf("got %d results, want 2", len(results))
+	}
+	for i, r := range results {
+		if r.Err != nil {
+			t.Errorf("item %d: unexpected error %v", i, r.Err)
+		}
+	}
+	if calls != 1 {
+		t.Errorf("expected 1 call, got %d", calls)
+	}
+}
+
+func TestChainClassifierBatchPartialFailureDoesNotKillLink(t *testing.T) {
+	firstCalls, secondCalls := 0, 0
+	link1 := stubBatchClassifier{calls: &firstCalls, fail: map[string]bool{"b": true}, failErr: errors.New("b falló")}
+	link2 := stubBatchClassifier{calls: &secondCalls}
+	c := NewChainClassifier(link1, link2)
+	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
+
+	results := c.ClassifyBatch(context.Background(), items)
+
+	if results[0].Err != nil || results[0].Classification.Reason != "ok:a" {
+		t.Errorf("item a: got %+v", results[0])
+	}
+	if results[1].Err != nil || results[1].Classification.Reason != "ok:b" {
+		t.Errorf("item b: got %+v", results[1])
+	}
+	if firstCalls != 1 {
+		t.Errorf("link1 calls = %d, want 1", firstCalls)
+	}
+	if secondCalls != 1 {
+		t.Errorf("link2 calls = %d, want 1 (solo el item que falló en link1)", secondCalls)
+	}
+
+	// Un fallo parcial no debería bancar el link: en una segunda corrida
+	// tiene que volver a intentarse.
+	results2 := c.ClassifyBatch(context.Background(), items)
+	if firstCalls != 2 {
+		t.Errorf("link1 debería seguir consultándose tras un fallo parcial, calls=%d", firstCalls)
+	}
+	if results2[0].Classification.Reason != "ok:a" {
+		t.Errorf("item a en segunda corrida: got %+v", results2[0])
+	}
+}
+
+func TestChainClassifierBatchFullFailureMarksLinkDead(t *testing.T) {
+	firstCalls, secondCalls := 0, 0
+	link1 := stubBatchClassifier{calls: &firstCalls, fail: map[string]bool{"a": true, "b": true}, failErr: errors.New("caído")}
+	link2 := stubBatchClassifier{calls: &secondCalls}
+	c := NewChainClassifier(link1, link2)
+	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
+
+	c.ClassifyBatch(context.Background(), items)
+	c.ClassifyBatch(context.Background(), items)
+
+	if firstCalls != 1 {
+		t.Errorf("link1 debería morir tras fallarle el batch completo una vez, calls=%d", firstCalls)
+	}
+	if secondCalls != 2 {
+		t.Errorf("link2 debería atender las dos corridas, calls=%d", secondCalls)
+	}
+}
+
 func TestChainClassifierAllDeadReturnsFastWithoutCalling(t *testing.T) {
 	calls := 0
 	c := NewChainClassifier(countingClassifier{calls: &calls, err: errors.New("caído")})

@@ -101,6 +101,83 @@ func (c *OpenAICompatClassifier) Classify(ctx context.Context, a model.Article, 
 	return cls, nil
 }
 
+// ClassifyBatch manda todos los items en UN solo request (numerados, ver
+// buildBatchUserPrompt) en vez de uno por artículo — mismo trabajo pedido
+// al modelo, muchas menos requests, que es lo que de verdad pisa los
+// límites por minuto de los free tiers (no el volumen total del día).
+//
+// Devuelve siempre len(items) resultados. Si el modelo se saltea algún
+// índice en la respuesta (raro, pero no hay garantía dura sin
+// response_format en varios proveedores free), esos puntuales se completan
+// con Classify() uno por uno en vez de perderlos en silencio — no vale la
+// pena repetir el batch entero por uno o dos items.
+func (c *OpenAICompatClassifier) ClassifyBatch(ctx context.Context, items []BatchItem) []BatchResult {
+	results := make([]BatchResult, len(items))
+	if len(items) == 0 {
+		return results
+	}
+
+	reqBody := compatChatRequest{
+		Model: c.Model,
+		Messages: []compatMessage{
+			{Role: "system", Content: batchClassifySystemPrompt},
+			{Role: "user", Content: buildBatchUserPrompt(items)},
+		},
+		Temperature: 0,
+	}
+	// Sin response_format acá a propósito: la respuesta es un array
+	// top-level, no un objeto — json_object de la API forzaría justo la
+	// forma que no queremos.
+
+	text, err := c.chat(ctx, reqBody)
+	if err != nil {
+		wrapped := fmt.Errorf("openai-compat classifier batch (%s): %w", c.Model, err)
+		for i := range results {
+			results[i] = BatchResult{Err: wrapped}
+		}
+		return results
+	}
+
+	var parsed []batchClassificationItem
+	if jsonErr := json.Unmarshal([]byte(text), &parsed); jsonErr != nil {
+		if jsonErr2 := json.Unmarshal([]byte(extractJSONArray(text)), &parsed); jsonErr2 != nil {
+			wrapped := fmt.Errorf("openai-compat classifier batch: no se pudo parsear la respuesta como array JSON: %w (output: %s)", jsonErr, truncate(text, 300))
+			for i := range results {
+				results[i] = BatchResult{Err: wrapped}
+			}
+			return results
+		}
+	}
+
+	byIndex := make(map[int]model.Classification, len(parsed))
+	for _, p := range parsed {
+		byIndex[p.Index] = p.Classification
+	}
+
+	var missing []int
+	for i := range items {
+		if cls, ok := byIndex[i]; ok {
+			results[i] = BatchResult{Classification: cls}
+		} else {
+			missing = append(missing, i)
+		}
+	}
+	for _, i := range missing {
+		cls, err := c.Classify(ctx, items[i].Article, items[i].Pre)
+		results[i] = BatchResult{Classification: cls, Err: err}
+	}
+
+	return results
+}
+
+// batchClassificationItem embebe model.Classification: el JSON del batch
+// trae los mismos campos que la clasificación individual, más "index" para
+// poder reconciliar sin depender del orden de la respuesta.
+type batchClassificationItem struct {
+	Index int `json:"index"`
+	model.Classification
+}
+
 // extractJSONObject pela fences de markdown (```json ... ```) y se queda
 // con la primera llave abierta hasta la última cerrada — suficiente para
 // rescatar un objeto JSON que vino acompañado de texto que no se pidió.
@@ -129,6 +206,36 @@ var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * tim
 
 func isRetryableStatus(code int) bool {
 	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
+}
+
+// isTransientErrorMessage detecta errores conocidos como transitorios
+// aunque vengan con un status HTTP que no dispara retry por sí solo — el
+// caso real que motivó esto: OpenRouter devuelve "Provider returned error"
+// cuando el modelo free de turno tuvo un hipo puntual (sobrecarga del lado
+// del proveedor upstream), no necesariamente con status 429/502/503.
+func isTransientErrorMessage(msg string) bool {
+	lower := strings.ToLower(msg)
+	for _, phrase := range []string{"provider returned error", "overloaded", "try again", "timeout", "internal server error"} {
+		if strings.Contains(lower, phrase) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractErrorMessage saca el texto de error de un body de respuesta, en
+// cualquiera de los dos formatos que devuelven los proveedores compatibles
+// (objeto plano o array envolvente) — "" si no hay ninguno reconocible.
+func extractErrorMessage(body []byte) string {
+	var cr compatChatResponse
+	if json.Unmarshal(body, &cr) == nil && cr.Error != nil {
+		return cr.Error.Message
+	}
+	var arr []compatChatResponse
+	if json.Unmarshal(body, &arr) == nil && len(arr) > 0 && arr[0].Error != nil {
+		return arr[0].Error.Message
+	}
+	return ""
 }
 
 // isHardQuotaExceeded distingue un 429 de cuota de plan agotada (diaria o
@@ -172,7 +279,8 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 		if statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body) {
 			break
 		}
-		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
+		retryable := isRetryableStatus(statusCode) || isTransientErrorMessage(extractErrorMessage(body))
+		if !retryable || attempt >= maxRateLimitRetries {
 			break
 		}
 		select {

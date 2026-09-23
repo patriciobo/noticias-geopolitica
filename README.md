@@ -118,6 +118,36 @@ OLLAMA_CLASSIFY_MODEL=qwen3:1.7b
 OLLAMA_SYNTHESIZE_MODEL=qwen3.5:9b
 ```
 
+### Por qué clasificar en batch (y por qué bajamos titulares por fuente)
+
+El 2026-09-23 Gemini pegó un 429 y el único fallback de OpenRouter de ese
+día falló también, ambos a mitad de la corrida — con la clasificación de a
+un titular por request, eso significa cientos de requests/día, cada una
+compitiendo por el mismo límite por minuto del free tier. Lo que de verdad
+se agota no es la cuota diaria (esa alcanza de sobra a este volumen), es el
+límite por minuto ante una ráfaga de requests concurrentes.
+
+Dos cambios en consecuencia:
+- **`classifyAll` agrupa `classifyBatchSize` (12) titulares por request** en
+  vez de mandar uno por request — mismo trabajo pedido al modelo (las
+  mismas reglas de `classifyCriteria`), 12x menos llamadas. Si el modelo se
+  saltea algún índice de la respuesta, ese puntual se completa individual
+  (`OpenAICompatClassifier.ClassifyBatch`) en vez de perderse en silencio.
+  `ChainClassifier.ClassifyBatch` banca un proveedor para el resto de la
+  corrida solo si le falló el LOTE completo — un fallo de uno o dos items
+  puntuales no lo tira, evita empujar tráfico de más al fallback (con cupo
+  mucho más chico) por un hipo menor.
+- **`MAX_HEADLINES_PER_SOURCE` bajó de 10 a 6** (default, configurable):
+  menos titulares candidatos, menos requests en total. Las noticias con
+  potencial internacional real suelen estar cerca del tope de cada feed, así
+  que el recall que se pierde en la cola de cada fuente es acotado.
+- Los clientes compatibles con OpenAI (Gemini, OpenRouter, `openai_compat`)
+  ya reintentaban con backoff ante 429/502/503 — ahora también reintentan
+  cuando el proveedor devuelve un error "blando" reconocido como transitorio
+  (ej. `Provider returned error`, `overloaded`, `timeout`) aunque el status
+  HTTP no lo dispare por sí solo, que es justo lo que pasó ese día con
+  OpenRouter.
+
 ### Fallback: OpenRouter
 
 Independiente del proveedor principal de arriba, si `OPENROUTER_API_KEY` está
@@ -328,12 +358,13 @@ cd core
 go run ./cmd/ingest
 ```
 
-Con 64 fuentes activas y hasta 10 titulares cada una, esto hace más o menos
-64 llamados baratos a Claude Haiku (solo para lo que pasa el prefiltro, así
-que en la práctica van a ser bastantes menos) más un llamado a Claude Sonnet
-para la síntesis final. Si querés probar con menos costo antes de correrlo
-completo, editá `config/sources.yaml` temporalmente y dejá activos (sin
-`NO_RSS`) solo 5 o 6 medios de un par de regiones.
+Con las fuentes activas (hasta `MAX_HEADLINES_PER_SOURCE`, default 6,
+titulares cada una) esto clasifica lo que pasa el prefiltro barato en lotes
+de `classifyBatchSize` (12 titulares por request, no uno por request — ver
+"Por qué batch" más abajo) más un llamado de síntesis final. Si querés
+probar con menos costo antes de correrlo completo, editá
+`config/sources.yaml` temporalmente y dejá activos (sin `NO_RSS`) solo 5 o 6
+medios de un par de regiones.
 
 Al terminar, el reporte queda en `core/out/YYYY-MM-DD.md`. Abrilo directo
 para chequear que las tres secciones (resumen por región, clima

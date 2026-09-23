@@ -46,6 +46,33 @@ func isRetryableStatus(code int) bool {
 	return code == http.StatusTooManyRequests || code == http.StatusBadGateway || code == http.StatusServiceUnavailable
 }
 
+// isTransientErrorMessage detecta errores conocidos como transitorios
+// aunque vengan con un status HTTP que no dispara retry por sí solo — mismo
+// criterio que filter.OpenAICompatClassifier (ver ahí el porqué).
+func isTransientErrorMessage(msg string) bool {
+	lower := strings.ToLower(msg)
+	for _, phrase := range []string{"provider returned error", "overloaded", "try again", "timeout", "internal server error"} {
+		if strings.Contains(lower, phrase) {
+			return true
+		}
+	}
+	return false
+}
+
+// extractErrorMessage saca el texto de error de un body de respuesta, en
+// cualquiera de los dos formatos que devuelven los proveedores compatibles.
+func extractErrorMessage(body []byte) string {
+	var cr compatChatResponse
+	if json.Unmarshal(body, &cr) == nil && cr.Error != nil {
+		return cr.Error.Message
+	}
+	var arr []compatChatResponse
+	if json.Unmarshal(body, &arr) == nil && len(arr) > 0 && arr[0].Error != nil {
+		return arr[0].Error.Message
+	}
+	return ""
+}
+
 // isHardQuotaExceeded distingue un 429 de cuota de plan agotada (diaria o
 // mensual, no se resetea en segundos) de un 429 de burst momentáneo (se
 // resetea solo) — mismo criterio que filter.OpenAICompatClassifier.
@@ -126,7 +153,8 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 		if statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body) {
 			break
 		}
-		if !isRetryableStatus(statusCode) || attempt >= maxRateLimitRetries {
+		retryable := isRetryableStatus(statusCode) || isTransientErrorMessage(extractErrorMessage(body))
+		if !retryable || attempt >= maxRateLimitRetries {
 			break
 		}
 		select {

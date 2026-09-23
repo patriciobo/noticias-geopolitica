@@ -23,7 +23,13 @@ import (
 )
 
 const (
-	defaultMaxHeadlinesPerSource = 10
+	// Bajado de 10 a 6: menos titulares candidatos por fuente significa
+	// menos requests de clasificación en total (además del batching, ver
+	// classifyBatchSize) — las noticias con potencial internacional real
+	// suelen estar cerca del tope de cada feed, así que el recall que se
+	// pierde en la cola es acotado. Configurable por si hace falta más
+	// profundidad para alguna fuente en particular.
+	defaultMaxHeadlinesPerSource = 6
 	defaultFetchConcurrency      = 10
 	defaultClassifyConcurrency   = 5
 )
@@ -239,7 +245,8 @@ func main() {
 
 	log.Printf("fuentes cargadas: %d", len(sources))
 
-	articles := fetchAll(sources, defaultMaxHeadlinesPerSource, defaultFetchConcurrency)
+	maxHeadlines := envOrDefaultInt("MAX_HEADLINES_PER_SOURCE", defaultMaxHeadlinesPerSource)
+	articles := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
 	log.Printf("titulares obtenidos: %d", len(articles))
 
 	classified := classifyAll(ctx, articles, sources, gaz, classifier, classifyConcurrency)
@@ -344,6 +351,15 @@ func fetchAll(sources []model.Source, maxItems, concurrency int) []struct {
 	return out
 }
 
+// classifyBatchSize agrupa varios titulares por request en vez de uno por
+// request: mismo trabajo pedido al modelo, muchas menos llamadas — lo que
+// de verdad pisa los límites por minuto de los free tiers es la CANTIDAD de
+// requests, no el volumen total del día (ver filter.ClassifyBatch). Con
+// esto, `concurrency` pasa a limitar cuántos BATCHES corren en paralelo, no
+// cuántos artículos — el número real de requests concurrentes es el mismo
+// de antes o menor, para el mismo valor de concurrency.
+const classifyBatchSize = 12
+
 func classifyAll(
 	ctx context.Context,
 	items []struct {
@@ -355,6 +371,19 @@ func classifyAll(
 	classifier filter.Classifier,
 	concurrency int,
 ) []model.ClassifiedArticle {
+	type passedItem struct {
+		Source  model.Source
+		Article model.Article
+		Pre     filter.PrefilterResult
+	}
+	var passed []passedItem
+	for _, it := range items {
+		pre := filter.Prefilter(it.Article, gaz)
+		if pre.Passed {
+			passed = append(passed, passedItem{Source: it.Source, Article: it.Article, Pre: pre})
+		}
+	}
+
 	var (
 		mu  sync.Mutex
 		out []model.ClassifiedArticle
@@ -362,30 +391,35 @@ func classifyAll(
 		sem = make(chan struct{}, concurrency)
 	)
 
-	for _, it := range items {
-		pre := filter.Prefilter(it.Article, gaz)
-		if !pre.Passed {
-			continue
-		}
+	for start := 0; start < len(passed); start += classifyBatchSize {
+		end := min(start+classifyBatchSize, len(passed))
+		chunk := passed[start:end]
 
 		wg.Add(1)
-		go func(src model.Source, a model.Article, pre filter.PrefilterResult) {
+		go func(chunk []passedItem) {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			cls, err := classifier.Classify(ctx, a, pre)
-			if err != nil {
-				log.Printf("classify %q: %v", a.Title, err)
-				return
+			batchItems := make([]filter.BatchItem, len(chunk))
+			for i, it := range chunk {
+				batchItems[i] = filter.BatchItem{Article: it.Article, Pre: it.Pre}
 			}
-			if !cls.IsInternational {
-				return
-			}
+			results := filter.ClassifyBatch(ctx, classifier, batchItems)
+
 			mu.Lock()
-			out = append(out, model.ClassifiedArticle{Article: a, Source: src, Classification: cls})
+			for i, r := range results {
+				if r.Err != nil {
+					log.Printf("classify %q: %v", chunk[i].Article.Title, r.Err)
+					continue
+				}
+				if !r.Classification.IsInternational {
+					continue
+				}
+				out = append(out, model.ClassifiedArticle{Article: chunk[i].Article, Source: chunk[i].Source, Classification: r.Classification})
+			}
 			mu.Unlock()
-		}(it.Source, it.Article, pre)
+		}(chunk)
 	}
 	wg.Wait()
 	return out
