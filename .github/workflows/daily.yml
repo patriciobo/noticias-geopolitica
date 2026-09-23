@@ -28,6 +28,7 @@ jobs:
           cache-dependency-path: core/go.sum
 
       - name: Generar reporte
+        id: ingest
         working-directory: core
         env:
           LLM_PROVIDER: gemini
@@ -40,7 +41,13 @@ jobs:
           SOURCES_PATH: ../config/sources.yaml
           GAZETTEER_PATH: ../config/gazetteer.yaml
           OUT_DIR: ../reports
-        run: go run ./cmd/ingest
+        run: |
+          go run ./cmd/ingest
+          # Mismo cómputo de fecha que usa cmd/ingest para nombrar el
+          # archivo (time.Now() en UTC, igual que el runner) — se lo pasa
+          # al paso de newsletter para que no tenga que recalcularlo y
+          # arriesgarse a desalinearse si corre cerca de medianoche.
+          echo "report_date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
 
       - name: Commitear reporte
         id: commit
@@ -70,6 +77,23 @@ jobs:
           done
           echo "no se pudo pushear el reporte tras varios intentos" >&2
           exit 1
+
+      # Newsletter opcional: manda por email el Resumen ejecutivo + Resumen
+      # por región del día a los suscriptores activos (alta solo con email,
+      # vía el form del blog). Sin DATABASE_URL o BREVO_API_KEY configurados
+      # este paso no hace nada (no rompe el resto del pipeline) — mismo
+      # patrón defensivo que el step de Render de más abajo.
+      - name: Enviar newsletter
+        if: steps.commit.outputs.committed == 'true'
+        working-directory: core
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+          OUT_DIR: ../reports
+          REPORT_DATE: ${{ steps.ingest.outputs.report_date }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+        run: go run ./cmd/newsletter
 
       # Dispara el deploy en Render directo por su Deploy Hook, en vez de
       # depender del webhook de GitHub→Render (auto-deploy "On Commit"):

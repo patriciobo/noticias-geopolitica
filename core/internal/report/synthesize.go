@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -115,11 +116,15 @@ más de un medio, no incluyas este subtítulo. Este bloque es un índice rápido
 desarrollo completo de cada historia sigue yendo en su región correspondiente, como se
 indica abajo, no lo repitas dos veces con el mismo nivel de detalle.
 
-Después, un subtítulo "### <región>" por cada región presente. Dentro de cada región,
-un bullet por país o hecho relevante (no un párrafo corrido), con el país o tema en
-negrita al inicio. Contrastá cuando la cobertura oficialista y de oposición de un
-mismo país difiera en énfasis o interpretación, sin tomar partido — solo señalar la
-diferencia de encuadre, como bullet aparte o aclaración dentro del mismo bullet.
+Después, escribí SIEMPRE exactamente 5 subtítulos "### <región>", uno por cada región
+en el mismo orden en que aparecen los bloques "REGIÓN: ..." del mensaje, incluso si esa
+región no tiene artículos. Para una región sin artículos, escribí una única línea: "Sin
+novedades relevantes hoy." — no inventes ni extrapoles contenido de otras regiones para
+rellenarla. Para una región con artículos, un bullet por país o hecho relevante (no un
+párrafo corrido), con el país o tema en negrita al inicio. Contrastá cuando la cobertura
+oficialista y de oposición de un mismo país difiera en énfasis o interpretación, sin
+tomar partido — solo señalar la diferencia de encuadre, como bullet aparte o aclaración
+dentro del mismo bullet.
 
 Si alguno de los titulares menciona a Argentina de forma directa (noticia del propio
 país) o indirecta (un país o empresa que tiene vínculo comercial, diplomático o de
@@ -163,6 +168,12 @@ var regionLabels = map[string]string{
 	"east_asia":     "Asia Oriental",
 	"eurasia":       "Eurasia",
 }
+
+// regionOrder fija el orden editorial en que aparecen las regiones en el
+// reporte (Américas → Europa → Asia/Eurasia), en vez de depender del orden
+// de iteración de un map (no determinístico en Go) o de qué regiones tengan
+// artículos ese día — buildUserPrompt itera esta lista completa siempre.
+var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia"}
 
 func regionLabel(region string) string {
 	if label, ok := regionLabels[region]; ok {
@@ -220,19 +231,18 @@ func buildUserPrompt(items []model.ClassifiedArticle) string {
 	for _, it := range items {
 		byRegion[it.Source.Region] = append(byRegion[it.Source.Region], it)
 	}
-	regions := make([]string, 0, len(byRegion))
-	for r := range byRegion {
-		regions = append(regions, r)
-	}
-	sort.Strings(regions)
 
-	for _, region := range regions {
+	for _, region := range regionOrder {
 		arts := byRegion[region]
+		fmt.Fprintf(&b, "REGIÓN: %s\n", regionLabel(region))
+		if len(arts) == 0 {
+			b.WriteString("(sin artículos internacionales clasificados hoy — escribí igual el subtítulo con una línea de \"Sin novedades relevantes hoy.\", sin inventar contenido)\n\n")
+			continue
+		}
 		sort.SliceStable(arts, func(i, j int) bool {
 			return coverageByArticle[articleKey(arts[i].Article)].weight >
 				coverageByArticle[articleKey(arts[j].Article)].weight
 		})
-		fmt.Fprintf(&b, "REGIÓN: %s\n", regionLabel(region))
 		for _, a := range arts {
 			cov := coverageByArticle[articleKey(a.Article)]
 			note := ""
@@ -297,5 +307,45 @@ func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 	if len(cr.Content) == 0 {
 		return "", fmt.Errorf("synthesizer: empty response")
 	}
-	return cr.Content[0].Text, nil
+	return ensureAllRegionsPresent(cr.Content[0].Text), nil
+}
+
+// ensureAllRegionsPresent repara determinísticamente el caso en que el LLM,
+// pese a la instrucción del prompt, igual omitió el subtítulo de alguna
+// región en "Resumen por región": inserta un bloque de placeholder para
+// garantizar que las 5 regiones aparezcan siempre. No falla el pipeline si
+// tiene que reparar algo — es un problema cosmético del LLM, no un motivo
+// para no publicar el reporte del día.
+func ensureAllRegionsPresent(report string) string {
+	const sectionHeading = "## Resumen por región"
+	start := strings.Index(report, sectionHeading)
+	if start == -1 {
+		return report
+	}
+	bodyStart := start + len(sectionHeading)
+
+	end := len(report)
+	if next := strings.Index(report[bodyStart:], "\n## "); next != -1 {
+		end = bodyStart + next
+	}
+	section := report[bodyStart:end]
+
+	var missing []string
+	for _, region := range regionOrder {
+		if !strings.Contains(section, "### "+regionLabel(region)) {
+			missing = append(missing, region)
+		}
+	}
+	if len(missing) == 0 {
+		return report
+	}
+
+	log.Printf("synthesizer: el LLM omitió %d región(es) en \"Resumen por región\", reparando con placeholder: %v", len(missing), missing)
+
+	var repair strings.Builder
+	for _, region := range missing {
+		fmt.Fprintf(&repair, "\n### %s\n\nSin novedades relevantes hoy.\n", regionLabel(region))
+	}
+
+	return report[:end] + repair.String() + report[end:]
 }

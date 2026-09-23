@@ -1,0 +1,63 @@
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.input {
+  flex: 1 1 14rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.button {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #171717;
+  color: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.success {
+  margin-top: 1rem;
+  color: #1a7a3c;
+  font-size: 0.95rem;
+}
+
+.error {
+  flex-basis: 100%;
+  margin: 0.35rem 0 0;
+  color: #c0392b;
+  font-size: 0.85rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .input {
+    border-color: #444;
+  }
+
+  .button {
+    background: #ededed;
+    color: #171717;
+  }
+
+  .success {
+    color: #4fd07a;
+  }
+
+  .error {
+    color: #ff8a75;
+  }
+}

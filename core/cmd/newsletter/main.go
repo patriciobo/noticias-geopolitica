@@ -1,0 +1,86 @@
+// Command newsletter manda por correo el resumen del día (Resumen
+// ejecutivo + Resumen por región) a los suscriptores activos. Corre una vez
+// por día, después de cmd/ingest, como paso separado del pipeline —
+// opcional: sin DATABASE_URL o BREVO_API_KEY configurados no hace nada.
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"path/filepath"
+	"time"
+
+	"noticias/core/internal/config"
+	"noticias/core/internal/newsletter"
+	"noticias/core/internal/report"
+	"noticias/core/internal/store"
+	"noticias/core/internal/subscriber"
+)
+
+func main() {
+	config.LoadDotEnv(".env")
+
+	dsn := os.Getenv("DATABASE_URL")
+	brevoKey := os.Getenv("BREVO_API_KEY")
+	if dsn == "" || brevoKey == "" {
+		log.Print("DATABASE_URL o BREVO_API_KEY no configurados, no se envía newsletter")
+		return
+	}
+
+	outDir := config.EnvOrDefault("OUT_DIR", "./out")
+	reportDate := config.EnvOrDefault("REPORT_DATE", time.Now().Format("2006-01-02"))
+	apiBaseURL := config.EnvOrDefault("API_BASE_URL", "http://localhost:8080")
+	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
+	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
+	subject := "Resumen internacional del " + reportDate
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	db, err := store.Open(ctx, dsn)
+	if err != nil {
+		log.Fatalf("no se pudo conectar a la base: %v", err)
+	}
+	defer db.Close()
+	repo := subscriber.NewRepository(db)
+
+	reportPath := filepath.Join(outDir, reportDate+".md")
+	raw, err := os.ReadFile(reportPath)
+	if err != nil {
+		log.Printf("no existe %s todavía, se omite el envío: %v", reportPath, err)
+		return
+	}
+
+	fragment, err := report.ExtractEmailSections(string(raw))
+	if err != nil {
+		log.Fatalf("no se pudieron extraer las secciones del reporte: %v", err)
+	}
+	bodyHTML := newsletter.MarkdownFragmentToHTML(fragment)
+
+	active, err := repo.ListActive(ctx)
+	if err != nil {
+		log.Fatalf("no se pudo listar suscriptores activos: %v", err)
+	}
+	if len(active) == 0 {
+		log.Print("no hay suscriptores activos, no se envía nada")
+		return
+	}
+
+	recipients := make([]newsletter.Recipient, 0, len(active))
+	for _, s := range active {
+		unsubscribeURL := apiBaseURL + "/subscribers/unsubscribe?token=" + s.UnsubscribeToken
+		html, err := newsletter.RenderEmail(bodyHTML, unsubscribeURL)
+		if err != nil {
+			log.Fatalf("no se pudo renderizar el email para %s: %v", s.Email, err)
+		}
+		recipients = append(recipients, newsletter.Recipient{Email: s.Email, HTMLContent: html})
+	}
+
+	brevo := newsletter.NewBrevo(brevoKey, senderEmail, senderName)
+	sent, failed, err := brevo.Send(ctx, subject, recipients)
+	if err != nil {
+		log.Printf("newsletter: hubo errores enviando (primer error: %v)", err)
+	}
+	log.Printf("newsletter: %d enviados, %d fallidos de %d suscriptores activos", sent, failed, len(active))
+}

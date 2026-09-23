@@ -1,4 +1,9 @@
 const API_BASE_URL = process.env.NOTICIAS_API_URL ?? "http://localhost:8080";
+// El form de suscripción corre en el browser (Client Component), donde
+// process.env solo expone variables con prefijo NEXT_PUBLIC_ — a
+// diferencia del resto de este archivo, que corre server-side.
+const PUBLIC_API_BASE_URL =
+  process.env.NEXT_PUBLIC_NOTICIAS_API_URL ?? "http://localhost:8080";
 
 export type SourceSummary = {
   name: string;
@@ -38,4 +43,29 @@ export async function fetchReportByDate(date: string): Promise<ReportResponse> {
 export async function fetchReportDates(): Promise<string[]> {
   const res = await apiFetch("/reports");
   return res.json();
+}
+
+export type SubscribeResult = { ok: true } | { ok: false; message: string };
+
+// A diferencia de apiFetch (pensado para fetches de página en Server
+// Components, que lanzan excepción), este flujo es un formulario
+// interactivo que necesita distinguir 400 (email inválido) de 500 (error
+// de servidor) para mostrar un mensaje inline sin romper el render.
+export async function subscribeEmail(email: string): Promise<SubscribeResult> {
+  try {
+    const res = await fetch(`${PUBLIC_API_BASE_URL}/subscribers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      if (res.status === 400) {
+        return { ok: false, message: "Ese email no parece válido." };
+      }
+      return { ok: false, message: "No se pudo completar la suscripción. Probá de nuevo." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "No se pudo conectar con el servidor. Probá de nuevo." };
+  }
 }

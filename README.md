@@ -4,7 +4,9 @@ Backend independiente que rastrea 90 medios de 17 países, filtra titulares con
 potencial internacional/multinacional, y publica un reporte diario en español
 formal de Argentina con tres secciones: resumen por región, clima internacional
 (comercio/industria/materias primas), y empresas potencialmente afectadas por
-región. El blog (Next.js) consume ese reporte vía HTTP.
+región. El blog (Next.js) consume ese reporte vía HTTP. Quien quiera puede
+suscribirse con solo su email y recibir por correo el Resumen ejecutivo +
+Resumen por región de cada edición.
 
 ## Arquitectura
 
@@ -15,17 +17,23 @@ config/gazetteer.yaml     países/empresas/keywords para el prefiltro barato
 
 core/                     backend Go, independiente de cualquier frontend
   cmd/ingest/             pipeline diario: fetch -> prefiltro -> clasificación LLM -> síntesis -> out/YYYY-MM-DD.md
-  cmd/api/                sirve los reportes generados por HTTP (para el blog Next.js y, a futuro, la app mobile)
+  cmd/api/                sirve los reportes generados por HTTP + alta/baja de suscriptores del newsletter
+  cmd/newsletter/         manda por email el Resumen ejecutivo + Resumen por región a los suscriptores activos
   cmd/checkfeeds/         smoke test de los 90 feeds sin gastar API de Claude
+  internal/config/        helpers de entorno (.env, env vars) compartidos entre los cmd/
   internal/model/         tipos compartidos (Source, Article, Classification)
   internal/ingest/        carga de config + parser RSS/Atom/RDF (stdlib, sin dependencias de terceros)
   internal/filter/        prefiltro por gazetteer + clasificador Claude
-  internal/report/        síntesis del reporte final vía Claude
+  internal/report/        síntesis del reporte final vía Claude + extracción de secciones para el email
+  internal/store/         conexión a Postgres (Neon) + schema idempotente
+  internal/subscriber/    dominio y repositorio de suscriptores del newsletter
+  internal/newsletter/    conversión markdown->HTML del email + envío vía Brevo
 
 web/                      Next.js (App Router) — blog que consume core/cmd/api
-  src/app/page.tsx             último reporte + archivo de ediciones anteriores
+  src/app/page.tsx             último reporte + archivo de ediciones anteriores + form de suscripción
   src/app/reportes/[fecha]/    reporte de una fecha puntual
-  src/lib/api.ts                cliente HTTP hacia core/cmd/api (server-side only)
+  src/lib/api.ts                cliente HTTP hacia core/cmd/api (server-side + el POST de suscripción, client-side)
+  src/components/SubscribeForm.tsx   form de alta al newsletter (solo email)
 ```
 
 ## Por qué Go para el core
@@ -188,6 +196,57 @@ El home muestra la última edición abierta y las anteriores (hasta 30) como
 tarjetas plegables. Cada edición cierra con "Noticias utilizadas": lista de
 enlaces a las notas originales, por región.
 
+## Newsletter (alta con solo email)
+
+El home tiene un form de suscripción que pide únicamente un email — nada de
+nombre ni otros datos. Al enviar, `cmd/api` lo guarda en Postgres (Neon) y,
+después de que `cmd/ingest` genera la edición del día, `cmd/newsletter`
+manda por correo (vía Brevo) el `## Resumen ejecutivo` + `## Resumen por
+región` de esa edición a todos los suscriptores activos, con un link de baja
+propio por suscriptor en el pie del correo.
+
+Es opcional en los tres niveles: sin `DATABASE_URL`, `cmd/api` no registra
+las rutas de `/subscribers*` (el resto de la API sigue igual); sin
+`DATABASE_URL`/`BREVO_API_KEY`, `cmd/newsletter` no hace nada; sin ninguna de
+las dos, el pipeline diario (`.github/workflows/daily.yml`) sigue publicando
+el reporte exactamente igual que antes.
+
+Variables nuevas:
+
+```
+# core/cmd/api y core/cmd/newsletter
+DATABASE_URL=postgres://...          # connection string de Neon (o cualquier Postgres)
+BREVO_API_KEY=                       # API key de Brevo (transactional)
+BREVO_SENDER_EMAIL=                  # remitente verificado en Brevo
+BREVO_SENDER_NAME=Noticias Internacionales
+
+# core/cmd/api
+WEB_ORIGIN=https://tu-blog.vercel.app   # CORS del POST /subscribers; "*" en local
+
+# core/cmd/newsletter
+API_BASE_URL=https://tu-api.onrender.com   # con qué host arma el link de unsubscribe
+REPORT_DATE=2026-09-23                     # opcional; sin setear usa "hoy" (UTC)
+
+# web/ (además de NOTICIAS_API_URL, que es server-side)
+NEXT_PUBLIC_NOTICIAS_API_URL=http://localhost:8080   # el form corre en el browser, necesita el prefijo NEXT_PUBLIC_
+```
+
+`DATABASE_URL` tiene que estar seteada en **dos lugares** por separado: en el
+servicio de Render (para que `cmd/api` sirva `/subscribers`) y como secret de
+GitHub Actions (para que `cmd/newsletter` corra en el cron diario) — cargar
+solo uno de los dos deja la otra mitad rota en silencio.
+
+Correrlo local de punta a punta:
+
+```bash
+cd core
+DATABASE_URL=... BREVO_API_KEY=... go run ./cmd/api        # habilita /subscribers*
+curl -X POST localhost:8080/subscribers -H 'Content-Type: application/json' -d '{"email":"vos@ejemplo.com"}'
+
+# con un reports/{fecha}.md ya generado:
+DATABASE_URL=... BREVO_API_KEY=... REPORT_DATE=2026-09-23 go run ./cmd/newsletter
+```
+
 ## Cómo probar la aplicación
 
 Ver sección dedicada más abajo con el detalle paso a paso (tests automáticos,
@@ -204,9 +263,10 @@ smoke test de feeds sin costo, corrida real del pipeline, y el blog).
 - [x] API HTTP mínima sobre archivos
 - [x] Tests automáticos (`go test ./...`) y smoke test de feeds (`cmd/checkfeeds`)
 - [x] Blog Next.js consumiendo la API del core
+- [x] Persistencia en Postgres (Neon) — hoy solo para suscriptores del newsletter
+- [x] Newsletter por email (alta con solo email, baja con link propio, envío vía Brevo)
 - [ ] Programar corrida diaria (cron)
 - [ ] Resolver scraping puntual para los 22 `NO_RSS` (sitemap/wp-json donde aplica)
-- [ ] Persistencia en Postgres (cuando se necesite historial/búsqueda más allá de archivos por fecha)
 
 ## Cómo probar la aplicación
 
@@ -292,3 +352,27 @@ romper — es el comportamiento esperado, no un bug.
 
 `npm run build` también sirve como chequeo rápido de tipos/compilación sin
 necesitar el backend levantado.
+
+### 6. Newsletter (opcional — necesita Postgres y Brevo)
+
+```bash
+cd core
+DATABASE_URL=postgres://... BREVO_API_KEY=... go run ./cmd/api
+```
+
+Suscribite desde el form del blog o directo con curl:
+
+```bash
+curl -X POST localhost:8080/subscribers -H 'Content-Type: application/json' -d '{"email":"vos@ejemplo.com"}'
+```
+
+Con un reporte ya generado (paso 3), mandá el correo de esa fecha:
+
+```bash
+DATABASE_URL=postgres://... BREVO_API_KEY=... REPORT_DATE=2026-09-23 go run ./cmd/newsletter
+```
+
+Revisá la bandeja: el correo debe traer solo Resumen ejecutivo + Resumen por
+región, con un link de baja al pie. Clickearlo confirma la baja
+(`unsubscribed_at` en la tabla `subscribers`) y una corrida posterior de
+`cmd/newsletter` ya no le manda nada a ese email.

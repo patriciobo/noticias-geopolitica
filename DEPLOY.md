@@ -20,6 +20,8 @@ con la edición nueva incluida. Sin base de datos, sin cambios de código.
 | API Go | Render (Web Service) | gratis, se duerme tras ~15 min sin tráfico |
 | Blog Next.js | Vercel (Hobby) | gratis, uso no comercial |
 | LLM | Gemini free tier (aistudio.google.com) | gratis, con límites de uso |
+| DB de suscriptores | Neon (Postgres free tier) | gratis, sostenido (no expira como el Postgres de Render) |
+| Envío de newsletter | Brevo (transactional) | gratis, 300 emails/día para siempre |
 
 Los límites de cada plan cambian: confirmalos en las páginas de precios antes
 de depender de ellos.
@@ -29,6 +31,7 @@ de depender de ellos.
 - Repo en GitHub (ver `git push -u origin main`).
 - Key de Gemini: aistudio.google.com → *Get API key*.
 - Cuentas en Render y Vercel, ambas con login de GitHub.
+- Opcional (solo si querés el newsletter): cuenta en neon.tech y en brevo.com.
 
 > Ollama no sirve en producción gratis (necesita una máquina propia) y la API
 > de Claude es paga. El workflow usa `LLM_PROVIDER=gemini`; si querés Claude,
@@ -102,6 +105,44 @@ El blog pide los datos en cada visita (`cache: "no-store"`), así que la edició
 nueva aparece apenas Render termina de redeployar; no hace falta redeployar
 Vercel.
 
+## Paso 4 — Newsletter (Neon + Brevo, opcional)
+
+Sin esto, todo lo de arriba sigue funcionando igual — el newsletter es
+enteramente opcional. Si querés habilitarlo:
+
+1. **Neon**: neon.tech → *New Project* → copiá el *Connection string*
+   (`postgres://usuario:password@host/dbname?sslmode=require`). No hace
+   falta crear tablas a mano: `cmd/api`/`cmd/newsletter` las crean solas al
+   arrancar (`CREATE TABLE IF NOT EXISTS`, ver `core/internal/store`).
+2. **Brevo**: brevo.com → creá cuenta gratis (sin tarjeta) → verificá un
+   email/dominio remitente (*Senders, Domains & Dedicated IPs*) → *SMTP &
+   API → API Keys → Generate a new API key*.
+3. **Render** (donde corre `cmd/api`) → *Environment* → agregá:
+   - `DATABASE_URL` = el connection string de Neon.
+   - `WEB_ORIGIN` = la URL de tu blog en Vercel (para el CORS del form de
+     suscripción — sin esto, o dejándolo en `*`, el form igual funciona pero
+     sin restringir el origen).
+4. **GitHub** (Settings → Secrets and variables → Actions) → agregá, además
+   de los secrets del paso 1:
+   - `DATABASE_URL` = el mismo connection string de Neon (sí, otra vez —
+     es un secret distinto, en un lugar distinto; ver más abajo por qué).
+   - `BREVO_API_KEY` = la key generada en el paso 2.
+   - `BREVO_SENDER_EMAIL` = el email verificado en Brevo.
+   - *Settings → Secrets and variables → Actions → Variables* (no
+     *Secrets* — no es sensible) → `API_BASE_URL` = la URL de tu servicio en
+     Render (para armar el link de baja en el email).
+5. En Vercel (paso 3 de arriba) agregá también `NEXT_PUBLIC_NOTICIAS_API_URL`
+   = la misma URL de Render que `NOTICIAS_API_URL` — el form de suscripción
+   corre en el browser, y Next.js solo expone al cliente las variables con
+   prefijo `NEXT_PUBLIC_`.
+
+**`DATABASE_URL` va en dos lugares distintos y hay que cargarla en los dos**:
+Render (para que `cmd/api` sirva `POST /subscribers`) y GitHub Actions (para
+que `cmd/newsletter` corra en el cron diario). Son procesos separados que no
+comparten variables de entorno entre sí — cargar solo uno dejaría la otra
+mitad del feature rota en silencio (el form suscribe gente bien, pero nunca
+les llega el correo, o viceversa).
+
 ## Verificación de punta a punta
 
 1. Actions → *Run workflow* → esperá el commit del reporte.
@@ -119,6 +160,9 @@ Vercel.
 | El blog dice "No se pudo conectar con la API" | `NOTICIAS_API_URL` mal seteada, o Render dormido (reintentá en 1 min). |
 | El blog dice "Todavía no se generó ningún reporte" | `reports/` vacío en el repo o `OUT_DIR` mal configurado en Render. |
 | Muchos `fetch <medio>` con error en el log | El medio bloquea IPs de GitHub; ver `config/sources_rss.yaml`. |
+| El form de suscripción no hace nada / error de CORS en la consola del browser | Falta `NEXT_PUBLIC_NOTICIAS_API_URL` en Vercel, o `WEB_ORIGIN` en Render no incluye el origen del blog. |
+| La gente se suscribe bien pero nunca recibe el correo | `DATABASE_URL` está seteada en Render pero no en GitHub Actions (o al revés) — tiene que estar en los dos, ver paso 4. |
+| `cmd/newsletter` loguea "no configurados, no se envía" | Falta `DATABASE_URL` o `BREVO_API_KEY` como secret de GitHub Actions. |
 
 ## Alternativas
 

@@ -1,11 +1,13 @@
 // Command api serves the reports written by cmd/ingest over HTTP, so the
 // Next.js blog (and later, a mobile app) can consume them without touching
-// the filesystem directly. v1 is file-backed on purpose — no DB config
+// the filesystem directly. Reports stay file-backed on purpose — no DB
 // needed until report history/querying outgrows a directory of Markdown
-// files.
+// files. DB config (DATABASE_URL) is only used for the newsletter
+// subscriber list, and is entirely optional.
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -14,35 +16,13 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
+	"noticias/core/internal/config"
 	"noticias/core/internal/model"
+	"noticias/core/internal/store"
+	"noticias/core/internal/subscriber"
 )
-
-// loadDotEnv reads KEY=VALUE pairs from an optional .env file and applies
-// them via os.Setenv, without overriding variables already set in the real
-// environment. Missing file is not an error — .env is just a convenience
-// for local dev; in prod (Render) the real env vars are set in the panel.
-func loadDotEnv(path string) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return
-	}
-	for _, line := range strings.Split(string(data), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		key, value, found := strings.Cut(line, "=")
-		if !found {
-			continue
-		}
-		key = strings.TrimSpace(key)
-		value = strings.Trim(strings.TrimSpace(value), `"'`)
-		if _, exists := os.LookupEnv(key); !exists {
-			os.Setenv(key, value)
-		}
-	}
-}
 
 var dateRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
@@ -54,10 +34,11 @@ type reportResponse struct {
 }
 
 func main() {
-	loadDotEnv(".env")
+	config.LoadDotEnv(".env")
 
-	outDir := envOrDefault("OUT_DIR", "./out")
-	addr := envOrDefault("API_ADDR", ":8080")
+	outDir := config.EnvOrDefault("OUT_DIR", "./out")
+	addr := config.EnvOrDefault("API_ADDR", ":8080")
+	webOrigin := config.EnvOrDefault("WEB_ORIGIN", "*")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -68,15 +49,26 @@ func main() {
 	mux.HandleFunc("GET /reports/latest", latestReportHandler(outDir))
 	mux.HandleFunc("GET /reports/{date}", reportByDateHandler(outDir))
 
+	// El newsletter es opcional: sin DATABASE_URL, cmd/api sigue sirviendo
+	// /reports* igual que siempre — no hace falta DB para lo demás.
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		db, err := store.Open(ctx, dsn)
+		cancel()
+		if err != nil {
+			log.Fatalf("no se pudo conectar a DATABASE_URL: %v", err)
+		}
+		repo := subscriber.NewRepository(db)
+		mux.HandleFunc("POST /subscribers", withCORS(webOrigin, handleSubscribe(repo)))
+		mux.HandleFunc("OPTIONS /subscribers", withCORS(webOrigin, corsPreflightHandler))
+		mux.HandleFunc("GET /subscribers/unsubscribe", handleUnsubscribe(repo))
+		log.Print("newsletter habilitado (DATABASE_URL configurada)")
+	} else {
+		log.Print("newsletter deshabilitado (sin DATABASE_URL)")
+	}
+
 	log.Printf("api escuchando en %s (fuente: %s)", addr, outDir)
 	log.Fatal(http.ListenAndServe(addr, mux))
-}
-
-func envOrDefault(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
 }
 
 func listDates(outDir string) ([]string, error) {

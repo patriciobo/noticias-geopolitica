@@ -5,6 +5,7 @@ import {
   type ReportResponse,
 } from "@/lib/api";
 import DayEntry from "@/components/DayEntry";
+import SubscribeForm from "@/components/SubscribeForm";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -58,6 +59,7 @@ export default async function Home() {
           Un informe por día: comercio, industria y empresas multinacionales,
           con enlaces a las notas originales de cada medio.
         </p>
+        <SubscribeForm />
       </header>
       <div className={styles.feed}>
         <DayEntry report={latest} latest />
