@@ -7,6 +7,7 @@ import {
 } from "@/lib/api";
 import DayEntry from "@/components/DayEntry";
 import SubscribeForm from "@/components/SubscribeForm";
+import DonationSupport from "@/components/DonationSupport";
 import styles from "./page.module.css";
 
 export const metadata = {
@@ -68,6 +69,7 @@ export default async function Home() {
           con enlaces a las notas originales de cada medio.
         </p>
         <SubscribeForm turnstileSiteKey={process.env.TURNSTILE_SITE_KEY} />
+        <DonationSupport />
       </header>
       <div className={styles.feed}>
         <DayEntry report={latest} latest />

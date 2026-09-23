@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { fetchReportByDate, ReportNotFoundError } from "@/lib/api";
+import { fetchReportByDate, ReportNotFoundError, type ReportResponse } from "@/lib/api";
 import ReportView from "@/components/ReportView";
+import DonationSupport from "@/components/DonationSupport";
 
 // Ver REVALIDATE_SECONDS en lib/api.ts (acá tiene que ser un literal).
 export const revalidate = 300;
@@ -25,7 +26,7 @@ export default async function ReportePage({
     notFound();
   }
 
-  let report;
+  let report: ReportResponse;
   try {
     report = await fetchReportByDate(fecha);
   } catch (err) {
@@ -34,5 +35,11 @@ export default async function ReportePage({
     }
     throw err;
   }
-  return <ReportView date={report.date} markdown={report.markdown} sources={report.sources} provenance={report.provenance} />;
+
+  return (
+    <>
+      <ReportView date={report.date} markdown={report.markdown} sources={report.sources} provenance={report.provenance} />
+      <DonationSupport variant="article" />
+    </>
+  );
 }
