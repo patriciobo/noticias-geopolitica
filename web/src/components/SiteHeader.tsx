@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import styles from './SiteHeader.module.css';
 
 // Header global (layout.tsx, aparece en todas las páginas). Los links de
@@ -21,6 +22,7 @@ export default function SiteHeader() {
 					<a href='/#ediciones-anteriores'>Ediciones</a>
 					<a href='/#resumen-por-region'>Regiones</a>
 					<a href='/#fuentes-consultadas'>Fuentes</a>
+					<Link href='/metodologia'>Metodología</Link>
 				</nav>
 			</div>
 			<div className={styles.accentBar} aria-hidden='true' />

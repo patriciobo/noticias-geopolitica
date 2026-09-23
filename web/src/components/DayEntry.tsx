@@ -40,7 +40,7 @@ export default function DayEntry({
           <p className={styles.meta}>{meta}</p>
         </header>
         {abstract && <Abstract markdown={abstract} />}
-        <ReportBody markdown={body} sources={report.sources} />
+        <ReportBody date={report.date} markdown={body} sources={report.sources} provenance={report.provenance} />
       </article>
     );
   }
@@ -58,7 +58,7 @@ export default function DayEntry({
           <span className={styles.toggle} aria-hidden="true" />
         </summary>
         <div className={styles.content}>
-          <ReportBody markdown={body} sources={report.sources} />
+          <ReportBody date={report.date} markdown={body} sources={report.sources} provenance={report.provenance} />
         </div>
       </details>
     </article>

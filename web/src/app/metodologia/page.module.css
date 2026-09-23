@@ -1,0 +1,104 @@
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+  line-height: 1.65;
+}
+
+.page h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+
+.lead {
+  font-size: 1.1rem;
+  color: var(--ink);
+  margin-bottom: 2rem;
+}
+
+.page section {
+  margin-bottom: 2.25rem;
+}
+
+.page h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 3px solid var(--accent);
+}
+
+.page ol,
+.page ul {
+  padding-left: 1.25rem;
+}
+
+.page li {
+  margin-bottom: 0.6rem;
+}
+
+.page a {
+  color: var(--accent);
+}
+
+.page code {
+  font-size: 0.85rem;
+  background: var(--accent-tint);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.table td:not(.countries) {
+  white-space: nowrap;
+}
+
+.countries {
+  color: var(--muted);
+  min-width: 12rem;
+}
+
+.fullList summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.fullList summary:hover {
+  color: var(--accent);
+}
+
+.fullList ul {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.fullList li {
+  margin-bottom: 0.25rem;
+}

@@ -5,11 +5,42 @@ export type SourceSummary = {
   country: string;
 };
 
+// Cómo se generó una edición (ver model.Provenance en core). Ausente en
+// ediciones anteriores al registro de auditoría.
+export type Provenance = {
+  generated_at: string;
+  commit?: string;
+  run_url?: string;
+  provider: string;
+  classify_models: string[];
+  synthesize_models: string[];
+  prompt_sha256: Record<string, string>;
+  counts: {
+    fetched: number;
+    prefilter_rejected: number;
+    classifier_rejected: number;
+    classifier_errors: number;
+    accepted: number;
+    links_removed: number;
+  };
+};
+
 export type ReportResponse = {
   date: string;
   markdown: string;
   sources: SourceSummary[];
   source_count: number;
+  provenance?: Provenance;
+};
+
+// Un medio de config/sources.yaml tal como lo publica GET /sources.
+export type PublicSource = {
+  name: string;
+  country: string;
+  region: string;
+  stance: string;
+  homepage: string;
+  has_feed: boolean;
 };
 
 export class ReportNotFoundError extends Error {}
@@ -45,6 +76,11 @@ export async function fetchReportByDate(date: string): Promise<ReportResponse> {
 
 export async function fetchReportDates(): Promise<string[]> {
   const res = await apiFetch("/reports");
+  return res.json();
+}
+
+export async function fetchSources(): Promise<PublicSource[]> {
+  const res = await apiFetch("/sources");
   return res.json();
 }
 

@@ -5,10 +5,11 @@ import Abstract from "./Abstract";
 import ClimateColumns from "./ClimateColumns";
 import CompaniesTable from "./CompaniesTable";
 import NewsLinks from "./NewsLinks";
+import ProvenanceDisclosure from "./ProvenanceDisclosure";
 import SourcesDisclosure from "./SourcesDisclosure";
 import { splitAbstract, splitNewsLinks } from "@/lib/newsLinks";
 import { splitTopSections } from "@/lib/reportSections";
-import type { SourceSummary } from "@/lib/api";
+import type { Provenance, SourceSummary } from "@/lib/api";
 import styles from "./ReportView.module.css";
 
 function textContent(node: ReactNode): string {
@@ -55,11 +56,15 @@ const genericMarkdownComponents: Components = {
 };
 
 export function ReportBody({
+  date,
   markdown,
   sources,
+  provenance,
 }: {
+  date: string;
   markdown: string;
   sources: SourceSummary[];
+  provenance?: Provenance;
 }) {
   const { body, groups } = splitNewsLinks(markdown);
   const sections = splitTopSections(body);
@@ -93,6 +98,7 @@ export function ReportBody({
       <div id="fuentes-consultadas">
         <SourcesDisclosure sources={sources} />
       </div>
+      <ProvenanceDisclosure date={date} provenance={provenance} />
     </>
   );
 }
@@ -101,17 +107,19 @@ export default function ReportView({
   date,
   markdown,
   sources,
+  provenance,
 }: {
   date: string;
   markdown: string;
   sources: SourceSummary[];
+  provenance?: Provenance;
 }) {
   const { abstract, body } = splitAbstract(markdown);
   return (
     <article className={styles.article}>
       <p className={styles.date}>Edición del {formatDate(date)}</p>
       {abstract && <Abstract markdown={abstract} />}
-      <ReportBody markdown={body} sources={sources} />
+      <ReportBody date={date} markdown={body} sources={sources} provenance={provenance} />
     </article>
   );
 }

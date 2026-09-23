@@ -59,6 +59,7 @@ func main() {
 	mux.HandleFunc("GET /reports", listReportsHandler(outDir))
 	mux.HandleFunc("GET /reports/latest", latestReportHandler(outDir))
 	mux.HandleFunc("GET /reports/{date}", reportByDateHandler(outDir))
+	mux.HandleFunc("GET /sources", sourcesHandler())
 
 	// El newsletter es opcional: sin DATABASE_URL, cmd/api sigue sirviendo
 	// /reports* igual que siempre — no hace falta DB para lo demás.

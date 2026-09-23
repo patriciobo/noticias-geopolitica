@@ -34,5 +34,5 @@ export default async function ReportePage({
     }
     throw err;
   }
-  return <ReportView date={report.date} markdown={report.markdown} sources={report.sources} />;
+  return <ReportView date={report.date} markdown={report.markdown} sources={report.sources} provenance={report.provenance} />;
 }
