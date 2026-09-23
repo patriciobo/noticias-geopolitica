@@ -167,9 +167,9 @@ func parseRSS2(body []byte, sourceID string, maxItems int) []model.Article {
 	for _, it := range items {
 		articles = append(articles, model.Article{
 			SourceID:    sourceID,
-			Title:       strings.TrimSpace(it.Title),
-			Link:        strings.TrimSpace(it.Link),
-			Snippet:     strings.TrimSpace(it.Description),
+			Title:       cleanText(it.Title, maxTitleRunes),
+			Link:        cleanLink(it.Link),
+			Snippet:     cleanText(it.Description, maxSnippetRunes),
 			PublishedAt: parseDate(it.PubDate),
 		})
 	}
@@ -204,9 +204,9 @@ func parseAtom(body []byte, sourceID string, maxItems int) []model.Article {
 		}
 		articles = append(articles, model.Article{
 			SourceID:    sourceID,
-			Title:       strings.TrimSpace(e.Title),
-			Link:        strings.TrimSpace(link),
-			Snippet:     strings.TrimSpace(snippet),
+			Title:       cleanText(e.Title, maxTitleRunes),
+			Link:        cleanLink(link),
+			Snippet:     cleanText(snippet, maxSnippetRunes),
 			PublishedAt: parseDate(published),
 		})
 	}
@@ -226,9 +226,9 @@ func parseRDF(body []byte, sourceID string, maxItems int) []model.Article {
 	for _, it := range items {
 		articles = append(articles, model.Article{
 			SourceID:    sourceID,
-			Title:       strings.TrimSpace(it.Title),
-			Link:        strings.TrimSpace(it.Link),
-			Snippet:     strings.TrimSpace(it.Description),
+			Title:       cleanText(it.Title, maxTitleRunes),
+			Link:        cleanLink(it.Link),
+			Snippet:     cleanText(it.Description, maxSnippetRunes),
 			PublishedAt: parseDate(it.Date),
 		})
 	}

@@ -32,6 +32,11 @@ type reportResponse struct {
 	Markdown    string                `json:"markdown"`
 	Sources     []model.SourceSummary `json:"sources"`
 	SourceCount int                   `json:"source_count"`
+	// Provenance resume cómo se generó la edición (modelos, commit, log de
+	// la corrida, conteos del filtrado). Nil en ediciones previas al
+	// registro de auditoría. El detalle titular por titular queda en
+	// reports/FECHA.audit.json en el repo, no se sirve acá.
+	Provenance *model.Provenance `json:"provenance,omitempty"`
 }
 
 func main() {
@@ -212,11 +217,23 @@ func serveReport(w http.ResponseWriter, outDir, date string) {
 		_ = json.Unmarshal(raw, &sources)
 	}
 
+	// El registro de auditoría trae arriba los mismos campos que
+	// model.Provenance (va embebido), así que decodificarlo ahí ignora la
+	// lista de titulares y se queda con el resumen.
+	var provenance *model.Provenance
+	if raw, err := os.ReadFile(filepath.Join(outDir, date+".audit.json")); err == nil {
+		var p model.Provenance
+		if json.Unmarshal(raw, &p) == nil {
+			provenance = &p
+		}
+	}
+
 	writeJSON(w, http.StatusOK, reportResponse{
 		Date:        date,
 		Markdown:    string(raw),
 		Sources:     sources,
 		SourceCount: len(sources),
+		Provenance:  provenance,
 	})
 }
 

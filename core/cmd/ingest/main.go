@@ -6,6 +6,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"os"
@@ -127,14 +129,20 @@ func main() {
 	var classifier filter.Classifier
 	var synth report.Synthesizer
 	classifyConcurrency := defaultClassifyConcurrency
+	// Modelos configurados, en orden (principal y después fallbacks), para
+	// el registro de auditoría de la edición.
+	var classifyModelNames, synthModelNames []string
 
 	switch provider {
 	case "claude":
 		if apiKey == "" {
 			log.Fatal("LLM_PROVIDER=claude pero ANTHROPIC_API_KEY no está configurada")
 		}
-		classifier = filter.NewClaudeClassifier(apiKey)
-		synth = report.NewClaudeSynthesizer(apiKey)
+		c := filter.NewClaudeClassifier(apiKey)
+		s := report.NewClaudeSynthesizer(apiKey)
+		classifier, synth = c, s
+		classifyModelNames = []string{c.Model}
+		synthModelNames = []string{s.Model}
 	case "gemini":
 		// Atajo sobre el cliente compatible con OpenAI: mismo cliente que
 		// "openai_compat", pero con los defaults de Gemini precargados para
@@ -151,6 +159,8 @@ func main() {
 		// El cliente ya reintenta con backoff ante 429, pero conviene no
 		// generarlos de entrada.
 		classifyConcurrency = envOrDefaultInt("GEMINI_CLASSIFY_CONCURRENCY", 2)
+		classifyModelNames = []string{classifyModel}
+		synthModelNames = []string{synthModel}
 		log.Printf("usando Gemini — clasificación: %s, síntesis: %s", classifyModel, synthModel)
 	case "openai_compat":
 		if compatKey == "" {
@@ -161,6 +171,8 @@ func main() {
 		synthModel := envOrDefault("OPENAI_COMPAT_SYNTHESIZE_MODEL", "gpt-5-nano")
 		classifier = filter.NewOpenAICompatClassifier(baseURL, compatKey, classifyModel)
 		synth = report.NewOpenAICompatSynthesizer(baseURL, compatKey, synthModel)
+		classifyModelNames = []string{classifyModel}
+		synthModelNames = []string{synthModel}
 		log.Printf("usando %s — clasificación: %s, síntesis: %s", baseURL, classifyModel, synthModel)
 	case "ollama":
 		ollamaHost := envOrDefault("OLLAMA_HOST", "http://localhost:11434")
@@ -169,6 +181,8 @@ func main() {
 		classifier = filter.NewOllamaClassifier(ollamaHost, classifyModel)
 		synth = report.NewOllamaSynthesizer(ollamaHost, synthModel)
 		classifyConcurrency = 2 // modelo local: evita saturar CPU/GPU con muchos requests en paralelo
+		classifyModelNames = []string{classifyModel}
+		synthModelNames = []string{synthModel}
 		log.Printf("usando Ollama local (%s) — clasificación: %s, síntesis: %s", ollamaHost, classifyModel, synthModel)
 	default:
 		log.Fatalf("LLM_PROVIDER desconocido: %q (usá claude, gemini, openai_compat u ollama)", provider)
@@ -219,6 +233,7 @@ func main() {
 			// puro por texto, alcanza sin el parámetro forzado.
 			c.DisableJSONMode = true
 			classifyChain = append(classifyChain, c)
+			classifyModelNames = append(classifyModelNames, "openrouter:"+m)
 		}
 		classifier = filter.NewChainClassifier(classifyChain...)
 
@@ -227,6 +242,7 @@ func main() {
 			s := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, m)
 			s.ExtraHeaders = headers
 			synthChain = append(synthChain, s)
+			synthModelNames = append(synthModelNames, "openrouter:"+m)
 		}
 		synth = report.NewChainSynthesizer(synthChain...)
 
@@ -249,7 +265,7 @@ func main() {
 	articles := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
 	log.Printf("titulares obtenidos: %d", len(articles))
 
-	classified := classifyAll(ctx, articles, sources, gaz, classifier, classifyConcurrency)
+	classified, auditEntries := classifyAll(ctx, articles, sources, gaz, classifier, classifyConcurrency)
 	log.Printf("titulares con potencial internacional: %d", len(classified))
 
 	if len(classified) == 0 {
@@ -259,6 +275,13 @@ func main() {
 	markdown, err := synth.Synthesize(ctx, classified)
 	if err != nil {
 		log.Fatalf("sintetizando reporte: %v", err)
+	}
+
+	// Defensa contra prompt injection: el informe solo puede enlazar notas
+	// que efectivamente se procesaron (ver report.StripUnknownLinks).
+	markdown, linksRemoved := report.StripUnknownLinks(markdown, classified)
+	if linksRemoved > 0 {
+		log.Printf("se sacaron %d enlace(s) del texto del LLM que no correspondían a notas procesadas", linksRemoved)
 	}
 
 	markdown = report.AppendSources(markdown, classified)
@@ -283,6 +306,77 @@ func main() {
 		log.Fatalf("escribiendo medios consultados: %v", err)
 	}
 	log.Printf("medios consultados: %d (%s)", len(consulted), sourcesPath2)
+
+	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, linksRemoved)
+	auditPath := filepath.Join(outDir, dateStr+".audit.json")
+	auditJSON, err := json.MarshalIndent(audit, "", " ")
+	if err != nil {
+		log.Fatalf("serializando registro de auditoría: %v", err)
+	}
+	if err := os.WriteFile(auditPath, auditJSON, 0o644); err != nil {
+		log.Fatalf("escribiendo registro de auditoría: %v", err)
+	}
+	log.Printf("registro de auditoría: %+v (%s)", audit.Counts, auditPath)
+}
+
+// buildAudit arma el registro público de la edición (ver model.Audit).
+// Commit y RunURL salen de las variables que GitHub Actions define en cada
+// corrida; en una corrida local quedan vacíos.
+func buildAudit(provider string, classifyModels, synthModels []string, entries []model.AuditEntry, linksRemoved int) model.Audit {
+	prompts := map[string]string{}
+	for name, text := range filter.SystemPrompts() {
+		prompts[name] = sha256Hex(text)
+	}
+	for name, text := range report.SystemPrompts() {
+		prompts[name] = sha256Hex(text)
+	}
+
+	var runURL string
+	if server, repo, run := os.Getenv("GITHUB_SERVER_URL"), os.Getenv("GITHUB_REPOSITORY"), os.Getenv("GITHUB_RUN_ID"); server != "" && repo != "" && run != "" {
+		runURL = server + "/" + repo + "/actions/runs/" + run
+	}
+
+	// Orden estable (fuente, título) para que el archivo sea legible y los
+	// diffs entre corridas tengan sentido.
+	sort.Slice(entries, func(i, j int) bool {
+		if entries[i].Source != entries[j].Source {
+			return entries[i].Source < entries[j].Source
+		}
+		return entries[i].Title < entries[j].Title
+	})
+
+	counts := model.AuditCounts{Fetched: len(entries), LinksRemoved: linksRemoved}
+	for _, e := range entries {
+		switch e.Stage {
+		case model.StagePrefilterRejected:
+			counts.PrefilterRejected++
+		case model.StageClassifierRejected:
+			counts.ClassifierRejected++
+		case model.StageClassifierError:
+			counts.ClassifierErrors++
+		case model.StageAccepted:
+			counts.Accepted++
+		}
+	}
+
+	return model.Audit{
+		Provenance: model.Provenance{
+			GeneratedAt:      time.Now().UTC(),
+			Commit:           os.Getenv("GITHUB_SHA"),
+			RunURL:           runURL,
+			Provider:         provider,
+			ClassifyModels:   classifyModels,
+			SynthesizeModels: synthModels,
+			PromptSHA256:     prompts,
+			Counts:           counts,
+		},
+		Headlines: entries,
+	}
+}
+
+func sha256Hex(s string) string {
+	sum := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sum[:])
 }
 
 // distinctSources dedupes the sources that returned at least one headline
@@ -370,18 +464,29 @@ func classifyAll(
 	gaz *filter.Gazetteer,
 	classifier filter.Classifier,
 	concurrency int,
-) []model.ClassifiedArticle {
+) ([]model.ClassifiedArticle, []model.AuditEntry) {
 	type passedItem struct {
 		Source  model.Source
 		Article model.Article
 		Pre     filter.PrefilterResult
 	}
-	var passed []passedItem
+	entry := func(src model.Source, a model.Article, stage string) model.AuditEntry {
+		return model.AuditEntry{Source: src.Name, Country: src.Country, Title: a.Title, Link: a.Link, Stage: stage}
+	}
+
+	var (
+		passed []passedItem
+		audit  = make([]model.AuditEntry, 0, len(items))
+	)
 	for _, it := range items {
 		pre := filter.Prefilter(it.Article, gaz)
 		if pre.Passed {
 			passed = append(passed, passedItem{Source: it.Source, Article: it.Article, Pre: pre})
+			continue
 		}
+		e := entry(it.Source, it.Article, model.StagePrefilterRejected)
+		e.Reason = "no menciona dos o más países, una empresa multinacional de la lista ni una palabra clave de comercio/tratados"
+		audit = append(audit, e)
 	}
 
 	var (
@@ -411,16 +516,25 @@ func classifyAll(
 			for i, r := range results {
 				if r.Err != nil {
 					log.Printf("classify %q: %v", chunk[i].Article.Title, r.Err)
+					e := entry(chunk[i].Source, chunk[i].Article, model.StageClassifierError)
+					e.Reason = r.Err.Error()
+					audit = append(audit, e)
 					continue
 				}
-				if !r.Classification.IsInternational {
-					continue
+				stage := model.StageClassifierRejected
+				if r.Classification.IsInternational {
+					stage = model.StageAccepted
+					out = append(out, model.ClassifiedArticle{Article: chunk[i].Article, Source: chunk[i].Source, Classification: r.Classification})
 				}
-				out = append(out, model.ClassifiedArticle{Article: chunk[i].Article, Source: chunk[i].Source, Classification: r.Classification})
+				e := entry(chunk[i].Source, chunk[i].Article, stage)
+				e.Reason = r.Classification.Reason
+				e.RelationType = r.Classification.RelationType
+				e.Confidence = r.Classification.Confidence
+				audit = append(audit, e)
 			}
 			mu.Unlock()
 		}(chunk)
 	}
 	wg.Wait()
-	return out
+	return out, audit
 }
