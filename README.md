@@ -219,6 +219,15 @@ suscriptor en el pie del correo (ese link sí lo abre el browser directo
 contra `cmd/api`, pero como navegación normal — no un fetch — tampoco pasa
 por CORS).
 
+El email sigue el mismo estilo editorial rojo/negro que el blog (header con
+nav, botón de suscripción, cita del resumen ejecutivo con borde rojo).
+Regiones sin novedades ese día (pasa seguido — ver el fix del bug de
+regiones más abajo) no reciben el mismo espacio que una con contenido real:
+se agrupan compactas en una fila aparte (`core/internal/newsletter/regions.go`),
+para que el layout no se vea roto en un día con dos o tres regiones vacías.
+No incluye dirección postal física en el pie — si la necesitás por norma
+legal de tu jurisdicción, agregala a mano en `core/internal/newsletter/template.go`.
+
 Es opcional en los tres niveles: sin `DATABASE_URL`, `cmd/api` no registra
 las rutas de `/subscribers*` (el resto de la API sigue igual); sin
 `DATABASE_URL`/`BREVO_API_KEY`, `cmd/newsletter` no hace nada; sin ninguna de
@@ -236,6 +245,7 @@ BREVO_SENDER_NAME=Noticias Internacionales
 
 # core/cmd/newsletter
 API_BASE_URL=https://tu-api.onrender.com   # con qué host arma el link de unsubscribe
+SITE_URL=https://tu-blog.vercel.app        # con qué host arma el header/CTA y el link a la edición completa
 REPORT_DATE=2026-09-23                     # opcional; sin setear usa "hoy" (UTC)
 ```
 

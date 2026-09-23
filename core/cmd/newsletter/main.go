@@ -6,6 +6,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,6 +33,7 @@ func main() {
 	outDir := config.EnvOrDefault("OUT_DIR", "./out")
 	reportDate := config.EnvOrDefault("REPORT_DATE", time.Now().Format("2006-01-02"))
 	apiBaseURL := config.EnvOrDefault("API_BASE_URL", "http://localhost:8080")
+	siteURL := config.EnvOrDefault("SITE_URL", "http://localhost:3000")
 	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
 	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
 	subject := "Resumen internacional del " + reportDate
@@ -52,11 +55,16 @@ func main() {
 		return
 	}
 
-	fragment, err := report.ExtractEmailSections(string(raw))
-	if err != nil {
-		log.Fatalf("no se pudieron extraer las secciones del reporte: %v", err)
+	sections := report.Sections(string(raw))
+	abstract, ok := sections["Resumen ejecutivo"]
+	if !ok {
+		log.Fatal("el reporte no tiene sección \"Resumen ejecutivo\"")
 	}
-	bodyHTML := newsletter.MarkdownFragmentToHTML(fragment)
+	regionSummary, ok := sections["Resumen por región"]
+	if !ok {
+		log.Fatal("el reporte no tiene sección \"Resumen por región\"")
+	}
+	populated, empty := newsletter.SplitRegions(regionSummary)
 
 	active, err := repo.ListActive(ctx)
 	if err != nil {
@@ -67,10 +75,20 @@ func main() {
 		return
 	}
 
+	base := newsletter.EmailData{
+		SiteURL:          siteURL,
+		EditionURL:       fmt.Sprintf("%s/reportes/%s", siteURL, reportDate),
+		DateLabel:        newsletter.FormatDateEs(reportDate),
+		AbstractHTML:     template.HTML(newsletter.MarkdownFragmentToHTML(abstract)),
+		PopulatedRegions: populated,
+		EmptyRegions:     empty,
+	}
+
 	recipients := make([]newsletter.Recipient, 0, len(active))
 	for _, s := range active {
-		unsubscribeURL := apiBaseURL + "/subscribers/unsubscribe?token=" + s.UnsubscribeToken
-		html, err := newsletter.RenderEmail(bodyHTML, unsubscribeURL)
+		data := base
+		data.UnsubscribeURL = apiBaseURL + "/subscribers/unsubscribe?token=" + s.UnsubscribeToken
+		html, err := newsletter.RenderEmail(data)
 		if err != nil {
 			log.Fatalf("no se pudo renderizar el email para %s: %v", s.Email, err)
 		}

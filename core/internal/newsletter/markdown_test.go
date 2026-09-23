@@ -25,6 +25,18 @@ func TestMarkdownFragmentToHTML(t *testing.T) {
 	}
 }
 
+func TestMarkdownFragmentToHTMLItalic(t *testing.T) {
+	got := MarkdownFragmentToHTML("Según *La Jornada*, algo pasó con **Estados Unidos**.")
+	for _, want := range []string{"<em>La Jornada</em>", "<strong>Estados Unidos</strong>"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "*") {
+		t.Errorf("leftover literal asterisk in:\n%s", got)
+	}
+}
+
 func TestMarkdownFragmentToHTMLEscapesRawHTML(t *testing.T) {
 	got := MarkdownFragmentToHTML("Texto con <script>alert(1)</script> adentro.")
 	if strings.Contains(got, "<script>") {

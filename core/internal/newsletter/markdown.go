@@ -7,9 +7,11 @@ import (
 )
 
 var boldRe = regexp.MustCompile(`\*\*(.+?)\*\*`)
+var italicRe = regexp.MustCompile(`\*(.+?)\*`)
 
-// MarkdownFragmentToHTML convierte a HTML el fragmento de markdown que
-// arma ExtractEmailSections. Es un conversor mínimo hecho a mano, no una
+// MarkdownFragmentToHTML convierte a HTML un fragmento de markdown del
+// reporte (una sección o subsección puntual, ver report.Sections/SubSections).
+// Es un conversor mínimo hecho a mano, no una
 // librería de markdown general (goldmark, etc): el contenido es
 // completamente predecible porque lo genera nuestro propio LLM siguiendo
 // un system prompt estricto (##/###, bullets "-", **negrita**, párrafos
@@ -57,11 +59,15 @@ func MarkdownFragmentToHTML(md string) string {
 	return b.String()
 }
 
-// inline escapa HTML y después aplica el único inline markdown que usa el
-// reporte: **negrita**. El escape va primero para que un "<" o "&" literal
-// en el texto no rompa el HTML resultante; **...** sigue intacto porque
-// html.EscapeString no toca asteriscos.
+// inline escapa HTML y después aplica el inline markdown que puede
+// aparecer en el reporte: **negrita** y *cursiva*. El escape va primero
+// para que un "<" o "&" literal en el texto no rompa el HTML resultante;
+// los asteriscos no se tocan. Negrita se resuelve ANTES que cursiva a
+// propósito: una vez reemplazado "**x**" por "<strong>x</strong>" no quedan
+// pares de asteriscos dobles sueltos, así que la regex de cursiva (un solo
+// asterisco) no puede matchear por error dentro de lo que ya era negrita.
 func inline(text string) string {
 	escaped := html.EscapeString(text)
-	return boldRe.ReplaceAllString(escaped, "<strong>$1</strong>")
+	bold := boldRe.ReplaceAllString(escaped, "<strong>$1</strong>")
+	return italicRe.ReplaceAllString(bold, "<em>$1</em>")
 }

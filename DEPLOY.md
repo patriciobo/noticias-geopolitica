@@ -126,8 +126,10 @@ enteramente opcional. Si querés habilitarlo:
    - `BREVO_API_KEY` = la key generada en el paso 2.
    - `BREVO_SENDER_EMAIL` = el email verificado en Brevo.
    - *Settings → Secrets and variables → Actions → Variables* (no
-     *Secrets* — no es sensible) → `API_BASE_URL` = la URL de tu servicio en
-     Render (para armar el link de baja en el email).
+     *Secrets* — no son sensibles) → `API_BASE_URL` = la URL de tu servicio en
+     Render (para armar el link de baja en el email) y `SITE_URL` = la URL de
+     tu blog en Vercel (para el header, el botón de suscripción y el link
+     "Ver edición completa" del email).
 
 No hace falta nada nuevo en Vercel: el form de suscripción pega a una route
 interna de Next.js (`web/src/app/api/subscribe/route.ts`, mismo origen, sin
