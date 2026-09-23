@@ -185,8 +185,18 @@ func main() {
 		// distintas por paso: clasificar dispara muchas llamadas
 		// concurrentes chicas, sintetizar es una sola llamada grande que
 		// tolera un modelo más pesado.
-		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "google/gemma-4-26b-a4b-it:free")
-		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free")
+		// openrouter/free al final de cada lista: es el router gratis de
+		// OpenRouter, reparte entre varios modelos free por dentro en vez de
+		// fijar uno solo — con solo 1-2 candidatos nombrados, si todos fallan
+		// a la vez (cuota agotada, error puntual del proveedor) el
+		// ChainClassifier/ChainSynthesizer los banca a TODOS para el resto de
+		// la corrida (ver comentario en internal/filter/fallback.go) y esa
+		// región/corrida se queda sin nada — nos pasó el 2026-09-23, Europa y
+		// Asia Oriental quedaron en cero por esto. openrouter/free no vence
+		// como id nombrado (a diferencia de un modelo puntual) porque decide
+		// él mismo a qué modelo free enrutar en cada request.
+		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "google/gemma-4-26b-a4b-it:free,openrouter/free")
+		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free,openrouter/free")
 		// OpenRouter recomienda estos headers para su free tier (ranking /
 		// prioridad de cupo); no son estrictamente obligatorios.
 		headers := map[string]string{

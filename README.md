@@ -126,14 +126,22 @@ Por qué una cadena y no un solo fallback: un modelo free individual de
 OpenRouter puede fallar puntualmente (`Provider returned error`, timeout) sin
 que el proveedor esté caído — con un solo candidato eso pierde el artículo, con
 varios prueba el siguiente. Cada link que falla se banca para el resto de la
-corrida (no vuelve a pagar el viaje de red a algo ya confirmado caído), así
-que agregar más candidatos no tiene costo si terminan sin usarse.
+corrida (no vuelve a pagar el viaje de red a algo ya confirmado caído) — el
+costo es que si TODOS los links fallan una vez (ej. Gemini con rate-limit +
+el único fallback de OpenRouter con un error puntual), toda la corrida se
+queda sin clasificar nada más desde ese momento: nos pasó el 2026-09-23,
+Europa y Asia Oriental quedaron con "sin novedades" no porque no hubiera
+noticias, sino porque los dos proveedores configurados fallaron a la vez a
+mitad de la corrida. Por eso el default incluye `openrouter/free` al final:
+es el router gratis de OpenRouter, que reparte internamente entre varios
+modelos free en cada request — no se agota ni vence como un id de modelo
+puntual.
 
 ```
 OPENROUTER_API_KEY=
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CLASSIFY_MODELS=google/gemma-4-26b-a4b-it:free,otro/modelo:free
-OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,otro/modelo:free
+OPENROUTER_CLASSIFY_MODELS=google/gemma-4-26b-a4b-it:free,openrouter/free
+OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,openrouter/free
 ```
 
 Lista distinta por paso, separada por comas: clasificar dispara varias
