@@ -199,11 +199,17 @@ enlaces a las notas originales, por región.
 ## Newsletter (alta con solo email)
 
 El home tiene un form de suscripción que pide únicamente un email — nada de
-nombre ni otros datos. Al enviar, `cmd/api` lo guarda en Postgres (Neon) y,
-después de que `cmd/ingest` genera la edición del día, `cmd/newsletter`
-manda por correo (vía Brevo) el `## Resumen ejecutivo` + `## Resumen por
-región` de esa edición a todos los suscriptores activos, con un link de baja
-propio por suscriptor en el pie del correo.
+nombre ni otros datos. El submit pega a `web/src/app/api/subscribe/route.ts`
+(una route interna de Next.js, mismo origen que el browser, sin CORS), que
+del lado del servidor reenvía a `cmd/api` usando `NOTICIAS_API_URL` — la
+misma variable server-only que ya usa el resto de `web/`, sin necesitar un
+`NEXT_PUBLIC_*` nuevo. `cmd/api` lo guarda en Postgres (Neon) y, después de
+que `cmd/ingest` genera la edición del día, `cmd/newsletter` manda por
+correo (vía Brevo) el `## Resumen ejecutivo` + `## Resumen por región` de
+esa edición a todos los suscriptores activos, con un link de baja propio por
+suscriptor en el pie del correo (ese link sí lo abre el browser directo
+contra `cmd/api`, pero como navegación normal — no un fetch — tampoco pasa
+por CORS).
 
 Es opcional en los tres niveles: sin `DATABASE_URL`, `cmd/api` no registra
 las rutas de `/subscribers*` (el resto de la API sigue igual); sin
@@ -220,16 +226,13 @@ BREVO_API_KEY=                       # API key de Brevo (transactional)
 BREVO_SENDER_EMAIL=                  # remitente verificado en Brevo
 BREVO_SENDER_NAME=Noticias Internacionales
 
-# core/cmd/api
-WEB_ORIGIN=https://tu-blog.vercel.app   # CORS del POST /subscribers; "*" en local
-
 # core/cmd/newsletter
 API_BASE_URL=https://tu-api.onrender.com   # con qué host arma el link de unsubscribe
 REPORT_DATE=2026-09-23                     # opcional; sin setear usa "hoy" (UTC)
-
-# web/ (además de NOTICIAS_API_URL, que es server-side)
-NEXT_PUBLIC_NOTICIAS_API_URL=http://localhost:8080   # el form corre en el browser, necesita el prefijo NEXT_PUBLIC_
 ```
+
+`web/` no necesita ninguna variable nueva: `/api/subscribe` reusa
+`NOTICIAS_API_URL`, la misma que ya usan `fetchLatestReport` y compañía.
 
 `DATABASE_URL` tiene que estar seteada en **dos lugares** por separado: en el
 servicio de Render (para que `cmd/api` sirva `/subscribers`) y como secret de

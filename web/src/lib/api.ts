@@ -1,9 +1,4 @@
 const API_BASE_URL = process.env.NOTICIAS_API_URL ?? "http://localhost:8080";
-// El form de suscripción corre en el browser (Client Component), donde
-// process.env solo expone variables con prefijo NEXT_PUBLIC_ — a
-// diferencia del resto de este archivo, que corre server-side.
-const PUBLIC_API_BASE_URL =
-  process.env.NEXT_PUBLIC_NOTICIAS_API_URL ?? "http://localhost:8080";
 
 export type SourceSummary = {
   name: string;
@@ -51,9 +46,14 @@ export type SubscribeResult = { ok: true } | { ok: false; message: string };
 // Components, que lanzan excepción), este flujo es un formulario
 // interactivo que necesita distinguir 400 (email inválido) de 500 (error
 // de servidor) para mostrar un mensaje inline sin romper el render.
+//
+// Pega a la propia route interna de Next.js (/api/subscribe, mismo origen)
+// en vez de a NOTICIAS_API_URL directo: esa var es server-only (Vercel no
+// deja exponerla con NEXT_PUBLIC_ en este proyecto) y de paso evita tener
+// que configurar CORS en core/cmd/api — la route interna reenvía server-side.
 export async function subscribeEmail(email: string): Promise<SubscribeResult> {
   try {
-    const res = await fetch(`${PUBLIC_API_BASE_URL}/subscribers`, {
+    const res = await fetch("/api/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

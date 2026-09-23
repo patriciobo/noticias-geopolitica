@@ -119,9 +119,6 @@ enteramente opcional. Si querés habilitarlo:
    API → API Keys → Generate a new API key*.
 3. **Render** (donde corre `cmd/api`) → *Environment* → agregá:
    - `DATABASE_URL` = el connection string de Neon.
-   - `WEB_ORIGIN` = la URL de tu blog en Vercel (para el CORS del form de
-     suscripción — sin esto, o dejándolo en `*`, el form igual funciona pero
-     sin restringir el origen).
 4. **GitHub** (Settings → Secrets and variables → Actions) → agregá, además
    de los secrets del paso 1:
    - `DATABASE_URL` = el mismo connection string de Neon (sí, otra vez —
@@ -131,10 +128,13 @@ enteramente opcional. Si querés habilitarlo:
    - *Settings → Secrets and variables → Actions → Variables* (no
      *Secrets* — no es sensible) → `API_BASE_URL` = la URL de tu servicio en
      Render (para armar el link de baja en el email).
-5. En Vercel (paso 3 de arriba) agregá también `NEXT_PUBLIC_NOTICIAS_API_URL`
-   = la misma URL de Render que `NOTICIAS_API_URL` — el form de suscripción
-   corre en el browser, y Next.js solo expone al cliente las variables con
-   prefijo `NEXT_PUBLIC_`.
+
+No hace falta nada nuevo en Vercel: el form de suscripción pega a una route
+interna de Next.js (`web/src/app/api/subscribe/route.ts`, mismo origen, sin
+CORS) que reenvía server-side usando `NOTICIAS_API_URL` — la misma variable
+que ya configuraste en el paso 3 de arriba. Si tu plan de Vercel no te deja
+crear variables `NEXT_PUBLIC_*`, no importa: no se necesita ninguna para
+este feature.
 
 **`DATABASE_URL` va en dos lugares distintos y hay que cargarla en los dos**:
 Render (para que `cmd/api` sirva `POST /subscribers`) y GitHub Actions (para
@@ -160,7 +160,7 @@ les llega el correo, o viceversa).
 | El blog dice "No se pudo conectar con la API" | `NOTICIAS_API_URL` mal seteada, o Render dormido (reintentá en 1 min). |
 | El blog dice "Todavía no se generó ningún reporte" | `reports/` vacío en el repo o `OUT_DIR` mal configurado en Render. |
 | Muchos `fetch <medio>` con error en el log | El medio bloquea IPs de GitHub; ver `config/sources_rss.yaml`. |
-| El form de suscripción no hace nada / error de CORS en la consola del browser | Falta `NEXT_PUBLIC_NOTICIAS_API_URL` en Vercel, o `WEB_ORIGIN` en Render no incluye el origen del blog. |
+| El form de suscripción tira "No se pudo conectar con el servidor" | `NOTICIAS_API_URL` mal seteada en Vercel, o Render dormido/caído — revisá los logs de la función `/api/subscribe` en Vercel. |
 | La gente se suscribe bien pero nunca recibe el correo | `DATABASE_URL` está seteada en Render pero no en GitHub Actions (o al revés) — tiene que estar en los dos, ver paso 4. |
 | `cmd/newsletter` loguea "no configurados, no se envía" | Falta `DATABASE_URL` o `BREVO_API_KEY` como secret de GitHub Actions. |
 

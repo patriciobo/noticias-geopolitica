@@ -7,23 +7,6 @@ import (
 	"noticias/core/internal/subscriber"
 )
 
-// withCORS habilita al front (web/, en otro origen) a llamar estos
-// endpoints desde el browser — la primera llamada cross-origin real del
-// proyecto (todo lo demás lo consume web/ server-side). origin es
-// configurable vía WEB_ORIGIN; "*" por default para no romper en local.
-func withCORS(origin string, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		next(w, r)
-	}
-}
-
-func corsPreflightHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNoContent)
-}
-
 type subscribeRequest struct {
 	Email string `json:"email"`
 }

@@ -38,7 +38,6 @@ func main() {
 
 	outDir := config.EnvOrDefault("OUT_DIR", "./out")
 	addr := config.EnvOrDefault("API_ADDR", ":8080")
-	webOrigin := config.EnvOrDefault("WEB_ORIGIN", "*")
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
@@ -59,8 +58,11 @@ func main() {
 			log.Fatalf("no se pudo conectar a DATABASE_URL: %v", err)
 		}
 		repo := subscriber.NewRepository(db)
-		mux.HandleFunc("POST /subscribers", withCORS(webOrigin, handleSubscribe(repo)))
-		mux.HandleFunc("OPTIONS /subscribers", withCORS(webOrigin, corsPreflightHandler))
+		// Sin CORS: /subscribers lo llama web/'s /api/subscribe server-side
+		// (mismo-origen para el browser, server-to-server hacia acá), y
+		// /unsubscribe lo abre el navegador como link normal (no fetch/XHR),
+		// ninguno de los dos está sujeto a CORS.
+		mux.HandleFunc("POST /subscribers", handleSubscribe(repo))
 		mux.HandleFunc("GET /subscribers/unsubscribe", handleUnsubscribe(repo))
 		log.Print("newsletter habilitado (DATABASE_URL configurada)")
 	} else {
