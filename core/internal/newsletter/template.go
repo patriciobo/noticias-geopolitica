@@ -55,11 +55,7 @@ const emailTemplateSrc = `<!doctype html>
 
 <h1 style="margin:14px 0 20px; font-size:26px; line-height:1.25; font-weight:800;">Un informe por día: comercio, industria y empresas multinacionales, con enlaces a las notas originales de cada medio.</h1>
 
-<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#c81e1e; padding: 10px 18px;">
-<a href="{{.SiteURL}}" style="color:#ffffff; font-weight:bold; font-size:14px; text-decoration:none;">Suscribirse &rarr;</a>
-</td></tr></table>
-
-<p style="margin-top:22px; font-family: 'Courier New', monospace; font-size:12px; font-weight:bold; letter-spacing:0.05em; text-transform:uppercase; color:#666666;">{{.DateLabel}}</p>
+<p style="margin-top:8px; font-family: 'Courier New', monospace; font-size:12px; font-weight:bold; letter-spacing:0.05em; text-transform:uppercase; color:#666666;">{{.DateLabel}}</p>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 6px 0 22px;">
 <tr><td style="border-left:4px solid #c81e1e; background:#fdf1f1; padding: 14px 18px; font-size:15px; line-height:1.55;">
