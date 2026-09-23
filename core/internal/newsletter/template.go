@@ -35,8 +35,8 @@ const emailTemplateSrc = `<!doctype html>
 
 <tr><td align="center" style="background:#171717; padding: 22px 28px 14px 28px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/logo.png" alt="Noticias Internacionales" width="64" height="64" style="display:block; border:0; outline:none; text-decoration:none; margin:0 auto;"></a></td>
-<td style="padding-left:14px;"><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/nombre-sf.png" alt="Noticias Internacionales" width="85" height="64" style="display:block; border:0; outline:none; text-decoration:none; width:85px; height:64px; margin:0 auto;"></a></td>
+<td><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/logo.png" alt="Noticias Internacionales" width="104" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:104px; height:104px; margin:0 auto;"></a></td>
+<td style="padding-left:14px;"><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/nombre-sf.png" alt="Noticias Internacionales" width="139" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:139px; height:104px; margin:0 auto;"></a></td>
 </tr></table>
 <div style="text-align:center; font-family: Georgia, serif; font-size:15px; font-weight:bold; letter-spacing:0.14em; text-transform:uppercase; color:#ffffff; padding-top:12px;">Radar Global</div>
 <div style="text-align:center; padding-top:12px; font-size:12px; color:#cccccc;">

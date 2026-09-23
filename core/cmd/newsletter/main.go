@@ -36,7 +36,7 @@ func main() {
 	siteURL := config.EnvOrDefault("SITE_URL", "http://localhost:3000")
 	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
 	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
-	subject := "Radar Global · Resumen internacional del " + reportDate
+	subject := "Radar Global"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
