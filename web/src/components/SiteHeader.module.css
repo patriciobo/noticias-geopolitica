@@ -17,12 +17,18 @@
 }
 
 .brand {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  display: flex;
+  align-items: center;
   white-space: nowrap;
+  padding-right: 19px;
+}
+
+.logoName {
+  display: block;
+  height: 34px;
+  width: auto;
+  transform: scale(1.4);
+  transform-origin: left center;
 }
 
 .nav {

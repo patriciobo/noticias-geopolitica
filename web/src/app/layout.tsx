@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Noticias Internacionales",
+  title: "Radar Global",
   description:
     "Resumen diario de la actualidad internacional y su impacto en el comercio y las empresas multinacionales.",
 };

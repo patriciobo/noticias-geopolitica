@@ -33,19 +33,17 @@ const emailTemplateSrc = `<!doctype html>
 <tr><td align="center" style="padding: 24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; max-width:600px;">
 
-<tr><td style="background:#171717; padding: 16px 28px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td style="font-family: Georgia, serif; font-size:13px; font-weight:bold; letter-spacing:0.06em; text-transform:uppercase; color:#ffffff;">
-&#9679; Noticias Internacionales
-</td>
-<td align="right" style="font-size:12px; color:#cccccc;">
+<tr><td align="center" style="background:#171717; padding: 22px 28px 14px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/logo.png" alt="Noticias Internacionales" width="64" height="64" style="display:block; border:0; outline:none; text-decoration:none; margin:0 auto;"></a></td>
+<td style="padding-left:14px;"><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/nombre-sf.png" alt="Noticias Internacionales" width="85" height="64" style="display:block; border:0; outline:none; text-decoration:none; width:85px; height:64px; margin:0 auto;"></a></td>
+</tr></table>
+<div style="text-align:center; font-family: Georgia, serif; font-size:15px; font-weight:bold; letter-spacing:0.14em; text-transform:uppercase; color:#ffffff; padding-top:12px;">Radar Global</div>
+<div style="text-align:center; padding-top:12px; font-size:12px; color:#cccccc;">
 <a href="{{.SiteURL}}/#ediciones-anteriores" style="color:#cccccc; text-decoration:none; margin-left:14px;">Ediciones</a>
 <a href="{{.SiteURL}}/#resumen-por-region" style="color:#cccccc; text-decoration:none; margin-left:14px;">Regiones</a>
 <a href="{{.SiteURL}}/#fuentes-consultadas" style="color:#cccccc; text-decoration:none; margin-left:14px;">Fuentes</a>
-</td>
-</tr>
-</table>
+</div>
 </td></tr>
 <tr><td style="background:#c81e1e; height:3px; font-size:1px; line-height:1px;">&nbsp;</td></tr>
 

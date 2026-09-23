@@ -22,11 +22,28 @@
   margin-bottom: 2.5rem;
 }
 
+.mastheadBrand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
 .masthead h1 {
   font-size: 2.25rem;
   font-weight: 800;
   line-height: 1.15;
   max-width: 32rem;
+}
+
+.mastheadLogo {
+  height: 104px;
+  width: 104px;
+}
+
+.mastheadName {
+  height: 104px;
+  width: auto;
 }
 
 .masthead p {

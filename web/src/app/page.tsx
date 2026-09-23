@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   fetchReportByDate,
   fetchReportDates,
@@ -9,7 +10,7 @@ import SubscribeForm from "@/components/SubscribeForm";
 import styles from "./page.module.css";
 
 export const metadata = {
-  title: "Noticias Internacionales",
+  title: "Radar Global",
   description:
     "Resumen diario de la actualidad internacional y su impacto en el comercio y las empresas multinacionales.",
 };
@@ -54,6 +55,10 @@ export default async function Home() {
   return (
     <main className={styles.blog}>
       <header className={styles.masthead}>
+        <div className={styles.mastheadBrand}>
+          <Image src="/logo.png" alt="Noticias Internacionales" width={1024} height={1024} className={styles.mastheadLogo} />
+          <Image src="/nombre-sf.png" alt="" aria-hidden={true} width={1536} height={1152} className={styles.mastheadName} />
+        </div>
         <h1>Noticias Internacionales</h1>
         <p>
           Un informe por día: comercio, industria y empresas multinacionales,
