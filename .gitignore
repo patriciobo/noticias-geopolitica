@@ -1,5 +1,4 @@
 core/out/
-reports/
 node_modules/
 .next/
 .env
