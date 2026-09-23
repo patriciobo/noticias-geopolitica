@@ -1,8 +1,8 @@
 .section {
   margin-top: 2.5rem;
-  border: 1px solid #dbe4f3;
-  border-radius: 12px;
-  background: #f7f9fd;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
 }
 
 .summary {
@@ -20,15 +20,15 @@
 }
 
 .heading {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .count {
   font-size: 0.75rem;
-  font-weight: 600;
-  background: #dbe4f3;
-  color: #1e3a8a;
+  font-weight: 700;
+  border: 1px solid var(--accent);
+  color: var(--accent);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
 }
@@ -37,8 +37,8 @@
   margin-left: auto;
   width: 0.6rem;
   height: 0.6rem;
-  border-right: 2px solid #667;
-  border-bottom: 2px solid #667;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
   transform: rotate(45deg);
   transition: transform 0.15s;
 }
@@ -49,7 +49,7 @@
 
 .section[open] > .summary {
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #dbe4f3;
+  border-bottom: 1px solid var(--border);
 }
 
 .body {
@@ -59,7 +59,7 @@
 .intro {
   margin-top: 0.3rem;
   font-size: 0.88rem;
-  color: #555;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -71,17 +71,18 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
   padding-bottom: 0.3rem;
-  border-bottom: 1px solid #dbe4f3;
+  border-bottom: 1px solid var(--border);
 }
 
 .regionCount {
   margin-left: auto;
   font-size: 0.75rem;
-  font-weight: 600;
-  background: #dbe4f3;
-  color: #1e3a8a;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
 }
@@ -96,7 +97,7 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.6rem 0;
-  border-bottom: 1px dashed #dbe4f3;
+  border-bottom: 1px dashed var(--border);
 }
 
 .item:last-child {
@@ -104,16 +105,16 @@
 }
 
 .title {
-  color: #1d4ed8;
+  color: var(--ink);
   font-weight: 600;
   line-height: 1.4;
   text-decoration: underline;
   text-underline-offset: 2px;
+  text-decoration-color: var(--accent);
 }
 
 .title:hover {
-  color: #1e40af;
-  text-decoration-thickness: 2px;
+  color: var(--accent);
 }
 
 .arrow {
@@ -122,35 +123,5 @@
 
 .meta {
   font-size: 0.8rem;
-  color: #666;
-}
-
-@media (prefers-color-scheme: dark) {
-  .section {
-    background: #11161f;
-    border-color: #26324a;
-  }
-  .intro,
-  .meta {
-    color: #9aa4b5;
-  }
-  .region,
-  .item,
-  .section[open] > .summary {
-    border-bottom-color: #26324a;
-  }
-  .count,
-  .regionCount {
-    background: #26324a;
-    color: #bcd0ff;
-  }
-  .toggle {
-    border-color: #99a;
-  }
-  .title {
-    color: #7aa2ff;
-  }
-  .title:hover {
-    color: #a5c0ff;
-  }
+  color: var(--muted);
 }

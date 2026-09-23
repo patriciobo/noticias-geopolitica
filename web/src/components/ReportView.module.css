@@ -5,20 +5,29 @@
 }
 
 .date {
-  color: #666;
-  font-size: 0.9rem;
-  text-transform: capitalize;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-bottom: 1.5rem;
 }
 
-.markdown h2 {
+.markdown section + section {
   margin-top: 2.5rem;
-  border-bottom: 1px solid #e2e2e2;
-  padding-bottom: 0.4rem;
+}
+
+.markdown h2 {
+  font-size: 1.15rem;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .markdown h3 {
+  font-size: 1rem;
   margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
 }
 
 .markdown p,
@@ -27,19 +36,37 @@
 }
 
 .markdown ul {
-  padding-left: 1.4rem;
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.markdown li {
+  padding-left: 1rem;
+  position: relative;
+}
+
+.markdown li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+}
+
+.noNews {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .crossCoverage {
   display: inline-block;
-  background: #eff6ff;
-  border-left: 4px solid #3b82f6;
+  background: var(--accent-tint);
+  border-left: 4px solid var(--accent);
   padding: 0.3rem 0.8rem;
-  border-radius: 4px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .crossCoverage {
-    background: #1e2a3f;
-  }
+  border-radius: 0 4px 4px 0;
 }

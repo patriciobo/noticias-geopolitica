@@ -1,30 +1,40 @@
 .disclosure {
-  margin-top: 0.4rem;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--paper);
 }
 
 .summary {
   cursor: pointer;
   font-size: 0.9rem;
-  color: #555;
+  font-weight: 700;
+  color: var(--ink);
   user-select: none;
-  width: fit-content;
+  list-style: none;
+  padding: 1rem 1.25rem;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
 }
 
 .summary:hover {
-  color: #222;
+  color: var(--accent);
 }
 
 .grid {
-  margin-top: 0.75rem;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem 1.5rem;
-  padding: 0.75rem 0 1rem;
-  border-top: 1px solid #e2e2e2;
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  padding-top: 1rem;
 }
 
 .countryName {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
   margin: 0 0 0.3rem;
 }
@@ -34,21 +44,6 @@
   padding: 0;
   margin: 0;
   font-size: 0.82rem;
-  color: #555;
+  color: var(--muted);
   line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  .summary {
-    color: #aaa;
-  }
-  .summary:hover {
-    color: #eee;
-  }
-  .grid {
-    border-top-color: #333;
-  }
-  .mediaList {
-    color: #999;
-  }
 }

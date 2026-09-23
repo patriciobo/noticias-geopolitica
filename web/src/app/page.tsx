@@ -64,12 +64,14 @@ export default async function Home() {
       <div className={styles.feed}>
         <DayEntry report={latest} latest />
         {older.length > 0 && (
-          <>
+          <div className={styles.archive} id="ediciones-anteriores">
             <h2 className={styles.archiveTitle}>Ediciones anteriores</h2>
-            {older.map((r) => (
-              <DayEntry key={r.date} report={r} />
-            ))}
-          </>
+            <div className={styles.archiveList}>
+              {older.map((r) => (
+                <DayEntry key={r.date} report={r} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </main>

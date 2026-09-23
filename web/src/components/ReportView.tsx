@@ -2,11 +2,12 @@ import type { ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Abstract from "./Abstract";
-import RegionBanner from "./RegionBanner";
+import ClimateColumns from "./ClimateColumns";
+import CompaniesTable from "./CompaniesTable";
 import NewsLinks from "./NewsLinks";
 import SourcesDisclosure from "./SourcesDisclosure";
 import { splitAbstract, splitNewsLinks } from "@/lib/newsLinks";
-import { REGION_THEME } from "@/lib/regionTheme";
+import { splitTopSections } from "@/lib/reportSections";
 import type { SourceSummary } from "@/lib/api";
 import styles from "./ReportView.module.css";
 
@@ -22,26 +23,27 @@ const SECTION_ICONS: Record<string, string> = {
   "Empresas potencialmente afectadas por región": "🏢",
 };
 
-const markdownComponents: Components = {
-  h2({ children }) {
-    const text = textContent(children).trim();
-    const icon = SECTION_ICONS[text];
-    return (
-      <h2>
-        {icon ? `${icon} ` : ""}
-        {children}
-      </h2>
-    );
-  },
+// id para que el nav del header ("Regiones") pueda anclar directo a esta
+// sección — mismo contenido de siempre, solo un atributo de más en el h2.
+const SECTION_IDS: Record<string, string> = {
+  "Resumen por región": "resumen-por-region",
+};
+
+const NO_NEWS_TEXT = "Sin novedades relevantes hoy.";
+
+const genericMarkdownComponents: Components = {
   h3({ children }) {
     const text = textContent(children).trim();
-    if (text in REGION_THEME) {
-      return <RegionBanner region={text} />;
-    }
     if (text === "Cobertura cruzada") {
       return <h3 className={styles.crossCoverage}>🌐 {children}</h3>;
     }
     return <h3>{children}</h3>;
+  },
+  p({ children }) {
+    if (textContent(children).trim() === NO_NEWS_TEXT) {
+      return <p className={styles.noNews}>{children}</p>;
+    }
+    return <p>{children}</p>;
   },
   a({ href, children }) {
     return (
@@ -60,15 +62,37 @@ export function ReportBody({
   sources: SourceSummary[];
 }) {
   const { body, groups } = splitNewsLinks(markdown);
+  const sections = splitTopSections(body);
+
   return (
     <>
-      <SourcesDisclosure sources={sources} />
       <div className={styles.markdown}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-          {body}
-        </ReactMarkdown>
+        {sections.map((section) => {
+          const icon = SECTION_ICONS[section.heading];
+          const id = SECTION_IDS[section.heading];
+          return (
+            <section key={section.heading}>
+              <h2 id={id}>
+                {icon ? `${icon} ` : ""}
+                {section.heading}
+              </h2>
+              {section.heading === "Clima internacional: comercio, industria y materias primas" ? (
+                <ClimateColumns body={section.body} />
+              ) : section.heading === "Empresas potencialmente afectadas por región" ? (
+                <CompaniesTable body={section.body} />
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={genericMarkdownComponents}>
+                  {section.body}
+                </ReactMarkdown>
+              )}
+            </section>
+          );
+        })}
       </div>
       {groups.length > 0 && <NewsLinks groups={groups} />}
+      <div id="fuentes-consultadas">
+        <SourcesDisclosure sources={sources} />
+      </div>
     </>
   );
 }
