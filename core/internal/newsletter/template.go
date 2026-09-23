@@ -17,6 +17,8 @@ type EmailData struct {
 	PopulatedRegions []RegionBlock
 	EmptyRegions     []RegionBlock
 	UnsubscribeURL   string
+	CafecitoURL      string // donaciones Argentina; vacío = no se muestra el botón
+	TecitoURL        string // donaciones exterior; vacío = no se muestra el botón
 }
 
 // emailTemplateSrc usa layout de tablas (no flexbox/grid) por compatibilidad
@@ -86,6 +88,27 @@ const emailTemplateSrc = `<!doctype html>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#c81e1e; padding: 10px 18px; margin-bottom: 24px;">
 <a href="{{.EditionURL}}" style="color:#ffffff; font-weight:bold; font-size:14px; text-decoration:none;">Ver edición completa &rarr;</a>
 </td></tr></table>
+
+{{if or .CafecitoURL .TecitoURL}}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:26px; border:1px solid #dddddd; background:#fdf1f1;">
+<tr><td style="padding:16px 18px;">
+<p style="margin:0 0 12px; font-size:13px; line-height:1.55; color:#171717;">¿Te sirvió el resumen de hoy? Radar Global es un esfuerzo independiente: invitanos un café y ayudanos a seguir informando, día a día.</p>
+<table role="presentation" cellpadding="0" cellspacing="0">
+{{if .CafecitoURL}}
+<tr><td style="background:#c81e1e; border-radius:8px;">
+<a href="{{.CafecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/donar-cafecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un cafecito &middot; desde $500 ARS</a>
+</td></tr>
+{{end}}
+{{if .TecitoURL}}
+<tr><td style="height:10px; font-size:1px; line-height:1px;">&nbsp;</td></tr>
+<tr><td style="background:#c81e1e; border-radius:8px;">
+<a href="{{.TecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/donar-tecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un tecito &middot; desde USD 1</a>
+</td></tr>
+{{end}}
+</table>
+</td></tr>
+</table>
+{{end}}
 
 </td></tr>
 

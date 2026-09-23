@@ -1,0 +1,64 @@
+.support {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--accent-tint);
+  padding: 1.25rem 1.5rem;
+}
+
+.masthead {
+  margin-top: 1.75rem;
+}
+
+.article {
+  max-width: 688px;
+  margin: 0 auto 4rem;
+}
+
+.message {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 1.1rem 0.55rem 0.6rem;
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.button:hover {
+  filter: brightness(1.08);
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.buttonText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.buttonText strong {
+  font-size: 0.95rem;
+}
+
+.buttonText span {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
