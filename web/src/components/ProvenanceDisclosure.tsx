@@ -61,13 +61,7 @@ export default function ProvenanceDisclosure({
                 </ul>
               </details>
             )}
-            <p>
-              Modelos: clasificación con <code>{provenance.classify_models[0]}</code>, redacción con{" "}
-              <code>{provenance.synthesize_models[0]}</code>
-              {(provenance.classify_models.length > 1 || provenance.synthesize_models.length > 1) &&
-                " (con modelos de respaldo si el principal falla, listados en el registro)"}
-              .
-            </p>
+            <ModelsUsed provenance={provenance} />
             <ul className={styles.links}>
               <li>
                 <a href={repoFileURL(auditPath)} target="_blank" rel="noopener noreferrer">Registro completo</a>: cada titular descargado y qué pasó con él
@@ -101,5 +95,56 @@ export default function ProvenanceDisclosure({
         </p>
       </div>
     </details>
+  );
+}
+
+// Qué modelos se usaron de verdad. Con una cadena de respaldo, el principal
+// configurado puede no ser el que clasificó o redactó: decirlo evita que
+// una edición escrita por un modelo de respaldo pase por la del principal.
+function ModelsUsed({ provenance }: { provenance: Provenance }) {
+  const primaryClassify = provenance.classify_models[0];
+  const primarySynth = provenance.synthesize_models[0];
+  const used = provenance.classify_models_used;
+  const synthUsed = provenance.synthesize_model_used;
+
+  if (!used && !synthUsed) {
+    return (
+      <p>
+        Modelos: clasificación con <code>{primaryClassify}</code>, redacción con <code>{primarySynth}</code>
+        {(provenance.classify_models.length > 1 || provenance.synthesize_models.length > 1) &&
+          " (con modelos de respaldo si el principal falla, listados en el registro)"}
+        .
+      </p>
+    );
+  }
+
+  const usedEntries = Object.entries(used ?? {}).sort((a, b) => b[1] - a[1]);
+  const fallbackUsed =
+    usedEntries.some(([m]) => m !== primaryClassify) || (synthUsed !== undefined && synthUsed !== primarySynth);
+
+  return (
+    <>
+      <p>
+        Clasificación:{" "}
+        {usedEntries.map(([m, n], i) => (
+          <span key={m}>
+            {i > 0 && ", "}
+            <code>{m}</code> ({n} titulares)
+          </span>
+        ))}
+        . Redacción: <code>{synthUsed ?? primarySynth}</code>.
+      </p>
+      {fallbackUsed && (
+        <p>
+          En esta edición se usó al menos un modelo de respaldo porque el principal (<code>{primaryClassify}</code>
+          {primarySynth !== primaryClassify && (
+            <>
+              {" "}/ <code>{primarySynth}</code>
+            </>
+          )}
+          ) falló en parte de la corrida.
+        </p>
+      )}
+    </>
   );
 }

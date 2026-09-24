@@ -209,3 +209,11 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, in Input) (str
 	}
 	return strings.TrimSpace(cr.Choices[0].Message.Content), nil
 }
+
+// ModelName: mismo formato que filter.OpenAICompatClassifier.ModelName.
+func (s *OpenAICompatSynthesizer) ModelName() string {
+	if strings.Contains(s.BaseURL, "openrouter.ai") {
+		return "openrouter:" + s.Model
+	}
+	return s.Model
+}

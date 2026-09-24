@@ -13,6 +13,8 @@ import (
 // falta recordar fallos entre llamadas.
 type ChainSynthesizer struct {
 	Links []Synthesizer
+	// Used es el modelo del link que produjo el último informe válido.
+	Used string
 }
 
 func NewChainSynthesizer(links ...Synthesizer) *ChainSynthesizer {
@@ -27,6 +29,7 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, in Input) (string, er
 			err = validateReport(markdown)
 		}
 		if err == nil {
+			c.Used = ModelName(link)
 			return markdown, nil
 		}
 		log.Printf("synthesize: proveedor %d/%d falló (%v), probando el siguiente", i+1, len(c.Links), err)
@@ -55,4 +58,16 @@ func validateReport(markdown string) error {
 		}
 	}
 	return nil
+}
+
+// ModelName devuelve el modelo de un sintetizador, o "" si no lo expone.
+// Para una cadena, el del último link que respondió bien.
+func ModelName(s Synthesizer) string {
+	switch v := s.(type) {
+	case *ChainSynthesizer:
+		return v.Used
+	case interface{ ModelName() string }:
+		return v.ModelName()
+	}
+	return ""
 }

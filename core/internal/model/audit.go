@@ -27,6 +27,11 @@ type Provenance struct {
 	// caído o sin notas recientes) — va en Provenance para que la web lo
 	// muestre sin tener que leer el registro completo.
 	SourceProblems []SourceStatus `json:"source_problems,omitempty"`
+	// Modelos que efectivamente se usaron: cuántos titulares clasificó cada
+	// uno y cuál redactó el informe. Con una cadena de respaldo pueden no
+	// ser los primeros de ClassifyModels/SynthesizeModels.
+	ClassifyModelsUsed  map[string]int `json:"classify_models_used,omitempty"`
+	SynthesizeModelUsed string         `json:"synthesize_model_used,omitempty"`
 }
 
 type AuditCounts struct {
@@ -57,6 +62,7 @@ type AuditEntry struct {
 	Stage        string  `json:"stage"`
 	Reason       string  `json:"reason,omitempty"`        // explicación del clasificador, o el error
 	RelationType string  `json:"relation_type,omitempty"` // solo si pasó por el clasificador
+	Model        string  `json:"model,omitempty"`         // modelo que lo clasificó
 	Confidence   float64 `json:"confidence,omitempty"`
 }
 

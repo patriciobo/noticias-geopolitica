@@ -93,3 +93,5 @@ func (s *OllamaSynthesizer) Synthesize(ctx context.Context, in Input) (string, e
 	}
 	return strings.TrimSpace(cr.Message.Content), nil
 }
+
+func (s *OllamaSynthesizer) ModelName() string { return s.Model }

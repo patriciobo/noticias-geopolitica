@@ -144,3 +144,5 @@ func (c *ClaudeClassifier) Classify(ctx context.Context, a model.Article, pre Pr
 	}
 	return cls, nil
 }
+
+func (c *ClaudeClassifier) ModelName() string { return c.Model }

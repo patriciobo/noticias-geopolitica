@@ -264,3 +264,23 @@ func (f *flakyClassifier) Classify(ctx context.Context, a model.Article, pre Pre
 	}
 	return model.Classification{Reason: "flaky"}, nil
 }
+
+type namedBatchClassifier struct {
+	stubBatchClassifier
+	name string
+}
+
+func (n namedBatchClassifier) ModelName() string { return n.name }
+
+func TestChainClassifierBatchRecordsModelPerItem(t *testing.T) {
+	primary := namedBatchClassifier{stubBatchClassifier{fail: map[string]bool{"b": true}, failErr: errors.New("x")}, "principal"}
+	backup := namedBatchClassifier{stubBatchClassifier{}, "respaldo"}
+	c := NewChainClassifier(primary, backup)
+	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
+
+	results := c.ClassifyBatch(context.Background(), items)
+
+	if results[0].Model != "principal" || results[1].Model != "respaldo" {
+		t.Errorf("modelos = %q, %q; want principal, respaldo", results[0].Model, results[1].Model)
+	}
+}

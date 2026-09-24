@@ -26,6 +26,8 @@ export type Provenance = {
     links_removed: number;
   };
   source_problems?: SourceProblem[];
+  classify_models_used?: Record<string, number>;
+  synthesize_model_used?: string;
 };
 
 // Medio que no aportó titulares en la corrida (ver model.SourceStatus).

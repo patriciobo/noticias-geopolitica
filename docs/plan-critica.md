@@ -24,7 +24,7 @@ decisiones que no se pueden inferir del código.
 - [x] **5. Monitor de feeds.** El registro de auditoría guarda los medios
   que fallaron o solo trajeron notas viejas; la web los muestra en "Cómo se
   hizo esta edición".
-- [ ] **6. Modelo por titular.** Cada entrada del registro guarda qué
+- [x] **6. Modelo por titular.** Cada entrada del registro guarda qué
   modelo la clasificó; la edición avisa si se usó un modelo de respaldo.
 - [ ] **7. Versiones visibles.** Regenerar una edición incrementa su
   versión y guarda el motivo (input `motivo` del workflow); la web muestra
@@ -64,3 +64,4 @@ decisiones que no se pueden inferir del código.
 - Paso 3 (2026-09-24): Reglas de atribución obligatoria en el prompt de síntesis; cada titular llega con 'tipo: estatal (nota)'; 'confirman' → 'publicaron' en cobertura cruzada.
 - Paso 4 (2026-09-24): report.Input con cobertura por región; región vacía con menos de la mitad de sus medios respondiendo dice 'Cobertura insuficiente hoy (X de Y medios respondieron).'; EnsureAllRegionsPresent ahora corre para todos los proveedores.
 - Paso 5 (2026-09-24): SourceStatus por medio en el audit (sources) y los que fallaron en provenance.source_problems; la web los lista en 'Cómo se hizo esta edición'. Mismo commit que el paso 4.
+- Paso 6 (2026-09-24): AuditEntry.model por titular; provenance.classify_models_used (conteo) y synthesize_model_used; la web lista los modelos usados y avisa si entró un respaldo.

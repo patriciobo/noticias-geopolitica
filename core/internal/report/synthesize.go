@@ -431,3 +431,5 @@ func EnsureAllRegionsPresent(report string, coverage map[string]RegionCoverage) 
 
 	return report[:end] + repair.String() + report[end:]
 }
+
+func (s *ClaudeSynthesizer) ModelName() string { return s.Model }

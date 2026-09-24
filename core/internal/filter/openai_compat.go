@@ -329,3 +329,12 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 	}
 	return strings.TrimSpace(cr.Choices[0].Message.Content), nil
 }
+
+// ModelName devuelve el modelo, con prefijo "openrouter:" si va por
+// OpenRouter — mismo formato que la lista de modelos del registro.
+func (c *OpenAICompatClassifier) ModelName() string {
+	if strings.Contains(c.BaseURL, "openrouter.ai") {
+		return "openrouter:" + c.Model
+	}
+	return c.Model
+}

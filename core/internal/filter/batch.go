@@ -22,6 +22,22 @@ type BatchItem struct {
 type BatchResult struct {
 	Classification model.Classification
 	Err            error
+	// Model es el modelo que produjo la clasificación (vacío si no se
+	// sabe). Va al registro de auditoría: con una cadena de respaldo, cada
+	// titular puede haberlo decidido un modelo distinto.
+	Model string
+}
+
+// ModelNamer lo cumplen los clasificadores que saben qué modelo usan.
+type ModelNamer interface {
+	ModelName() string
+}
+
+func modelName(c any) string {
+	if n, ok := c.(ModelNamer); ok {
+		return n.ModelName()
+	}
+	return ""
 }
 
 // batchClassifier es la interfaz opcional que un Classifier puede cumplir
@@ -39,10 +55,20 @@ type batchClassifier interface {
 // OpenRouter) lo usa; si no (Claude, Ollama), cae a una llamada por
 // artículo, que sigue siendo correcta aunque no ahorre requests.
 func ClassifyBatch(ctx context.Context, c Classifier, items []BatchItem) []BatchResult {
+	var results []BatchResult
 	if bc, ok := c.(batchClassifier); ok {
-		return bc.ClassifyBatch(ctx, items)
+		results = bc.ClassifyBatch(ctx, items)
+	} else {
+		results = classifySequential(ctx, c, items)
 	}
-	return classifySequential(ctx, c, items)
+	if name := modelName(c); name != "" {
+		for i := range results {
+			if results[i].Err == nil && results[i].Model == "" {
+				results[i].Model = name
+			}
+		}
+	}
+	return results
 }
 
 func classifySequential(ctx context.Context, c Classifier, items []BatchItem) []BatchResult {

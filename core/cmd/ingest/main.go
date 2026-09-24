@@ -368,6 +368,7 @@ func main() {
 	log.Printf("medios consultados: %d (%s)", len(consulted), sourcesPath2)
 
 	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, sourceStatuses, linksRemoved)
+	audit.SynthesizeModelUsed = report.ModelName(synth)
 	auditPath := filepath.Join(outDir, dateStr+".audit.json")
 	auditJSON, err := json.MarshalIndent(audit, "", " ")
 	if err != nil {
@@ -406,6 +407,12 @@ func buildAudit(provider string, classifyModels, synthModels []string, entries [
 	})
 
 	counts := model.AuditCounts{Fetched: len(entries), LinksRemoved: linksRemoved, SourcesConfigured: len(sources)}
+	used := map[string]int{}
+	for _, e := range entries {
+		if e.Model != "" {
+			used[e.Model]++
+		}
+	}
 	var problems []model.SourceStatus
 	for _, s := range sources {
 		if s.Status == model.SourceOK {
@@ -429,15 +436,16 @@ func buildAudit(provider string, classifyModels, synthModels []string, entries [
 
 	return model.Audit{
 		Provenance: model.Provenance{
-			GeneratedAt:      time.Now().UTC(),
-			Commit:           os.Getenv("GITHUB_SHA"),
-			RunURL:           runURL,
-			Provider:         provider,
-			ClassifyModels:   classifyModels,
-			SynthesizeModels: synthModels,
-			PromptSHA256:     prompts,
-			Counts:           counts,
-			SourceProblems:   problems,
+			GeneratedAt:        time.Now().UTC(),
+			Commit:             os.Getenv("GITHUB_SHA"),
+			RunURL:             runURL,
+			Provider:           provider,
+			ClassifyModels:     classifyModels,
+			SynthesizeModels:   synthModels,
+			PromptSHA256:       prompts,
+			Counts:             counts,
+			SourceProblems:     problems,
+			ClassifyModelsUsed: used,
 		},
 		Sources:   sources,
 		Headlines: entries,
@@ -606,6 +614,7 @@ func classifyAll(
 					out = append(out, model.ClassifiedArticle{Article: chunk[i].Article, Source: chunk[i].Source, Classification: r.Classification})
 				}
 				e := entry(chunk[i].Source, chunk[i].Article, stage)
+				e.Model = r.Model
 				e.Reason = r.Classification.Reason
 				e.RelationType = r.Classification.RelationType
 				e.Confidence = r.Classification.Confidence
