@@ -58,18 +58,12 @@ export default async function MetodologiaPage() {
         <h2>Cómo se arma cada informe</h2>
         <ol>
           <li>
-            <strong>Descarga.</strong> Todos los días, a las 07:13 (hora argentina), un proceso automático en
+            <strong>Descarga.</strong> Todos los días, temprano a la mañana (antes de las 08:00, hora argentina), un proceso automático en
             GitHub Actions descarga los titulares más recientes de cada medio de la lista (hasta 6 por medio),
             desde sus feeds RSS públicos.
           </li>
           <li>
-            <strong>Prefiltro.</strong> Se descartan los titulares que no mencionan al menos dos países, una
-            empresa multinacional de la lista o una palabra clave de comercio o tratados. Es un filtro por
-            palabras, sin inteligencia artificial, y la lista completa es pública (
-            <a href={repoFileURL("config/gazetteer.yaml")}>config/gazetteer.yaml</a>).
-          </li>
-          <li>
-            <strong>Clasificación.</strong> Un modelo de lenguaje decide si cada titular restante tiene alcance
+            <strong>Clasificación.</strong> Un modelo de lenguaje decide si cada titular, en su idioma original, tiene alcance
             internacional real, y deja por escrito el motivo.
           </li>
           <li>

@@ -3,6 +3,7 @@ package filter
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"noticias/core/internal/model"
@@ -78,7 +79,7 @@ func TestChainClassifierStopsCallingDeadLinks(t *testing.T) {
 		countingClassifier{calls: &secondCalls, cls: model.Classification{Reason: "second"}},
 	)
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 6; i++ {
 		got, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
 		if err != nil {
 			t.Fatalf("call %d: unexpected error: %v", i, err)
@@ -88,10 +89,10 @@ func TestChainClassifierStopsCallingDeadLinks(t *testing.T) {
 		}
 	}
 
-	if firstCalls != 1 {
-		t.Errorf("expected first link called exactly once (dies after first failure), got %d calls", firstCalls)
+	if firstCalls != maxConsecutiveFailures {
+		t.Errorf("expected first link called %d times (dies after that many failures in a row), got %d calls", maxConsecutiveFailures, firstCalls)
 	}
-	if secondCalls != 5 {
+	if secondCalls != 6 {
 		t.Errorf("expected second link called every time, got %d calls", secondCalls)
 	}
 }
@@ -203,22 +204,23 @@ func TestChainClassifierBatchFullFailureMarksLinkDead(t *testing.T) {
 	c := NewChainClassifier(link1, link2)
 	items := []BatchItem{{Article: model.Article{Title: "a"}}, {Article: model.Article{Title: "b"}}}
 
-	c.ClassifyBatch(context.Background(), items)
-	c.ClassifyBatch(context.Background(), items)
-
-	if firstCalls != 1 {
-		t.Errorf("link1 debería morir tras fallarle el batch completo una vez, calls=%d", firstCalls)
+	for i := 0; i < maxConsecutiveFailures+2; i++ {
+		c.ClassifyBatch(context.Background(), items)
 	}
-	if secondCalls != 2 {
-		t.Errorf("link2 debería atender las dos corridas, calls=%d", secondCalls)
+
+	if firstCalls != maxConsecutiveFailures {
+		t.Errorf("link1 debería morir tras %d batches completos fallidos seguidos, calls=%d", maxConsecutiveFailures, firstCalls)
+	}
+	if secondCalls != maxConsecutiveFailures+2 {
+		t.Errorf("link2 debería atender todas las corridas, calls=%d", secondCalls)
 	}
 }
 
 func TestChainClassifierAllDeadReturnsFastWithoutCalling(t *testing.T) {
 	calls := 0
-	c := NewChainClassifier(countingClassifier{calls: &calls, err: errors.New("caído")})
+	c := NewChainClassifier(countingClassifier{calls: &calls, err: fmt.Errorf("429: %w", ErrQuotaExhausted)})
 
-	// primera llamada: banca el único link
+	// primera llamada: cuota agotada banca el único link en el acto
 	if _, err := c.Classify(context.Background(), model.Article{}, PrefilterResult{}); err == nil {
 		t.Fatal("expected error on first call")
 	}
@@ -229,4 +231,36 @@ func TestChainClassifierAllDeadReturnsFastWithoutCalling(t *testing.T) {
 	if calls != 1 {
 		t.Errorf("expected the dead link to be called only once total, got %d calls", calls)
 	}
+}
+
+// El caso del 2026-09-24: un timeout puntual no tiene que sacar de juego a
+// un proveedor que después responde bien.
+func TestChainClassifierTransientFailureDoesNotKillLink(t *testing.T) {
+	calls := 0
+	flaky := &flakyClassifier{calls: &calls, failFirst: 1}
+	c := NewChainClassifier(flaky, stubClassifier{cls: model.Classification{Reason: "fallback"}})
+
+	got, _ := c.Classify(context.Background(), model.Article{}, PrefilterResult{})
+	if got.Reason != "fallback" {
+		t.Fatalf("primer intento: esperaba fallback, dio %q", got.Reason)
+	}
+	for i := 0; i < 5; i++ {
+		got, _ = c.Classify(context.Background(), model.Article{}, PrefilterResult{})
+		if got.Reason != "flaky" {
+			t.Fatalf("intento %d: esperaba que el principal siga vivo, dio %q", i, got.Reason)
+		}
+	}
+}
+
+type flakyClassifier struct {
+	calls     *int
+	failFirst int
+}
+
+func (f *flakyClassifier) Classify(ctx context.Context, a model.Article, pre PrefilterResult) (model.Classification, error) {
+	*f.calls++
+	if *f.calls <= f.failFirst {
+		return model.Classification{}, errors.New("context deadline exceeded")
+	}
+	return model.Classification{Reason: "flaky"}, nil
 }

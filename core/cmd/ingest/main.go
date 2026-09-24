@@ -215,8 +215,14 @@ func main() {
 		// Asia Oriental quedaron en cero por esto. openrouter/free no vence
 		// como id nombrado (a diferencia de un modelo puntual) porque decide
 		// él mismo a qué modelo free enrutar en cada request.
-		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "google/gemma-4-26b-a4b-it:free,openrouter/free")
-		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free,openrouter/free")
+		//
+		// Actualización 2026-09-24: openrouter/free se sacó de los defaults.
+		// Además de modelos de chat, enruta a modelos de moderación
+		// (nemotron-3.5-content-safety), que contestan "User Safety: safe"
+		// en vez de clasificar — ese día se perdieron batches enteros por
+		// eso. En su lugar, varios modelos free nombrados y multilingües.
+		classifyModels := envOrDefaultList("OPENROUTER_CLASSIFY_MODELS", "qwen/qwen3.8-27b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free")
+		synthModels := envOrDefaultList("OPENROUTER_SYNTHESIZE_MODELS", "nvidia/nemotron-3-ultra-550b-a55b:free,qwen/qwen3.8-27b:free,nvidia/nemotron-3-super-120b-a12b:free")
 		// OpenRouter recomienda estos headers para su free tier (ranking /
 		// prioridad de cupo); no son estrictamente obligatorios.
 		headers := map[string]string{
@@ -224,30 +230,61 @@ func main() {
 			"X-Title":      "noticias",
 		}
 
-		classifyChain := []filter.Classifier{classifier}
-		for _, m := range classifyModels {
+		// Modelos de OpenRouter que van ANTES del proveedor principal (no
+		// como fallback): pensado para un modelo pago barato y confiable
+		// (ej. deepseek/deepseek-v4-flash, centavos por día) que no sufra
+		// los 503 por demanda del free tier de Gemini. Vacío por defecto:
+		// un modelo pago gasta créditos, se activa a propósito.
+		primaryClassifyModels := envOrDefaultList("OPENROUTER_PRIMARY_CLASSIFY_MODELS", "")
+		primarySynthModels := envOrDefaultList("OPENROUTER_PRIMARY_SYNTHESIZE_MODELS", "")
+
+		newClassifier := func(m string) filter.Classifier {
 			c := filter.NewOpenAICompatClassifier(baseURL, openrouterKey, m)
 			c.ExtraHeaders = headers
 			// Varios modelos free de OpenRouter no soportan response_format
 			// y tiran error en vez de ignorarlo — el prompt ya pide JSON
 			// puro por texto, alcanza sin el parámetro forzado.
 			c.DisableJSONMode = true
-			classifyChain = append(classifyChain, c)
-			classifyModelNames = append(classifyModelNames, "openrouter:"+m)
+			return c
 		}
-		classifier = filter.NewChainClassifier(classifyChain...)
-
-		synthChain := []report.Synthesizer{synth}
-		for _, m := range synthModels {
+		newSynth := func(m string) report.Synthesizer {
 			s := report.NewOpenAICompatSynthesizer(baseURL, openrouterKey, m)
 			s.ExtraHeaders = headers
-			synthChain = append(synthChain, s)
-			synthModelNames = append(synthModelNames, "openrouter:"+m)
+			return s
+		}
+
+		var classifyChain []filter.Classifier
+		var chainClassifyNames []string
+		for _, m := range primaryClassifyModels {
+			classifyChain = append(classifyChain, newClassifier(m))
+			chainClassifyNames = append(chainClassifyNames, "openrouter:"+m)
+		}
+		classifyChain = append(classifyChain, classifier)
+		chainClassifyNames = append(chainClassifyNames, classifyModelNames...)
+		for _, m := range classifyModels {
+			classifyChain = append(classifyChain, newClassifier(m))
+			chainClassifyNames = append(chainClassifyNames, "openrouter:"+m)
+		}
+		classifier = filter.NewChainClassifier(classifyChain...)
+		classifyModelNames = chainClassifyNames
+
+		var synthChain []report.Synthesizer
+		var chainSynthNames []string
+		for _, m := range primarySynthModels {
+			synthChain = append(synthChain, newSynth(m))
+			chainSynthNames = append(chainSynthNames, "openrouter:"+m)
+		}
+		synthChain = append(synthChain, synth)
+		chainSynthNames = append(chainSynthNames, synthModelNames...)
+		for _, m := range synthModels {
+			synthChain = append(synthChain, newSynth(m))
+			chainSynthNames = append(chainSynthNames, "openrouter:"+m)
 		}
 		synth = report.NewChainSynthesizer(synthChain...)
+		synthModelNames = chainSynthNames
 
-		log.Printf("fallback OpenRouter configurado — clasificación: %s, síntesis: %s",
-			strings.Join(classifyModels, ", "), strings.Join(synthModels, ", "))
+		log.Printf("cadena de clasificación: %s", strings.Join(classifyModelNames, " → "))
+		log.Printf("cadena de síntesis: %s", strings.Join(synthModelNames, " → "))
 	}
 
 	sources, err := ingest.LoadSources(sourcesPath)
@@ -265,7 +302,20 @@ func main() {
 	articles := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
 	log.Printf("titulares obtenidos: %d", len(articles))
 
-	classified, auditEntries := classifyAll(ctx, articles, sources, gaz, classifier, classifyConcurrency)
+	// El prefiltro por palabras clave queda apagado por defecto con
+	// proveedores en la nube: no entiende titulares en coreano, japonés,
+	// ruso, alemán, etc., y el 2026-09-24 descartó 406 de 465 titulares
+	// (Europa y Asia Oriental quedaron vacías). Clasificar todo son ~30
+	// requests por día en batches, holgado para los free tiers. Con Ollama
+	// local sigue prendido: ahí cada titular cuesta CPU/GPU real.
+	defaultPrefilter := "off"
+	if provider == "ollama" {
+		defaultPrefilter = "on"
+	}
+	usePrefilter := strings.ToLower(envOrDefault("PREFILTER", defaultPrefilter)) == "on"
+	log.Printf("prefiltro por palabras clave: %v", usePrefilter)
+
+	classified, auditEntries := classifyAll(ctx, articles, sources, gaz, usePrefilter, classifier, classifyConcurrency)
 	log.Printf("titulares con potencial internacional: %d", len(classified))
 
 	if len(classified) == 0 {
@@ -452,7 +502,11 @@ func fetchAll(sources []model.Source, maxItems, concurrency int) []struct {
 // esto, `concurrency` pasa a limitar cuántos BATCHES corren en paralelo, no
 // cuántos artículos — el número real de requests concurrentes es el mismo
 // de antes o menor, para el mismo valor de concurrency.
-const classifyBatchSize = 12
+//
+// 16 (antes 12) desde que se clasifica todo sin prefiltro: ~460 titulares
+// quedan en ~29 requests por día, lejos del tope diario de los free tiers
+// de OpenRouter aun si Gemini se cae entero.
+const classifyBatchSize = 16
 
 func classifyAll(
 	ctx context.Context,
@@ -462,6 +516,7 @@ func classifyAll(
 	},
 	_ []model.Source,
 	gaz *filter.Gazetteer,
+	usePrefilter bool,
 	classifier filter.Classifier,
 	concurrency int,
 ) ([]model.ClassifiedArticle, []model.AuditEntry) {
@@ -480,7 +535,7 @@ func classifyAll(
 	)
 	for _, it := range items {
 		pre := filter.Prefilter(it.Article, gaz)
-		if pre.Passed {
+		if pre.Passed || !usePrefilter {
 			passed = append(passed, passedItem{Source: it.Source, Article: it.Article, Pre: pre})
 			continue
 		}

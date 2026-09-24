@@ -89,6 +89,13 @@ jobs:
           # día. Opcional — sin el secret, el pipeline sigue andando
           # solo con Gemini como antes.
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Modelo pago barato por delante de Gemini: el free tier de Gemini
+          # devuelve 503 por demanda seguido (2026-09-24). DeepSeek V4 Flash
+          # cuesta ~USD 0,60/mes con el volumen actual, pagado con créditos
+          # de OpenRouter. Si se quedan sin saldo, falla con 402 y la cadena
+          # sigue con Gemini y los modelos free.
+          OPENROUTER_PRIMARY_CLASSIFY_MODELS: deepseek/deepseek-v4-flash
+          OPENROUTER_PRIMARY_SYNTHESIZE_MODELS: deepseek/deepseek-v4-flash
           SOURCES_PATH: ../config/sources.yaml
           GAZETTEER_PATH: ../config/gazetteer.yaml
           OUT_DIR: ../reports

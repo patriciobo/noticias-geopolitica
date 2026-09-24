@@ -44,6 +44,70 @@ countries:
   - Australia
   - New Zealand
   - Nueva Zelanda
+  # Agregados 2026-09-24: países y actores que faltaban (el prefiltro dejó
+  # afuera Irán, Ucrania, Israel, Taiwán, etc.) y variantes en pt/fr/it/de.
+  # Solo se usa con PREFILTER=on (Ollama local); en la nube clasifica todo.
+  - Ukraine
+  - Ucrania
+  - Ucraina
+  - Ukrain
+  - Iran
+  - Irán
+  - Israel
+  - Palestin
+  - Gaza
+  - Taiwan
+  - Taiwán
+  - North Korea
+  - Corea del Norte
+  - India
+  - Pakistan
+  - Turkey
+  - Türkiye
+  - Turquía
+  - Saudi
+  - Poland
+  - Polonia
+  - Philippines
+  - Filipinas
+  - Cuba
+  - Belarus
+  - Bielorrusia
+  - Syria
+  - Siria
+  - Morocco
+  - Marruecos
+  - Sudan
+  - Sudán
+  - Deutschland
+  - Frankreich
+  - Russland
+  - Russie
+  - Chine
+  - Cina
+  - Stati Uniti
+  - États-Unis
+  - USA
+  - Kremlin
+  - Casa Blanca
+  - White House
+  - Weißes Haus
+  - Maison Blanche
+  - Casa Bianca
+  - Washington
+  - Beijing
+  - Pekín
+  - Moscow
+  - Moscú
+  - Brussels
+  - Bruselas
+  - Bruxelles
+  - Brüssel
+  - Trump
+  - Putin
+  - Xi Jinping
+  - Zelensky
+  - Netanyahu
 
 # Empresas multinacionales de referencia (ampliable). No es exhaustivo:
 # el prefiltro solo necesita indicios, la clasificación fina la hace el LLM.
@@ -141,3 +205,30 @@ keywords:
   - divisa
   - central bank
   - banco central
+  # Agregados 2026-09-24: organismos y temas de seguridad/geopolítica.
+  - NATO
+  - OTAN
+  - United Nations
+  - Naciones Unidas
+  - Nazioni Unite
+  - Nations unies
+  - Mercosur
+  - summit
+  - cumbre
+  - vertice
+  - sommet
+  - Gipfel
+  - diplomat
+  - embajador
+  - ambassador
+  - missile
+  - misil
+  - drone
+  - dron
+  - invasion
+  - invasión
+  - ceasefire
+  - alto el fuego
+  - refugee
+  - refugiado
+  - geopolit

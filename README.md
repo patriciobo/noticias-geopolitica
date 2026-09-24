@@ -46,11 +46,17 @@ abajo). Única dependencia externa: `gopkg.in/yaml.v3` para leer la config.
 
 1. **Prefiltro (`internal/filter/prefilter.go`)**: matching por gazetteer
    (países, empresas multinacionales, keywords de comercio/tratados) sobre
-   título+snippet. Barato, favorece recall. Pasa si menciona una empresa
-   trackeada, una keyword de comercio/tratado, o dos o más países.
-2. **Clasificación (`internal/filter/claude.go`)**: a lo que sobrevive el
-   prefiltro, Claude Haiku decide con precisión `is_international`,
-   entidades, tipo de relación y confianza.
+   título+snippet. Pasa si menciona una empresa trackeada, una keyword de
+   comercio/tratado, o dos o más países. **Apagado por defecto con
+   proveedores en la nube** (`PREFILTER=off`): no entiende titulares en
+   coreano, japonés, ruso, alemán, etc., y el 2026-09-24 descartó 406 de
+   465 titulares. Clasificar todo son ~30 requests por día en lotes. Con
+   Ollama local queda prendido (`PREFILTER=on`) porque ahí cada titular
+   cuesta CPU/GPU.
+2. **Clasificación (`internal/filter/claude.go`)**: el LLM decide con
+   precisión `is_international`, entidades, tipo de relación y confianza,
+   en el idioma original del titular. El criterio favorece recall: ante la
+   duda razonable marca internacional con confianza baja.
 
 Lo que pasa ambas etapas se sintetiza (`internal/report/synthesize.go`, Claude
 Sonnet) en el reporte final de tres secciones, en español formal de Argentina
@@ -160,24 +166,41 @@ sigue andando exactamente igual que antes, con un solo proveedor.
 Por qué una cadena y no un solo fallback: un modelo free individual de
 OpenRouter puede fallar puntualmente (`Provider returned error`, timeout) sin
 que el proveedor esté caído — con un solo candidato eso pierde el artículo, con
-varios prueba el siguiente. Cada link que falla se banca para el resto de la
-corrida (no vuelve a pagar el viaje de red a algo ya confirmado caído) — el
-costo es que si TODOS los links fallan una vez (ej. Gemini con rate-limit +
-el único fallback de OpenRouter con un error puntual), toda la corrida se
-queda sin clasificar nada más desde ese momento: nos pasó el 2026-09-23,
-Europa y Asia Oriental quedaron con "sin novedades" no porque no hubiera
-noticias, sino porque los dos proveedores configurados fallaron a la vez a
-mitad de la corrida. Por eso el default incluye `openrouter/free` al final:
-es el router gratis de OpenRouter, que reparte internamente entre varios
-modelos free en cada request — no se agota ni vence como un id de modelo
-puntual.
+varios prueba el siguiente. Un link se banca para el resto de la corrida
+recién tras 3 fallos seguidos (o en el acto si la cuota está agotada): antes
+se bancaba al primer fallo, y el 2026-09-23 y 2026-09-24 un timeout puntual
+de Gemini más un error de OpenRouter dejaron sin clasificar todo lo que
+seguía — Europa y Asia Oriental salieron en "sin novedades". Los timeouts y
+cortes de conexión también se reintentan con backoff.
+
+`openrouter/free` ya no va en los defaults: además de modelos de chat enruta
+a modelos de moderación (`nemotron-3.5-content-safety`) que contestan "User
+Safety: safe" en vez de clasificar o escribir el informe. Por la misma razón,
+la cadena de síntesis descarta cualquier respuesta sin las secciones
+obligatorias y prueba el siguiente proveedor.
 
 ```
 OPENROUTER_API_KEY=
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_CLASSIFY_MODELS=google/gemma-4-26b-a4b-it:free,openrouter/free
-OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,openrouter/free
+OPENROUTER_CLASSIFY_MODELS=qwen/qwen3.8-27b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free
+OPENROUTER_SYNTHESIZE_MODELS=nvidia/nemotron-3-ultra-550b-a55b:free,qwen/qwen3.8-27b:free,nvidia/nemotron-3-super-120b-a12b:free
 ```
+
+Modelos que van **antes** del proveedor principal (no como fallback), para
+un modelo pago barato que no sufra los 503 del free tier de Gemini. El
+workflow diario usa DeepSeek V4 Flash (~USD 0,60/mes con el volumen actual,
+pagado con créditos de OpenRouter; sin saldo responde 402 y la cadena sigue
+con Gemini y los free):
+
+```
+OPENROUTER_PRIMARY_CLASSIFY_MODELS=deepseek/deepseek-v4-flash
+OPENROUTER_PRIMARY_SYNTHESIZE_MODELS=deepseek/deepseek-v4-flash
+```
+
+Cupo de los modelos `:free` de OpenRouter: 20 requests/minuto y 50 por día,
+o 1000 por día si la cuenta compró alguna vez al menos USD 10 de créditos.
+Una corrida completa usa ~30 requests, así que sin créditos el fallback
+alcanza solo si Gemini no se cae entero.
 
 Lista distinta por paso, separada por comas: clasificar dispara varias
 llamadas chicas en paralelo, sintetizar es una sola llamada grande — un
@@ -434,8 +457,8 @@ go run ./cmd/ingest
 ```
 
 Con las fuentes activas (hasta `MAX_HEADLINES_PER_SOURCE`, default 6,
-titulares cada una) esto clasifica lo que pasa el prefiltro barato en lotes
-de `classifyBatchSize` (12 titulares por request, no uno por request — ver
+titulares cada una) esto clasifica todos los titulares en lotes
+de `classifyBatchSize` (16 titulares por request, no uno por request — ver
 "Por qué batch" más abajo) más un llamado de síntesis final. Si querés
 probar con menos costo antes de correrlo completo, editá
 `config/sources.yaml` temporalmente y dejá activos (sin `NO_RSS`) solo 5 o 6

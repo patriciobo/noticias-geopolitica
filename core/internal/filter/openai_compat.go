@@ -39,7 +39,10 @@ func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatC
 		BaseURL: strings.TrimSuffix(baseURL, "/"),
 		APIKey:  apiKey,
 		Model:   modelName,
-		Client:  &http.Client{Timeout: 60 * time.Second},
+		// 120s: un batch de titulares con un modelo que razona antes de
+		// responder puede pasar holgado el minuto (Gemini cortó por timeout
+		// a los 60s el 2026-09-24). Igual se reintenta si vence, ver chat().
+		Client: &http.Client{Timeout: 120 * time.Second},
 	}
 }
 
@@ -202,6 +205,10 @@ func extractJSONObject(s string) string {
 // dropping the article silently.
 const maxRateLimitRetries = 6
 
+// maxTransportRetries es menor que maxRateLimitRetries porque cada intento
+// fallido por timeout ya consumió el timeout entero del cliente.
+const maxTransportRetries = 2
+
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
 
 func isRetryableStatus(code int) bool {
@@ -267,7 +274,18 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 
 		resp, err := c.Client.Do(req)
 		if err != nil {
-			return "", err
+			// Timeout o corte de conexión: tan transitorio como un 503 —
+			// reintentamos con el mismo backoff en vez de dar el batch por
+			// perdido al primer hipo de red.
+			if ctx.Err() != nil || attempt >= maxTransportRetries {
+				return "", err
+			}
+			select {
+			case <-time.After(rateLimitBackoff[attempt]):
+			case <-ctx.Done():
+				return "", ctx.Err()
+			}
+			continue
 		}
 		statusCode = resp.StatusCode
 		body, err = io.ReadAll(io.LimitReader(resp.Body, 4<<20))
@@ -276,8 +294,10 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 			return "", err
 		}
 
-		if statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body) {
-			break
+		// 402: OpenRouter sin saldo para un modelo pago — no se arregla en
+		// lo que queda de la corrida, igual que una cuota agotada.
+		if statusCode == http.StatusPaymentRequired || (statusCode == http.StatusTooManyRequests && isHardQuotaExceeded(body)) {
+			return "", fmt.Errorf("%w: %s", ErrQuotaExhausted, truncate(extractErrorMessage(body), 300))
 		}
 		retryable := isRetryableStatus(statusCode) || isTransientErrorMessage(extractErrorMessage(body))
 		if !retryable || attempt >= maxRateLimitRetries {

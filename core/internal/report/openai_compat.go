@@ -40,6 +40,10 @@ func NewOpenAICompatSynthesizer(baseURL, apiKey, modelName string) *OpenAICompat
 // filter.OpenAICompatClassifier.
 const maxRateLimitRetries = 6
 
+// maxTransportRetries: menos intentos que ante un 429/503 porque cada
+// timeout ya consumió el timeout entero del cliente.
+const maxTransportRetries = 2
+
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
 
 func isRetryableStatus(code int) bool {
@@ -141,7 +145,18 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 
 		resp, err := s.Client.Do(req)
 		if err != nil {
-			return "", fmt.Errorf("openai-compat synthesizer (%s): %w", s.Model, err)
+			// Corte de conexión (GOAWAY, EOF) o timeout: transitorio, igual
+			// que un 503 — el 2026-09-24 Gemini cortó así la síntesis y la
+			// corrida murió sin informe.
+			if ctx.Err() != nil || attempt >= maxTransportRetries {
+				return "", fmt.Errorf("openai-compat synthesizer (%s): %w", s.Model, err)
+			}
+			select {
+			case <-time.After(rateLimitBackoff[attempt]):
+			case <-ctx.Done():
+				return "", ctx.Err()
+			}
+			continue
 		}
 		statusCode = resp.StatusCode
 		body, err = io.ReadAll(io.LimitReader(resp.Body, 8<<20))

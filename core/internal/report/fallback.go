@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"noticias/core/internal/model"
 )
@@ -25,10 +26,29 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, items []model.Classif
 	for i, link := range c.Links {
 		markdown, err := link.Synthesize(ctx, items)
 		if err == nil {
+			err = validateReport(markdown)
+		}
+		if err == nil {
 			return markdown, nil
 		}
 		log.Printf("synthesize: proveedor %d/%d falló (%v), probando el siguiente", i+1, len(c.Links), err)
 		lastErr = err
 	}
 	return "", fmt.Errorf("los %d proveedores configurados fallaron, último error: %w", len(c.Links), lastErr)
+}
+
+// requiredSections son los encabezados que el prompt de síntesis exige
+// siempre. Si faltan, el modelo no hizo el trabajo pedido — pasa con los
+// routers de modelos free, que a veces caen en un modelo de moderación que
+// contesta "User Safety: safe" en vez de escribir el informe. Mejor probar
+// el siguiente proveedor que publicar eso.
+var requiredSections = []string{"## Resumen ejecutivo", "## Resumen por región"}
+
+func validateReport(markdown string) error {
+	for _, h := range requiredSections {
+		if !strings.Contains(markdown, h) {
+			return fmt.Errorf("la respuesta no tiene la sección %q (output: %s)", h, truncate(markdown, 200))
+		}
+	}
+	return nil
 }
