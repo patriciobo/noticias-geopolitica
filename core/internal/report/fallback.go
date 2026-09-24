@@ -38,11 +38,17 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, items []model.Classif
 }
 
 // requiredSections son los encabezados que el prompt de síntesis exige
-// siempre. Si faltan, el modelo no hizo el trabajo pedido — pasa con los
-// routers de modelos free, que a veces caen en un modelo de moderación que
-// contesta "User Safety: safe" en vez de escribir el informe. Mejor probar
-// el siguiente proveedor que publicar eso.
-var requiredSections = []string{"## Resumen ejecutivo", "## Resumen por región"}
+// siempre. Si falta alguno, el modelo no hizo el trabajo pedido o la
+// respuesta vino cortada — pasa con los routers de modelos free (a veces
+// caen en un modelo de moderación que contesta "User Safety: safe") y pasó
+// con un informe truncado a mitad de "Resumen por región" el 2026-09-24.
+// Mejor probar el siguiente proveedor que publicar eso.
+var requiredSections = []string{
+	"## Resumen ejecutivo",
+	"## Resumen por región",
+	"## Clima internacional",
+	"## Empresas potencialmente afectadas",
+}
 
 func validateReport(markdown string) error {
 	for _, h := range requiredSections {

@@ -19,6 +19,10 @@ on:
         description: "Saltear si el informe de hoy ya existe (lo usa el disparo externo)"
         type: boolean
         default: false
+      enviar_newsletter:
+        description: "Mandar el newsletter (desmarcar al regenerar un informe que ya se envió)"
+        type: boolean
+        default: true
 
 # Por defecto sin permisos; el job pide solo los que usa.
 permissions: {}
@@ -155,7 +159,10 @@ jobs:
       # este paso no hace nada (no rompe el resto del pipeline) — mismo
       # patrón defensivo que el step de Render de más abajo.
       - name: Enviar newsletter
-        if: steps.commit.outputs.committed == 'true'
+        # En un cron no hay inputs: se manda siempre. Ojo, no usar
+        # `inputs.enviar_newsletter != false`: null y false se comparan
+        # como iguales en las expresiones de Actions.
+        if: steps.commit.outputs.committed == 'true' && (github.event_name != 'workflow_dispatch' || inputs.enviar_newsletter)
         working-directory: core
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"noticias/core/internal/model"
 )
@@ -35,5 +36,32 @@ func TestBuildAudit(t *testing.T) {
 	}
 	if a.Headlines[0].Source != "A" || a.Headlines[0].Title != "b" || a.Headlines[4].Source != "C" {
 		t.Errorf("titulares no quedaron ordenados por fuente y título: %+v", a.Headlines)
+	}
+}
+
+func TestDropStale(t *testing.T) {
+	now := time.Date(2026, 9, 24, 12, 0, 0, 0, time.UTC)
+	mk := func(title string, pub time.Time) struct {
+		Source  model.Source
+		Article model.Article
+	} {
+		return struct {
+			Source  model.Source
+			Article model.Article
+		}{Source: model.Source{Name: "X"}, Article: model.Article{Title: title, PublishedAt: pub}}
+	}
+	items := []struct {
+		Source  model.Source
+		Article model.Article
+	}{
+		mk("hoy", now.Add(-2*time.Hour)),
+		mk("2020", time.Date(2020, 2, 27, 0, 0, 0, 0, time.UTC)),
+		mk("sin fecha", time.Time{}),
+	}
+
+	got := dropStale(items, now, 72*time.Hour)
+
+	if len(got) != 2 || got[0].Article.Title != "hoy" || got[1].Article.Title != "sin fecha" {
+		t.Errorf("dropStale = %+v", got)
 	}
 }

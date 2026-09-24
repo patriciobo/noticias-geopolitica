@@ -44,6 +44,10 @@ const maxRateLimitRetries = 6
 // timeout ya consumió el timeout entero del cliente.
 const maxTransportRetries = 2
 
+// synthMaxTokens deja margen de sobra: un informe completo ronda los 5-8k
+// tokens, más lo que razone el modelo antes de escribir.
+const synthMaxTokens = 32000
+
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
 
 func isRetryableStatus(code int) bool {
@@ -93,6 +97,7 @@ func truncate(s string, n int) string {
 
 type compatChatRequest struct {
 	Model       string          `json:"model"`
+	MaxTokens   int             `json:"max_tokens,omitempty"`
 	Messages    []compatMessage `json:"messages"`
 	Temperature float64         `json:"temperature"`
 }
@@ -104,7 +109,8 @@ type compatMessage struct {
 
 type compatChatResponse struct {
 	Choices []struct {
-		Message compatMessage `json:"message"`
+		Message      compatMessage `json:"message"`
+		FinishReason string        `json:"finish_reason"`
 	} `json:"choices"`
 	Error *struct {
 		Message string `json:"message"`
@@ -123,6 +129,10 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 			{Role: "user", Content: buildUserPrompt(items)},
 		},
 		Temperature: 0.3,
+		// Explícito: sin esto algunos proveedores de OpenRouter aplican un
+		// tope por defecto chico y el informe sale cortado a mitad de frase
+		// (pasó con DeepSeek el 2026-09-24).
+		MaxTokens: synthMaxTokens,
 	}
 
 	payload, err := json.Marshal(reqBody)
@@ -195,6 +205,9 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 	}
 	if len(cr.Choices) == 0 {
 		return "", fmt.Errorf("openai-compat synthesizer: respuesta vacía")
+	}
+	if cr.Choices[0].FinishReason == "length" {
+		return "", fmt.Errorf("openai-compat synthesizer (%s): respuesta cortada por límite de tokens", s.Model)
 	}
 	return strings.TrimSpace(cr.Choices[0].Message.Content), nil
 }

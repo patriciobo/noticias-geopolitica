@@ -20,7 +20,7 @@ func (s stubSynthesizer) Synthesize(ctx context.Context, items []model.Classifie
 // report arma un markdown mínimo que pasa validateReport, marcado con tag
 // para distinguir qué link lo produjo.
 func report(tag string) string {
-	return "## Resumen ejecutivo\n\n" + tag + "\n\n## Resumen por región\n"
+	return "## Resumen ejecutivo\n\n" + tag + "\n\n## Resumen por región\n\n## Clima internacional: comercio\n\n## Empresas potencialmente afectadas por región\n"
 }
 
 func TestChainSynthesizerUsesFirstOnSuccess(t *testing.T) {
@@ -67,6 +67,20 @@ func TestChainSynthesizerErrorsWhenAllFail(t *testing.T) {
 func TestChainSynthesizerSkipsOutputWithoutRequiredSections(t *testing.T) {
 	c := NewChainSynthesizer(
 		stubSynthesizer{markdown: "User Safety: safe"},
+		stubSynthesizer{markdown: report("second")},
+	)
+	got, err := c.Synthesize(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != report("second") {
+		t.Errorf("expected second link's result, got %q", got)
+	}
+}
+
+func TestChainSynthesizerSkipsTruncatedReport(t *testing.T) {
+	c := NewChainSynthesizer(
+		stubSynthesizer{markdown: "## Resumen ejecutivo\n\nx\n\n## Resumen por región\n\n- corte a mitad"},
 		stubSynthesizer{markdown: report("second")},
 	)
 	got, err := c.Synthesize(context.Background(), nil)

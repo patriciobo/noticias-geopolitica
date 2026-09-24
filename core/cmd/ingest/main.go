@@ -34,6 +34,10 @@ const (
 	defaultMaxHeadlinesPerSource = 6
 	defaultFetchConcurrency      = 10
 	defaultClassifyConcurrency   = 5
+	// Algunos feeds devuelven notas de hace años (El País sirvió notas de
+	// 2020 y Xinhua de 2017 el 2026-09-24): sin prefiltro, el clasificador
+	// las aceptaba como noticias del día.
+	defaultMaxArticleAgeHours = 72
 )
 
 func envOrDefault(key, def string) string {
@@ -301,6 +305,9 @@ func main() {
 	maxHeadlines := envOrDefaultInt("MAX_HEADLINES_PER_SOURCE", defaultMaxHeadlinesPerSource)
 	articles := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
 	log.Printf("titulares obtenidos: %d", len(articles))
+
+	maxAge := time.Duration(envOrDefaultInt("MAX_ARTICLE_AGE_HOURS", defaultMaxArticleAgeHours)) * time.Hour
+	articles = dropStale(articles, time.Now(), maxAge)
 
 	// El prefiltro por palabras clave queda apagado por defecto con
 	// proveedores en la nube: no entiende titulares en coreano, japonés,
@@ -592,4 +599,29 @@ func classifyAll(
 	}
 	wg.Wait()
 	return out, audit
+}
+
+// dropStale saca los titulares con fecha de publicación más vieja que
+// maxAge. Los que no traen fecha (PublishedAt cero) se quedan: muchos
+// feeds no la informan y no hay forma de saber si son viejos.
+func dropStale(items []struct {
+	Source  model.Source
+	Article model.Article
+}, now time.Time, maxAge time.Duration) []struct {
+	Source  model.Source
+	Article model.Article
+} {
+	out := items[:0:0]
+	perSource := map[string]int{}
+	for _, it := range items {
+		if pub := it.Article.PublishedAt; !pub.IsZero() && now.Sub(pub) > maxAge {
+			perSource[it.Source.Name]++
+			continue
+		}
+		out = append(out, it)
+	}
+	for name, n := range perSource {
+		log.Printf("descartados %d titulares viejos (más de %s) de %s — revisar el feed", n, maxAge, name)
+	}
+	return out
 }
