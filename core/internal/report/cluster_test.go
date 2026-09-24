@@ -24,7 +24,7 @@ func TestClusterStoriesGroupsSharedCompanyAcrossCountries(t *testing.T) {
 		art("nyt", "Estados Unidos", "Volkswagen anuncia recorte de personal", []string{"Volkswagen"}, []string{"Alemania"}, "supply_chain"),
 		art("der-spiegel", "Alemania", "VW reduce plantilla en Wolfsburgo", []string{"Volkswagen"}, []string{"Alemania"}, "supply_chain"),
 	}
-	clusters := clusterStories(items)
+	clusters := clusterStories(items, nil)
 	if len(clusters) != 1 {
 		t.Fatalf("esperaba 1 cluster, dio %d", len(clusters))
 	}
@@ -46,7 +46,7 @@ func TestClusterStoriesSameCountryWeighsLess(t *testing.T) {
 		art("la-nacion", "Argentina", "YPF firma acuerdo de litio", []string{"YPF"}, []string{"Argentina"}, "trade"),
 		art("pagina12", "Argentina", "YPF avanza en exportación de litio", []string{"YPF"}, []string{"Argentina"}, "trade"),
 	}
-	clusters := clusterStories(items)
+	clusters := clusterStories(items, nil)
 	if len(clusters) != 1 {
 		t.Fatalf("esperaba 1 cluster, dio %d", len(clusters))
 	}
@@ -62,7 +62,7 @@ func TestClusterStoriesDoesNotMergeUnrelatedArticles(t *testing.T) {
 		art("nyt", "Estados Unidos", "Titular A", []string{"Tesla"}, []string{"Estados Unidos"}, "trade"),
 		art("le-monde", "Francia", "Titular B", []string{"TotalEnergies"}, []string{"Francia"}, "regulatory"),
 	}
-	clusters := clusterStories(items)
+	clusters := clusterStories(items, nil)
 	if len(clusters) != 2 {
 		t.Fatalf("esperaba 2 clusters separados, dio %d", len(clusters))
 	}
@@ -79,7 +79,7 @@ func TestClusterStoriesSortedByWeightDescending(t *testing.T) {
 		art("s2", "Alemania", "Historia con cobertura cruzada", []string{"Volkswagen"}, []string{"Alemania"}, "supply_chain"),
 		art("s3", "Estados Unidos", "Historia con cobertura cruzada", []string{"Volkswagen"}, []string{"Alemania"}, "supply_chain"),
 	}
-	clusters := clusterStories(items)
+	clusters := clusterStories(items, nil)
 	if len(clusters) != 2 {
 		t.Fatalf("esperaba 2 clusters, dio %d", len(clusters))
 	}

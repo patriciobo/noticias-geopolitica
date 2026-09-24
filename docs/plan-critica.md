@@ -52,7 +52,7 @@ decisiones que no se pueden inferir del código.
 
 ## Pendientes detectados al probar (2026-09-24)
 
-- [ ] **15. Agrupamiento de la cobertura cruzada.** Agrupa por países +
+- [x] **15. Agrupamiento de la cobertura cruzada.** Agrupa por países +
   tipo de relación (o empresa + relación), así que mezcla historias
   distintas: en la prueba local el chequeo de fidelidad marcó 3 de las 8
   afirmaciones sin respaldo en "Cobertura cruzada" porque el título del
@@ -85,3 +85,4 @@ decisiones que no se pueden inferir del código.
 - Paso 11 (2026-09-24): report.CheckFidelity: lotes de 30 afirmaciones con sus notas citadas → respaldada/inferencia/sin_respaldo; counts.claims_* y fidelity_issues en la edición; FIDELITY_CHECK=off lo apaga. Lo hace el mismo modelo que redactó (control de consistencia, no revisión independiente).
 - Paso 13 (2026-09-24): core/cmd/muestra + workflow semanal (lunes) que abre un issue 'revision-semanal' con 20 titulares y 10 afirmaciones al azar de los últimos 7 días, con checklist.
 - Paso 12 (2026-09-24): eval/classify.jsonl (115 titulares, etiquetas de Claude a revisar), cmd/evalclassify, workflow manual 'Evaluar clasificador'. Primer resultado: Qwen 3.8 27B free F1 0.85 vs DeepSeek V4 Flash 0.71 → la clasificación pasa a Qwen con DeepSeek de respaldo.
+- Paso 15 (2026-09-24): report.GroupStories: el modelo agrupa las notas por hecho concreto (multilingüe) con validación; la cobertura cruzada usa el hecho del grupo como título; si falla, vuelve al agrupamiento por entidades.

@@ -20,7 +20,7 @@ func TestSameWireCountsAsOneVoice(t *testing.T) {
 		wireArt("b", "Italia", "privado", "Sanzioni USA all'Iran", "(Reuters) Il Tesoro americano..."),
 		wireArt("c", "Francia", "privado", "Sanctions américaines", "Selon Reuters, le Trésor..."),
 	}
-	cl := clusterStories(items)[0]
+	cl := clusterStories(items, nil)[0]
 	if cl.sourceCount() != 3 || cl.independentCount() != 1 {
 		t.Errorf("medios=%d independientes=%d; want 3 y 1", cl.sourceCount(), cl.independentCount())
 	}
@@ -35,7 +35,7 @@ func TestStateMediaOfSameCountryIsOneVoice(t *testing.T) {
 		wireArt("sputnik", "Rusia", "estatal", "US sanctions Tehran", "New sanctions..."),
 		wireArt("haaretz", "Israel", "privado", "US slaps sanctions on Iran", "The Treasury..."),
 	}
-	cl := clusterStories(items)[0]
+	cl := clusterStories(items, nil)[0]
 	if cl.independentCount() != 2 {
 		t.Errorf("independientes=%d; want 2 (Estado ruso + Haaretz)", cl.independentCount())
 	}

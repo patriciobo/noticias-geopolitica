@@ -30,6 +30,9 @@ type Synthesizer interface {
 type Input struct {
 	Items    []model.ClassifiedArticle
 	Coverage map[string]RegionCoverage // por id de región; nil = desconocida
+	// Groups son las notas agrupadas por hecho (GroupStories); nil = se
+	// agrupa por entidades.
+	Groups []StoryGroup
 }
 
 // RegionCoverage cuenta los medios con feed configurados en una región y
@@ -274,7 +277,7 @@ func buildUserPrompt(in Input) string {
 	items := in.Items
 	nums := citationNumbers(items)
 
-	clusters := clusterStories(items)
+	clusters := clusterStories(items, in.Groups)
 
 	type coverage struct {
 		sources, countries, independent int
@@ -296,6 +299,10 @@ func buildUserPrompt(in Input) string {
 		b.WriteString("COBERTURA CRUZADA (de mayor a menor relevancia):\n")
 		for _, cl := range crossPortal {
 			rep := cl.items[0]
+			title := rep.Article.Title
+			if cl.event != "" {
+				title = cl.event
+			}
 			var mediaCountries []string
 			seen := map[string]bool{}
 			for _, it := range cl.items {
@@ -313,7 +320,7 @@ func buildUserPrompt(in Input) string {
 				wires = " (cables: " + ws + ")"
 			}
 			fmt.Fprintf(&b, "- %s — %d medios en %d país(es) (%s); fuentes independientes: %d, de %d país(es)%s — notas %s\n",
-				rep.Article.Title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "),
+				title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "),
 				cl.independentCount(), len(cl.voiceCountries), wires, strings.Join(refs, ""))
 		}
 		b.WriteString("\n")

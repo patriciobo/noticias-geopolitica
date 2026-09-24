@@ -332,7 +332,21 @@ func main() {
 		log.Fatal("ningún titular pasó el filtro internacional hoy — nada que sintetizar")
 	}
 
-	markdown, err := synth.Synthesize(ctx, report.Input{Items: classified, Coverage: coverage})
+	// Agrupar por hecho con el modelo: el agrupamiento por entidades
+	// (países + tipo de relación) mezclaba historias distintas en la
+	// cobertura cruzada. Si falla, se usa ese agrupamiento como antes.
+	var groups []report.StoryGroup
+	if comp, ok := synth.(report.Completer); ok {
+		g, gerr := report.GroupStories(ctx, comp, classified)
+		if gerr != nil {
+			log.Printf("agrupamiento por hecho falló, uso el de entidades: %v", gerr)
+		} else {
+			groups = g
+			log.Printf("agrupamiento por hecho: %d historias con más de una nota", len(groups))
+		}
+	}
+
+	markdown, err := synth.Synthesize(ctx, report.Input{Items: classified, Coverage: coverage, Groups: groups})
 	if err != nil {
 		log.Fatalf("sintetizando reporte: %v", err)
 	}

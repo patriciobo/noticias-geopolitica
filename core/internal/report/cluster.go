@@ -12,6 +12,9 @@ import (
 // underlying event, so the synthesis prompt can tell the model which
 // stories are cross-validated by multiple independent outlets.
 type storyCluster struct {
+	// event describe el hecho cuando lo agrupó el modelo (GroupStories);
+	// vacío con el agrupamiento por entidades.
+	event     string
 	items     []model.ClassifiedArticle
 	sourceIDs map[string]bool
 	countries map[string]bool
@@ -82,20 +85,39 @@ func normalizeSet(items []string) []string {
 	return out
 }
 
-// clusterStories groups items by storySignature and sorts clusters by
-// weight, highest coverage first.
-func clusterStories(items []model.ClassifiedArticle) []*storyCluster {
+// clusterStories agrupa las notas y ordena los grupos por peso. Con
+// groups (del modelo, ver GroupStories) usa esos grupos y deja el resto
+// como notas sueltas; sin groups, agrupa por storySignature, que es más
+// ruidoso: junta historias distintas que comparten países y tipo de
+// relación.
+func clusterStories(items []model.ClassifiedArticle, groups []StoryGroup) []*storyCluster {
 	byKey := map[string]*storyCluster{}
 	var order []string
 
+	groupOf := map[int]int{}
+	for g, sg := range groups {
+		for _, i := range sg.Items {
+			groupOf[i] = g
+		}
+	}
+
 	for i, it := range items {
-		key := storySignature(it.Classification)
-		if key == "" {
+		var key string
+		if groups != nil {
+			if g, ok := groupOf[i]; ok {
+				key = fmt.Sprintf("group:%d", g)
+			} else {
+				key = fmt.Sprintf("singleton:%d", i)
+			}
+		} else if key = storySignature(it.Classification); key == "" {
 			key = fmt.Sprintf("singleton:%d", i)
 		}
 		cl, ok := byKey[key]
 		if !ok {
 			cl = &storyCluster{sourceIDs: map[string]bool{}, countries: map[string]bool{}, voices: map[string]bool{}, voiceCountries: map[string]bool{}, wires: map[string]int{}}
+			if g, ok := groupOf[i]; ok && groups != nil {
+				cl.event = groups[g].Event
+			}
 			byKey[key] = cl
 			order = append(order, key)
 		}
