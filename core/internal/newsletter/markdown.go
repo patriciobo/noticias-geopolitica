@@ -1,6 +1,7 @@
 package newsletter
 
 import (
+	"fmt"
 	"html"
 	"regexp"
 	"strings"
@@ -67,6 +68,30 @@ func MarkdownFragmentToHTML(md string) string {
 // pares de asteriscos dobles sueltos, así que la regex de cursiva (un solo
 // asterisco) no puede matchear por error dentro de lo que ya era negrita.
 func inline(text string) string {
+	// Los links markdown ([texto](url) o [texto](<url>), como las citas
+	// [[3]](<url>)) se convierten en <a>; el resto se escapa y recibe
+	// negrita/itálica. Solo se aceptan URLs http(s).
+	var b strings.Builder
+	last := 0
+	for _, m := range mdLinkRe.FindAllStringSubmatchIndex(text, -1) {
+		b.WriteString(emphasis(text[last:m[0]]))
+		label, href := text[m[2]:m[3]], text[m[4]:m[5]]
+		if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
+			fmt.Fprintf(&b, `<a href="%s" style="color:#c81e1e; text-decoration:none;">%s</a>`, html.EscapeString(href), emphasis(label))
+		} else {
+			b.WriteString(emphasis(label))
+		}
+		last = m[1]
+	}
+	b.WriteString(emphasis(text[last:]))
+	return b.String()
+}
+
+// mdLinkRe: [texto](url) o [texto](<url>); el texto puede tener corchetes
+// adentro ([[3]]).
+var mdLinkRe = regexp.MustCompile(`\[((?:\[[^\]]*\]|[^\[\]])*)\]\(<?([^)<>\s]+)>?\)`)
+
+func emphasis(text string) string {
 	escaped := html.EscapeString(text)
 	bold := boldRe.ReplaceAllString(escaped, "<strong>$1</strong>")
 	return italicRe.ReplaceAllString(bold, "<em>$1</em>")

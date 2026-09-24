@@ -46,3 +46,14 @@ func TestMarkdownFragmentToHTMLEscapesRawHTML(t *testing.T) {
 		t.Errorf("expected escaped script tag:\n%s", got)
 	}
 }
+
+func TestInlineRendersCitationLinks(t *testing.T) {
+	got := inline("**Francia**: según Le Monde, x [[2]](<https://b.example/2?a=1&b=2>) y <script>")
+	want := `<strong>Francia</strong>: según Le Monde, x <a href="https://b.example/2?a=1&amp;b=2" style="color:#c81e1e; text-decoration:none;">[2]</a> y &lt;script&gt;`
+	if got != want {
+		t.Errorf("inline =\n%s\nwant\n%s", got, want)
+	}
+	if got := inline("[click](javascript:alert(1))"); strings.Contains(got, "href") {
+		t.Errorf("aceptó un href no http: %s", got)
+	}
+}

@@ -340,6 +340,10 @@ func main() {
 	// que efectivamente se procesaron (ver report.StripUnknownLinks).
 	markdown = report.EnsureAllRegionsPresent(markdown, coverage)
 	markdown, linksRemoved := report.StripUnknownLinks(markdown, classified)
+	// Después de StripUnknownLinks: los links de las citas los arma el
+	// código a partir de notas procesadas, no el modelo.
+	markdown, citeStats := report.ResolveCitations(markdown, classified)
+	log.Printf("citas: %d resueltas, %d inventadas (sacadas), %d bullets sin cita", citeStats.Resolved, citeStats.Invalid, citeStats.Uncited)
 	if linksRemoved > 0 {
 		log.Printf("se sacaron %d enlace(s) del texto del LLM que no correspondían a notas procesadas", linksRemoved)
 	}
@@ -370,6 +374,9 @@ func main() {
 	auditPath := filepath.Join(outDir, dateStr+".audit.json")
 	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, sourceStatuses, linksRemoved)
 	audit.SynthesizeModelUsed = report.ModelName(synth)
+	audit.Counts.CitationsResolved = citeStats.Resolved
+	audit.Counts.CitationsInvalid = citeStats.Invalid
+	audit.Counts.UncitedBullets = citeStats.Uncited
 	audit.Version, audit.Revisions = nextRevision(auditPath, audit.GeneratedAt, os.Getenv("REGENERATION_REASON"))
 	if audit.Version > 1 {
 		log.Printf("edición regenerada: versión %d (motivo: %s)", audit.Version, audit.Revisions[len(audit.Revisions)-1].Reason)

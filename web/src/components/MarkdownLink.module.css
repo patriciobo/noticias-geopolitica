@@ -1,0 +1,13 @@
+.citation {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+  margin-left: 0.1em;
+  padding: 0 0.15em;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.citation:hover {
+  text-decoration: underline;
+}

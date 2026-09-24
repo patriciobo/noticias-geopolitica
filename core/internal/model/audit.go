@@ -49,6 +49,9 @@ type AuditCounts struct {
 	ClassifierErrors   int `json:"classifier_errors"`   // el clasificador falló y el titular quedó afuera
 	Accepted           int `json:"accepted"`            // entraron a la síntesis
 	LinksRemoved       int `json:"links_removed"`       // enlaces que escribió el LLM y se sacaron por no ser de una nota procesada
+	CitationsResolved  int `json:"citations_resolved"`  // citas [n] convertidas en link a su nota
+	CitationsInvalid   int `json:"citations_invalid"`   // citas a números que no existían (se sacaron)
+	UncitedBullets     int `json:"uncited_bullets"`     // bullets o resúmenes sin ninguna cita
 }
 
 // Etapas posibles de un AuditEntry.

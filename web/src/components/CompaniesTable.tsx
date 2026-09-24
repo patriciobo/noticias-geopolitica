@@ -1,15 +1,12 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import MarkdownLink from "./MarkdownLink";
 import { splitSubsections } from "@/lib/reportSections";
 import styles from "./CompaniesTable.module.css";
 
 const components: Components = {
   a({ href, children }) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer">
-        {children}
-      </a>
-    );
+    return <MarkdownLink href={href}>{children}</MarkdownLink>;
   },
 };
 

@@ -129,6 +129,12 @@ verificación de los hechos, y tiene que leerse así:
 - En el Resumen ejecutivo podés atribuir de forma agregada ("según medios de X
   países", "según la prensa estatal iraní").
 
+Citas (obligatorias). Cada titular de la lista viene con un número entre corchetes
+([12]). Terminá cada bullet, y cada oración del Resumen ejecutivo, con los números de
+las notas en que se basa: "[12]" o "[12][40]". Usá solo números que estén en la lista,
+nunca inventes uno. Un bullet sin una nota que lo respalde no se escribe. Las citas se
+convierten solas en links a cada nota: no escribas enlaces ni la lista de notas.
+
 Escribí todo el texto en español formal de Argentina: voseo ("vos", "tenés", "podés"),
 nunca "tú" ni conjugación de tuteo; registro profesional y periodístico, sin modismos
 coloquiales (nada de "che", "boludo", etc.) y sin mexicanismos ni neutro genérico.
@@ -264,6 +270,7 @@ func articleKey(a model.Article) string {
 func buildUserPrompt(in Input) string {
 	var b strings.Builder
 	items := in.Items
+	nums := citationNumbers(items)
 
 	clusters := clusterStories(items)
 
@@ -295,8 +302,12 @@ func buildUserPrompt(in Input) string {
 					mediaCountries = append(mediaCountries, it.Source.Country)
 				}
 			}
-			fmt.Fprintf(&b, "- %s — %d medios en %d país(es) (%s)\n",
-				rep.Article.Title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "))
+			var refs []string
+			for _, it := range cl.items {
+				refs = append(refs, fmt.Sprintf("[%d]", nums[articleKey(it.Article)]))
+			}
+			fmt.Fprintf(&b, "- %s — %d medios en %d país(es) (%s) — notas %s\n",
+				rep.Article.Title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "), strings.Join(refs, ""))
 		}
 		b.WriteString("\n")
 	}
@@ -331,8 +342,8 @@ func buildUserPrompt(in Input) string {
 			if cov.sources > 1 {
 				note = fmt.Sprintf(" [cobertura: %d medios, %d país(es)]", cov.sources, cov.countries)
 			}
-			fmt.Fprintf(&b, "- [%s | %s | %s | tipo: %s] %s (países: %v, empresas: %v, relación: %s)%s\n",
-				a.Source.Country, a.Source.Name, a.Source.Stance, sourceKind(a.Source),
+			fmt.Fprintf(&b, "- [%d] [%s | %s | %s | tipo: %s] %s (países: %v, empresas: %v, relación: %s)%s\n",
+				nums[articleKey(a.Article)], a.Source.Country, a.Source.Name, a.Source.Stance, sourceKind(a.Source),
 				a.Article.Title, a.Classification.Countries, a.Classification.Companies,
 				a.Classification.RelationType, note)
 		}

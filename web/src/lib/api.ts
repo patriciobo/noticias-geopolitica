@@ -24,6 +24,9 @@ export type Provenance = {
     classifier_errors: number;
     accepted: number;
     links_removed: number;
+    citations_resolved?: number;
+    citations_invalid?: number;
+    uncited_bullets?: number;
   };
   source_problems?: SourceProblem[];
   version?: number;

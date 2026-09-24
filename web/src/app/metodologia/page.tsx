@@ -75,6 +75,11 @@ export default async function MetodologiaPage() {
             resumen lo va a repetir, atribuido a ese medio.
           </li>
           <li>
+            <strong>Cada afirmación tiene su fuente:</strong> termina en un número que enlaza a la nota de la
+            que sale. El sistema descarta los números que no corresponden a ninguna nota procesada y publica
+            cuántas afirmaciones quedaron sin cita.
+          </li>
+          <li>
             <strong>Que varios medios publiquen lo mismo no lo confirma:</strong> muchas veces repiten el
             mismo cable de una agencia.
           </li>

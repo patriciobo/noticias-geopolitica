@@ -31,7 +31,7 @@ decisiones que no se pueden inferir del código.
   "Versión N — motivo". Página /correcciones.
 - [x] **8. Reportar un error.** Plantilla de issue en el repo y link
   "¿Encontraste un error?" en cada edición y en el newsletter.
-- [ ] **9. Cada afirmación con su cita.** Los titulares van numerados al
+- [x] **9. Cada afirmación con su cita.** Los titulares van numerados al
   modelo; cada bullet termina en [n]; el código valida que las citas
   existan, las convierte en links a la nota y cuenta bullets sin cita.
 - [ ] **10. Confirmación independiente.** Detectar cables de agencias
@@ -67,3 +67,4 @@ decisiones que no se pueden inferir del código.
 - Paso 6 (2026-09-24): AuditEntry.model por titular; provenance.classify_models_used (conteo) y synthesize_model_used; la web lista los modelos usados y avisa si entró un respaldo.
 - Paso 7 (2026-09-24): provenance.version/revisions con motivo (input 'motivo' del workflow → REGENERATION_REASON); GET /corrections; aviso de versión en la edición; página /correcciones con política y nota histórica del 24/09.
 - Paso 8 (2026-09-24): Plantillas .github/ISSUE_TEMPLATE/error-en-edicion.yml y objecion-medio.yml (labels creados); link '¿Encontraste un error?' con la fecha precargada en cada edición y en el newsletter.
+- Paso 9 (2026-09-24): Titulares numerados en el prompt; report.ResolveCitations convierte [n] en link a la nota, saca números inventados y cuenta bullets sin cita (counts.citations_*, uncited_bullets); web muestra superíndices; el newsletter renderiza links.

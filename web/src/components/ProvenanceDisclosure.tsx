@@ -44,6 +44,15 @@ export default function ProvenanceDisclosure({
                 <li><strong>{provenance.counts.classifier_errors}</strong> no se pudieron clasificar (error técnico) y quedaron afuera</li>
               )}
               <li><strong>{provenance.counts.accepted}</strong> usados para escribir el informe</li>
+              {provenance.counts.citations_resolved !== undefined && (
+                <li>
+                  <strong>{provenance.counts.citations_resolved}</strong> citas enlazadas a su nota
+                  {(provenance.counts.uncited_bullets ?? 0) > 0 &&
+                    `; ${provenance.counts.uncited_bullets} afirmaciones quedaron sin cita`}
+                  {(provenance.counts.citations_invalid ?? 0) > 0 &&
+                    `; ${provenance.counts.citations_invalid} citas del modelo apuntaban a notas inexistentes y se sacaron`}
+                </li>
+              )}
               {provenance.counts.links_removed > 0 && (
                 <li><strong>{provenance.counts.links_removed}</strong> enlaces escritos por el modelo se eliminaron por no corresponder a una nota procesada</li>
               )}
