@@ -391,7 +391,9 @@ sources:
     stance: oficialista
     lang: zh
     homepage: https://www.xinhuanet.com
-    rss: "http://www.xinhuanet.com/english/rss/worldrss.xml"
+    # El feed RSS de Xinhua quedó congelado en 2017-2018 (también en
+    # english.news.cn): servía notas de hace años como si fueran del día.
+    rss: "NO_RSS"
   - id: global-times
     name: Global Times
     country: China
@@ -643,7 +645,9 @@ sources:
     stance: oficialista
     lang: es
     homepage: https://elpais.com
-    rss: "https://elpais.com/rss/elpais/portada.xml"
+    # El feed viejo (elpais.com/rss/elpais/portada.xml) quedó congelado en
+    # julio de 2020; este es el vigente.
+    rss: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada"
   - id: eldiario-es
     name: elDiario.es
     country: España

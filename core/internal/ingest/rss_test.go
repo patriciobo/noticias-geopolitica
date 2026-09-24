@@ -117,3 +117,10 @@ func TestParseRSS2DecodesLatin1(t *testing.T) {
 		t.Errorf("snippet mal decodificado: got %q want %q", articles[0].Snippet, want)
 	}
 }
+
+func TestParseDateOnly(t *testing.T) {
+	got := parseDate("2018-01-24")
+	if got.IsZero() || got.Year() != 2018 || got.Month() != 1 || got.Day() != 24 {
+		t.Errorf("parseDate(\"2018-01-24\") = %v", got)
+	}
+}

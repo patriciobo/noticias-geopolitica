@@ -99,6 +99,10 @@ var pubDateLayouts = []string{
 	time.RFC1123,
 	time.RFC3339,
 	"2006-01-02T15:04:05Z07:00",
+	// Fecha sola, sin hora (Xinhua): sin esto quedaba en cero y una nota de
+	// 2017 pasaba el filtro de antigüedad como "sin fecha".
+	"2006-01-02",
+	"2006-01-02 15:04:05",
 }
 
 func parseDate(s string) time.Time {
