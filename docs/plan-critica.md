@@ -34,7 +34,7 @@ decisiones que no se pueden inferir del código.
 - [x] **9. Cada afirmación con su cita.** Los titulares van numerados al
   modelo; cada bullet termina en [n]; el código valida que las citas
   existan, las convierte en links a la nota y cuenta bullets sin cita.
-- [ ] **10. Confirmación independiente.** Detectar cables de agencias
+- [x] **10. Confirmación independiente.** Detectar cables de agencias
   (Reuters, AFP, AP, EFE, ...) en la cobertura cruzada: contar "fuentes
   independientes" aparte de "medios que lo publicaron".
 - [ ] **11. Chequeo de fidelidad.** Segunda pasada del LLM que contrasta
@@ -68,3 +68,4 @@ decisiones que no se pueden inferir del código.
 - Paso 7 (2026-09-24): provenance.version/revisions con motivo (input 'motivo' del workflow → REGENERATION_REASON); GET /corrections; aviso de versión en la edición; página /correcciones con política y nota histórica del 24/09.
 - Paso 8 (2026-09-24): Plantillas .github/ISSUE_TEMPLATE/error-en-edicion.yml y objecion-medio.yml (labels creados); link '¿Encontraste un error?' con la fecha precargada en cada edición y en el newsletter.
 - Paso 9 (2026-09-24): Titulares numerados en el prompt; report.ResolveCitations convierte [n] en link a la nota, saca números inventados y cuenta bullets sin cita (counts.citations_*, uncited_bullets); web muestra superíndices; el newsletter renderiza links.
+- Paso 10 (2026-09-24): report/wire.go detecta cables (Reuters, AFP, AP, EFE, ...) y agrupa medios estatales del mismo país como una voz; la cobertura cruzada informa fuentes independientes y cables, y el peso usa voces, no medios.

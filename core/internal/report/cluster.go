@@ -15,17 +15,39 @@ type storyCluster struct {
 	items     []model.ClassifiedArticle
 	sourceIDs map[string]bool
 	countries map[string]bool
+	// voices son las fuentes independientes (ver voiceKey): cuatro medios
+	// que publican el mismo cable de Reuters son una sola voz.
+	voices map[string]bool
+	// voiceCountries son los países de las voces que no son cables.
+	voiceCountries map[string]bool
+	// wires cuenta cuántos medios del cluster publicaron cada agencia.
+	wires map[string]int
 }
 
-func (c *storyCluster) sourceCount() int  { return len(c.sourceIDs) }
-func (c *storyCluster) countryCount() int { return len(c.countries) }
+func (c *storyCluster) sourceCount() int      { return len(c.sourceIDs) }
+func (c *storyCluster) countryCount() int     { return len(c.countries) }
+func (c *storyCluster) independentCount() int { return len(c.voices) }
 
-// weight favors stories confirmed by more outlets, and doubles the credit
-// for each distinct country among those outlets — coverage from portals in
-// different countries is a stronger relevance signal than repeat coverage
-// within the same country.
+// weight favorece las historias con más fuentes independientes y duplica
+// el crédito por cada país distinto entre ellas. Cuenta voces, no medios:
+// la cantidad de medios que repiten un cable mide difusión, no
+// corroboración.
 func (c *storyCluster) weight() float64 {
-	return float64(c.sourceCount()) + float64(c.countryCount())*2
+	return float64(c.independentCount()) + float64(len(c.voiceCountries))*2
+}
+
+// wireSummary describe los cables del cluster: "Reuters en 3 medios".
+func (c *storyCluster) wireSummary() string {
+	var names []string
+	for w := range c.wires {
+		names = append(names, w)
+	}
+	sort.Strings(names)
+	var parts []string
+	for _, w := range names {
+		parts = append(parts, fmt.Sprintf("%s en %d medios", w, c.wires[w]))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // storySignature approximates "same story" from the entities the
@@ -73,13 +95,19 @@ func clusterStories(items []model.ClassifiedArticle) []*storyCluster {
 		}
 		cl, ok := byKey[key]
 		if !ok {
-			cl = &storyCluster{sourceIDs: map[string]bool{}, countries: map[string]bool{}}
+			cl = &storyCluster{sourceIDs: map[string]bool{}, countries: map[string]bool{}, voices: map[string]bool{}, voiceCountries: map[string]bool{}, wires: map[string]int{}}
 			byKey[key] = cl
 			order = append(order, key)
 		}
 		cl.items = append(cl.items, it)
 		cl.sourceIDs[it.Article.SourceID] = true
 		cl.countries[it.Source.Country] = true
+		cl.voices[voiceKey(it)] = true
+		if w := detectWire(it); w != "" {
+			cl.wires[w]++
+		} else {
+			cl.voiceCountries[it.Source.Country] = true
+		}
 	}
 
 	clusters := make([]*storyCluster, 0, len(order))

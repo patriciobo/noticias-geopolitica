@@ -100,18 +100,19 @@ tipo de medio (estatal, privado, partidario, ong, exilio, con una aclaración cu
 hace falta), países y empresas detectadas, y tipo de relación.
 
 Antes de la lista por región puede venir un bloque "COBERTURA CRUZADA": historias que
-salieron en más de un medio, ordenadas de mayor a menor relevancia. Un medio más =
-más peso; medios de países distintos pesan el doble que medios repetidos dentro del
-mismo país (una historia que publican portales de varios países es más relevante que
-la misma cantidad de repeticiones dentro de un solo país). Esto es una señal adicional,
+salieron en más de un medio, ordenadas de mayor a menor relevancia. Cada una dice
+cuántos medios la publicaron y cuántas fuentes independientes hay detrás: varios medios
+que reproducen el mismo cable de agencia (Reuters, AFP, EFE...) cuentan como una sola
+fuente, y los medios estatales de un mismo país también. Lo que da peso es la cantidad
+de fuentes independientes y de países distintos entre ellas, no la cantidad de medios. Esto es una señal adicional,
 no un filtro: tratá con el mismo nivel normal de desarrollo a TODAS las noticias con
 potencial internacional real, sean de un medio o de varios — el criterio principal
 sigue siendo la relevancia del hecho en sí. Usá la cobertura cruzada solo para decidir
 qué va primero dentro de cada región/sección y, cuando quede lugar, darle uno o dos
 bullets extra de contexto a la historia con más peso — nunca para achicar o recortar
 el desarrollo de una noticia relevante que salió en un solo medio. Cada item de la
-lista por región trae opcionalmente "[cobertura: N medios, M país(es)]" con el mismo
-criterio a nivel de bullet individual.
+lista por región trae opcionalmente "[cobertura: N medios, M país(es), K fuentes
+independientes]" con el mismo criterio a nivel de bullet individual.
 
 Atribución (obligatoria). Esto es un resumen de lo que publicaron los medios, no una
 verificación de los hechos, y tiene que leerse así:
@@ -162,8 +163,9 @@ textual lo que vas a repetir más abajo, resumí con tus palabras.
 
 Si el bloque COBERTURA CRUZADA no está vacío, arrancá esta sección con un subtítulo
 "### Cobertura cruzada" — un bullet por cada historia ahí listada, título corto +
-qué países/medios la publicaron. Marcá con "🌐 " al inicio del bullet las que tienen
-medios de países distintos (más de un país en el dato de cobertura): son las que más
+qué países/medios la publicaron, y si es un cable decilo ("cable de Reuters publicado por
+3 medios"). Marcá con "🌐 " al inicio del bullet las que tienen fuentes independientes de
+más de un país (el dato "fuentes independientes: N, de M país(es)" con M mayor a 1): son las que más
 peso real tienen, remarcalas. Las que se repiten en varios medios pero dentro de un
 mismo país van sin el ícono, más al final de la lista. Si no hay ninguna historia con
 más de un medio, no incluyas este subtítulo. Este bloque es un índice rápido — el
@@ -275,13 +277,13 @@ func buildUserPrompt(in Input) string {
 	clusters := clusterStories(items)
 
 	type coverage struct {
-		sources, countries int
-		weight             float64
+		sources, countries, independent int
+		weight                          float64
 	}
 	coverageByArticle := map[string]coverage{}
 	var crossPortal []*storyCluster
 	for _, cl := range clusters {
-		cov := coverage{sources: cl.sourceCount(), countries: cl.countryCount(), weight: cl.weight()}
+		cov := coverage{sources: cl.sourceCount(), countries: cl.countryCount(), independent: cl.independentCount(), weight: cl.weight()}
 		for _, it := range cl.items {
 			coverageByArticle[articleKey(it.Article)] = cov
 		}
@@ -306,8 +308,13 @@ func buildUserPrompt(in Input) string {
 			for _, it := range cl.items {
 				refs = append(refs, fmt.Sprintf("[%d]", nums[articleKey(it.Article)]))
 			}
-			fmt.Fprintf(&b, "- %s — %d medios en %d país(es) (%s) — notas %s\n",
-				rep.Article.Title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "), strings.Join(refs, ""))
+			wires := ""
+			if ws := cl.wireSummary(); ws != "" {
+				wires = " (cables: " + ws + ")"
+			}
+			fmt.Fprintf(&b, "- %s — %d medios en %d país(es) (%s); fuentes independientes: %d, de %d país(es)%s — notas %s\n",
+				rep.Article.Title, cl.sourceCount(), cl.countryCount(), strings.Join(mediaCountries, ", "),
+				cl.independentCount(), len(cl.voiceCountries), wires, strings.Join(refs, ""))
 		}
 		b.WriteString("\n")
 	}
@@ -340,7 +347,7 @@ func buildUserPrompt(in Input) string {
 			cov := coverageByArticle[articleKey(a.Article)]
 			note := ""
 			if cov.sources > 1 {
-				note = fmt.Sprintf(" [cobertura: %d medios, %d país(es)]", cov.sources, cov.countries)
+				note = fmt.Sprintf(" [cobertura: %d medios, %d país(es), %d fuentes independientes]", cov.sources, cov.countries, cov.independent)
 			}
 			fmt.Fprintf(&b, "- [%d] [%s | %s | %s | tipo: %s] %s (países: %v, empresas: %v, relación: %s)%s\n",
 				nums[articleKey(a.Article)], a.Source.Country, a.Source.Name, a.Source.Stance, sourceKind(a.Source),
