@@ -36,7 +36,7 @@ func main() {
 	apiBaseURL := config.EnvOrDefault("API_BASE_URL", "http://localhost:8080")
 	siteURL := config.EnvOrDefault("SITE_URL", "http://localhost:3000")
 	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
-	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
+	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Radar Global")
 	subject := "Radar Global"
 	// En CI, un SITE_URL/API_BASE_URL sin configurar cae al default de
 	// localhost y el mail sale con imágenes y links rotos (pasó hasta el
