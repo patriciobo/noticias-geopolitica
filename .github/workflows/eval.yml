@@ -1,0 +1,33 @@
+name: Evaluar clasificador
+
+# Mide el clasificador contra eval/classify.jsonl (ver eval/README.md).
+# Manual: se corre antes de cambiar el modelo de producción.
+
+on:
+  workflow_dispatch:
+    inputs:
+      modelos:
+        description: "Modelos de OpenRouter separados por coma"
+        type: string
+        default: "deepseek/deepseek-v4-flash,qwen/qwen3.8-27b:free,nvidia/nemotron-3-super-120b-a12b:free"
+
+permissions: {}
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+      - name: Evaluar
+        working-directory: core
+        env:
+          EVAL_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EVAL_MODELS: ${{ inputs.modelos }}
+        run: go run ./cmd/evalclassify >> "$GITHUB_STEP_SUMMARY"

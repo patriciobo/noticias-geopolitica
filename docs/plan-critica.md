@@ -40,7 +40,7 @@ decisiones que no se pueden inferir del código.
 - [x] **11. Chequeo de fidelidad.** Segunda pasada del LLM que contrasta
   cada bullet con sus notas citadas; se publica cuántos quedaron sin
   respaldo y cuáles.
-- [ ] **12. Evaluación del clasificador.** Conjunto de titulares
+- [x] **12. Evaluación del clasificador.** Conjunto de titulares
   etiquetados (`eval/classify.jsonl`) y `cmd/evalclassify` que mide
   precisión/cobertura por modelo. Etiquetas iniciales de Claude — revisar.
 - [x] **13. Revisión humana por muestreo.** Workflow semanal que abre un
@@ -72,3 +72,4 @@ decisiones que no se pueden inferir del código.
 - Paso 10 (2026-09-24): report/wire.go detecta cables (Reuters, AFP, AP, EFE, ...) y agrupa medios estatales del mismo país como una voz; la cobertura cruzada informa fuentes independientes y cables, y el peso usa voces, no medios.
 - Paso 11 (2026-09-24): report.CheckFidelity: lotes de 30 afirmaciones con sus notas citadas → respaldada/inferencia/sin_respaldo; counts.claims_* y fidelity_issues en la edición; FIDELITY_CHECK=off lo apaga. Lo hace el mismo modelo que redactó (control de consistencia, no revisión independiente).
 - Paso 13 (2026-09-24): core/cmd/muestra + workflow semanal (lunes) que abre un issue 'revision-semanal' con 20 titulares y 10 afirmaciones al azar de los últimos 7 días, con checklist.
+- Paso 12 (2026-09-24): eval/classify.jsonl (115 titulares, etiquetas de Claude a revisar), cmd/evalclassify, workflow manual 'Evaluar clasificador'. Primer resultado: Qwen 3.8 27B free F1 0.85 vs DeepSeek V4 Flash 0.71 → la clasificación pasa a Qwen con DeepSeek de respaldo.
