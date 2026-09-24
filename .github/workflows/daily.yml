@@ -1,22 +1,56 @@
 name: Informe diario
 
 on:
+  # El cron de GitHub es "best effort": en la práctica llegó con horas de
+  # atraso o directamente no disparó (22/09 nada, 23/09 recién 14:57 UTC).
+  # Por eso hay varios horarios de respaldo; el job `check` hace que solo
+  # el primero que llegue genere el informe y el resto se saltee.
   schedule:
-    - cron: "13 10 * * *" # ~10:13 UTC = ~07:13 Argentina — evita el tope de hora, donde GitHub retrasa o saltea crons por carga
-  workflow_dispatch: # botón "Run workflow" para probar a mano
+    - cron: "13 10 * * *" # ~07:13 Argentina — horario principal
+    - cron: "43 11 * * *" # ~08:43 Argentina — respaldo
+    - cron: "17 13 * * *" # ~10:17 Argentina — respaldo
+    - cron: "47 15 * * *" # ~12:47 Argentina — último respaldo
+  workflow_dispatch: # botón "Run workflow" para probar a mano (siempre genera)
 
 # Por defecto sin permisos; el job pide solo los que usa.
 permissions: {}
 
 concurrency:
   group: daily-report
-  # true: un dispatch nuevo cancela corridas viejas encoladas en vez de
+  # Un dispatch manual cancela corridas viejas encoladas en vez de
   # amontonarse — evita que una corrida vieja ejecute contra un commit
-  # desactualizado y choque el push contra main.
-  cancel-in-progress: true
+  # desactualizado y choque el push contra main. Un cron de respaldo, en
+  # cambio, no cancela: si otra corrida está generando, espera y después
+  # `check` lo saltea porque el informe ya existe.
+  cancel-in-progress: ${{ github.event_name == 'workflow_dispatch' }}
 
 jobs:
+  # Saltea los crons de respaldo si el informe del día ya está en main.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      skip: ${{ steps.exists.outputs.skip }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          sparse-checkout: reports
+
+      - id: exists
+        run: |
+          f="reports/$(date -u +%F).md"
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] && [ -f "$f" ]; then
+            echo "$f ya existe, salteo esta corrida de respaldo"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   ingest:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
