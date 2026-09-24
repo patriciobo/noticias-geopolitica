@@ -26,8 +26,21 @@ export type Provenance = {
     links_removed: number;
   };
   source_problems?: SourceProblem[];
+  version?: number;
+  revisions?: Revision[];
   classify_models_used?: Record<string, number>;
   synthesize_model_used?: string;
+};
+
+export type Revision = {
+  version: number;
+  generated_at: string;
+  reason?: string;
+};
+
+export type Correction = {
+  date: string;
+  revisions: Revision[];
 };
 
 // Medio que no aportó titulares en la corrida (ver model.SourceStatus).
@@ -92,6 +105,11 @@ export async function fetchReportByDate(date: string): Promise<ReportResponse> {
 
 export async function fetchReportDates(): Promise<string[]> {
   const res = await apiFetch("/reports");
+  return res.json();
+}
+
+export async function fetchCorrections(): Promise<Correction[]> {
+  const res = await apiFetch("/corrections");
   return res.json();
 }
 

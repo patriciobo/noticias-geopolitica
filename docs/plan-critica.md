@@ -26,7 +26,7 @@ decisiones que no se pueden inferir del código.
   hizo esta edición".
 - [x] **6. Modelo por titular.** Cada entrada del registro guarda qué
   modelo la clasificó; la edición avisa si se usó un modelo de respaldo.
-- [ ] **7. Versiones visibles.** Regenerar una edición incrementa su
+- [x] **7. Versiones visibles.** Regenerar una edición incrementa su
   versión y guarda el motivo (input `motivo` del workflow); la web muestra
   "Versión N — motivo". Página /correcciones.
 - [ ] **8. Reportar un error.** Plantilla de issue en el repo y link
@@ -65,3 +65,4 @@ decisiones que no se pueden inferir del código.
 - Paso 4 (2026-09-24): report.Input con cobertura por región; región vacía con menos de la mitad de sus medios respondiendo dice 'Cobertura insuficiente hoy (X de Y medios respondieron).'; EnsureAllRegionsPresent ahora corre para todos los proveedores.
 - Paso 5 (2026-09-24): SourceStatus por medio en el audit (sources) y los que fallaron en provenance.source_problems; la web los lista en 'Cómo se hizo esta edición'. Mismo commit que el paso 4.
 - Paso 6 (2026-09-24): AuditEntry.model por titular; provenance.classify_models_used (conteo) y synthesize_model_used; la web lista los modelos usados y avisa si entró un respaldo.
+- Paso 7 (2026-09-24): provenance.version/revisions con motivo (input 'motivo' del workflow → REGENERATION_REASON); GET /corrections; aviso de versión en la edición; página /correcciones con política y nota histórica del 24/09.

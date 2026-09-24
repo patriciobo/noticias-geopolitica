@@ -367,9 +367,13 @@ func main() {
 	}
 	log.Printf("medios consultados: %d (%s)", len(consulted), sourcesPath2)
 
+	auditPath := filepath.Join(outDir, dateStr+".audit.json")
 	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, sourceStatuses, linksRemoved)
 	audit.SynthesizeModelUsed = report.ModelName(synth)
-	auditPath := filepath.Join(outDir, dateStr+".audit.json")
+	audit.Version, audit.Revisions = nextRevision(auditPath, audit.GeneratedAt, os.Getenv("REGENERATION_REASON"))
+	if audit.Version > 1 {
+		log.Printf("edición regenerada: versión %d (motivo: %s)", audit.Version, audit.Revisions[len(audit.Revisions)-1].Reason)
+	}
 	auditJSON, err := json.MarshalIndent(audit, "", " ")
 	if err != nil {
 		log.Fatalf("serializando registro de auditoría: %v", err)
@@ -712,4 +716,28 @@ func buildSourceStatuses(sources []model.Source, items []struct {
 		out = append(out, st)
 	}
 	return out
+}
+
+// nextRevision lee el registro de una edición anterior de la misma fecha
+// (si existe) y devuelve la versión nueva con el historial acumulado. Sin
+// motivo declarado en una regeneración, lo dice explícitamente.
+func nextRevision(auditPath string, generatedAt time.Time, reason string) (int, []model.Revision) {
+	var prev model.Provenance
+	if raw, err := os.ReadFile(auditPath); err == nil {
+		_ = json.Unmarshal(raw, &prev)
+	}
+	revisions := prev.Revisions
+	if len(revisions) == 0 && !prev.GeneratedAt.IsZero() {
+		// Edición anterior al registro de versiones: cuenta como la 1.
+		revisions = []model.Revision{{Version: 1, GeneratedAt: prev.GeneratedAt, Reason: "edición original"}}
+	}
+	version := len(revisions) + 1
+	switch {
+	case version == 1:
+		reason = "edición original"
+	case reason == "":
+		reason = "regenerada sin motivo declarado"
+	}
+	revisions = append(revisions, model.Revision{Version: version, GeneratedAt: generatedAt, Reason: reason})
+	return version, revisions
 }

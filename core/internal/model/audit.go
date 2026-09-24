@@ -30,6 +30,12 @@ type Provenance struct {
 	// Modelos que efectivamente se usaron: cuántos titulares clasificó cada
 	// uno y cuál redactó el informe. Con una cadena de respaldo pueden no
 	// ser los primeros de ClassifyModels/SynthesizeModels.
+	// Version cuenta cuántas veces se generó la edición de esa fecha (1 =
+	// original). Revisions guarda cada versión con su motivo, para que una
+	// regeneración nunca reemplace una edición en silencio.
+	Version   int        `json:"version,omitempty"`
+	Revisions []Revision `json:"revisions,omitempty"`
+
 	ClassifyModelsUsed  map[string]int `json:"classify_models_used,omitempty"`
 	SynthesizeModelUsed string         `json:"synthesize_model_used,omitempty"`
 }
@@ -84,4 +90,11 @@ type SourceStatus struct {
 	Status    string `json:"status"`
 	Detail    string `json:"detail,omitempty"`
 	Headlines int    `json:"headlines"`
+}
+
+// Revision es una versión de una edición.
+type Revision struct {
+	Version     int       `json:"version"`
+	GeneratedAt time.Time `json:"generated_at"`
+	Reason      string    `json:"reason,omitempty"`
 }

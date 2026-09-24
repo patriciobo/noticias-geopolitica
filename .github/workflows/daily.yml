@@ -19,6 +19,10 @@ on:
         description: "Saltear si el informe de hoy ya existe (lo usa el disparo externo)"
         type: boolean
         default: false
+      motivo:
+        description: "Motivo de la regeneración (se publica en la edición si ya existía una versión de hoy)"
+        type: string
+        default: ""
       enviar_newsletter:
         description: "Mandar el newsletter (desmarcar al regenerar un informe que ya se envió)"
         type: boolean
@@ -103,6 +107,7 @@ jobs:
           SOURCES_PATH: ../config/sources.yaml
           GAZETTEER_PATH: ../config/gazetteer.yaml
           OUT_DIR: ../reports
+          REGENERATION_REASON: ${{ inputs.motivo }}
         run: |
           go run ./cmd/ingest
           # Mismo cómputo de fecha que usa cmd/ingest para nombrar el

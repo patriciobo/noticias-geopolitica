@@ -4,7 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
 	"noticias/core/internal/model"
+	"os"
+	"path/filepath"
 )
 
 func TestBuildAudit(t *testing.T) {
@@ -70,5 +73,33 @@ func TestDropStale(t *testing.T) {
 
 	if len(got) != 2 || got[0].Article.Title != "hoy" || got[1].Article.Title != "sin fecha" {
 		t.Errorf("dropStale = %+v", got)
+	}
+}
+
+func TestNextRevision(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "2026-09-25.audit.json")
+	t1 := time.Date(2026, 9, 25, 8, 0, 0, 0, time.UTC)
+
+	v, revs := nextRevision(path, t1, "")
+	if v != 1 || len(revs) != 1 || revs[0].Reason != "edición original" {
+		t.Fatalf("primera versión: v=%d revs=%+v", v, revs)
+	}
+
+	raw, _ := json.Marshal(model.Provenance{GeneratedAt: t1, Version: v, Revisions: revs})
+	if err := os.WriteFile(path, raw, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, revs = nextRevision(path, t1.Add(time.Hour), "informe truncado")
+	if v != 2 || len(revs) != 2 || revs[1].Reason != "informe truncado" {
+		t.Fatalf("segunda versión: v=%d revs=%+v", v, revs)
+	}
+
+	// Edición vieja sin historial: cuenta como versión 1.
+	raw, _ = json.Marshal(model.Provenance{GeneratedAt: t1})
+	os.WriteFile(path, raw, 0o644)
+	v, revs = nextRevision(path, t1.Add(2*time.Hour), "")
+	if v != 2 || revs[1].Reason != "regenerada sin motivo declarado" {
+		t.Fatalf("regeneración sin motivo: v=%d revs=%+v", v, revs)
 	}
 }

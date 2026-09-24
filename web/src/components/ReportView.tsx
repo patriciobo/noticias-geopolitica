@@ -3,6 +3,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Abstract from "./Abstract";
 import AutomationNotice from "./AutomationNotice";
+import VersionNotice from "./VersionNotice";
 import ClimateColumns from "./ClimateColumns";
 import CompaniesTable from "./CompaniesTable";
 import NewsLinks from "./NewsLinks";
@@ -73,6 +74,7 @@ export function ReportBody({
 
   return (
     <>
+      <VersionNotice provenance={provenance} />
       <AutomationNotice />
       <div className={styles.markdown}>
         {sections.map((section) => {

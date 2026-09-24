@@ -91,7 +91,7 @@ export default function ProvenanceDisclosure({
           </p>
         )}
         <p>
-          <Link href="/metodologia">Metodología completa</Link>
+          <Link href="/metodologia">Metodología completa</Link> · <Link href="/correcciones">Correcciones</Link>
         </p>
       </div>
     </details>
