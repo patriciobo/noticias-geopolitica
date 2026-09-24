@@ -303,11 +303,13 @@ func main() {
 	log.Printf("fuentes cargadas: %d", len(sources))
 
 	maxHeadlines := envOrDefaultInt("MAX_HEADLINES_PER_SOURCE", defaultMaxHeadlinesPerSource)
-	articles := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
+	articles, fetchErrs := fetchAll(sources, maxHeadlines, defaultFetchConcurrency)
 	log.Printf("titulares obtenidos: %d", len(articles))
 
 	maxAge := time.Duration(envOrDefaultInt("MAX_ARTICLE_AGE_HOURS", defaultMaxArticleAgeHours)) * time.Hour
 	articles = dropStale(articles, time.Now(), maxAge)
+	coverage := regionCoverage(sources, articles)
+	sourceStatuses := buildSourceStatuses(sources, articles, fetchErrs)
 
 	// El prefiltro por palabras clave queda apagado por defecto con
 	// proveedores en la nube: no entiende titulares en coreano, japonés,
@@ -329,13 +331,14 @@ func main() {
 		log.Fatal("ningún titular pasó el filtro internacional hoy — nada que sintetizar")
 	}
 
-	markdown, err := synth.Synthesize(ctx, classified)
+	markdown, err := synth.Synthesize(ctx, report.Input{Items: classified, Coverage: coverage})
 	if err != nil {
 		log.Fatalf("sintetizando reporte: %v", err)
 	}
 
 	// Defensa contra prompt injection: el informe solo puede enlazar notas
 	// que efectivamente se procesaron (ver report.StripUnknownLinks).
+	markdown = report.EnsureAllRegionsPresent(markdown, coverage)
 	markdown, linksRemoved := report.StripUnknownLinks(markdown, classified)
 	if linksRemoved > 0 {
 		log.Printf("se sacaron %d enlace(s) del texto del LLM que no correspondían a notas procesadas", linksRemoved)
@@ -364,7 +367,7 @@ func main() {
 	}
 	log.Printf("medios consultados: %d (%s)", len(consulted), sourcesPath2)
 
-	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, linksRemoved)
+	audit := buildAudit(provider, classifyModelNames, synthModelNames, auditEntries, sourceStatuses, linksRemoved)
 	auditPath := filepath.Join(outDir, dateStr+".audit.json")
 	auditJSON, err := json.MarshalIndent(audit, "", " ")
 	if err != nil {
@@ -379,7 +382,7 @@ func main() {
 // buildAudit arma el registro público de la edición (ver model.Audit).
 // Commit y RunURL salen de las variables que GitHub Actions define en cada
 // corrida; en una corrida local quedan vacíos.
-func buildAudit(provider string, classifyModels, synthModels []string, entries []model.AuditEntry, linksRemoved int) model.Audit {
+func buildAudit(provider string, classifyModels, synthModels []string, entries []model.AuditEntry, sources []model.SourceStatus, linksRemoved int) model.Audit {
 	prompts := map[string]string{}
 	for name, text := range filter.SystemPrompts() {
 		prompts[name] = sha256Hex(text)
@@ -402,7 +405,15 @@ func buildAudit(provider string, classifyModels, synthModels []string, entries [
 		return entries[i].Title < entries[j].Title
 	})
 
-	counts := model.AuditCounts{Fetched: len(entries), LinksRemoved: linksRemoved}
+	counts := model.AuditCounts{Fetched: len(entries), LinksRemoved: linksRemoved, SourcesConfigured: len(sources)}
+	var problems []model.SourceStatus
+	for _, s := range sources {
+		if s.Status == model.SourceOK {
+			counts.SourcesResponded++
+		} else {
+			problems = append(problems, s)
+		}
+	}
 	for _, e := range entries {
 		switch e.Stage {
 		case model.StagePrefilterRejected:
@@ -426,7 +437,9 @@ func buildAudit(provider string, classifyModels, synthModels []string, entries [
 			SynthesizeModels: synthModels,
 			PromptSHA256:     prompts,
 			Counts:           counts,
+			SourceProblems:   problems,
 		},
+		Sources:   sources,
 		Headlines: entries,
 	}
 }
@@ -461,14 +474,15 @@ func distinctSources(items []struct {
 	return out
 }
 
-func fetchAll(sources []model.Source, maxItems, concurrency int) []struct {
+func fetchAll(sources []model.Source, maxItems, concurrency int) ([]struct {
 	Source  model.Source
 	Article model.Article
-} {
+}, map[string]string) {
 	type result = struct {
 		Source  model.Source
 		Article model.Article
 	}
+	errs := map[string]string{}
 	var (
 		mu  sync.Mutex
 		out []result
@@ -489,6 +503,9 @@ func fetchAll(sources []model.Source, maxItems, concurrency int) []struct {
 			arts, err := ingest.FetchHeadlines(src, maxItems)
 			if err != nil {
 				log.Printf("fetch %s: %v", src.ID, err)
+				mu.Lock()
+				errs[src.ID] = err.Error()
+				mu.Unlock()
 				return
 			}
 			mu.Lock()
@@ -499,7 +516,7 @@ func fetchAll(sources []model.Source, maxItems, concurrency int) []struct {
 		}(src)
 	}
 	wg.Wait()
-	return out
+	return out, errs
 }
 
 // classifyBatchSize agrupa varios titulares por request en vez de uno por
@@ -622,6 +639,68 @@ func dropStale(items []struct {
 	}
 	for name, n := range perSource {
 		log.Printf("descartados %d titulares viejos (más de %s) de %s — revisar el feed", n, maxAge, name)
+	}
+	return out
+}
+
+// hasFeed indica si el medio tiene un feed configurado (los NO_RSS no se
+// consultan y no cuentan para la cobertura).
+func hasFeed(src model.Source) bool {
+	return src.RSS != "" && src.RSS != "NO_RSS"
+}
+
+// regionCoverage cuenta, por región, los medios con feed configurados y
+// cuántos aportaron al menos un titular vigente (después de dropStale).
+func regionCoverage(sources []model.Source, items []struct {
+	Source  model.Source
+	Article model.Article
+}) map[string]report.RegionCoverage {
+	responded := map[string]bool{}
+	for _, it := range items {
+		responded[it.Source.ID] = true
+	}
+	cov := map[string]report.RegionCoverage{}
+	for _, src := range sources {
+		if !hasFeed(src) {
+			continue
+		}
+		c := cov[src.Region]
+		c.Configured++
+		if responded[src.ID] {
+			c.Responded++
+		}
+		cov[src.Region] = c
+	}
+	return cov
+}
+
+// buildSourceStatuses arma el estado de cada medio con feed en esta
+// corrida, para el registro de auditoría: ok, error (no se pudo descargar)
+// o sin_vigentes (respondió, pero sin titulares de las últimas horas).
+func buildSourceStatuses(sources []model.Source, items []struct {
+	Source  model.Source
+	Article model.Article
+}, fetchErrs map[string]string) []model.SourceStatus {
+	count := map[string]int{}
+	for _, it := range items {
+		count[it.Source.ID]++
+	}
+	var out []model.SourceStatus
+	for _, src := range sources {
+		if !hasFeed(src) {
+			continue
+		}
+		st := model.SourceStatus{Name: src.Name, Country: src.Country, Region: src.Region, Headlines: count[src.ID]}
+		switch {
+		case fetchErrs[src.ID] != "":
+			st.Status = model.SourceError
+			st.Detail = fetchErrs[src.ID]
+		case count[src.ID] == 0:
+			st.Status = model.SourceNoRecent
+		default:
+			st.Status = model.SourceOK
+		}
+		out = append(out, st)
 	}
 	return out
 }

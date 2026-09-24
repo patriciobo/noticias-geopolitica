@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"noticias/core/internal/model"
 )
 
 // ChainSynthesizer prueba una lista de proveedores en orden hasta que uno
@@ -21,10 +19,10 @@ func NewChainSynthesizer(links ...Synthesizer) *ChainSynthesizer {
 	return &ChainSynthesizer{Links: links}
 }
 
-func (c *ChainSynthesizer) Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error) {
+func (c *ChainSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
 	var lastErr error
 	for i, link := range c.Links {
-		markdown, err := link.Synthesize(ctx, items)
+		markdown, err := link.Synthesize(ctx, in)
 		if err == nil {
 			err = validateReport(markdown)
 		}

@@ -31,6 +31,12 @@ export default function ProvenanceDisclosure({
               sin edición humana.
             </p>
             <ul className={styles.counts}>
+              {provenance.counts.sources_configured !== undefined && (
+                <li>
+                  <strong>{provenance.counts.sources_responded}</strong> de {provenance.counts.sources_configured} medios
+                  respondieron con titulares recientes
+                </li>
+              )}
               <li><strong>{provenance.counts.fetched}</strong> titulares descargados de los feeds</li>
               <li><strong>{provenance.counts.prefilter_rejected}</strong> descartados por el prefiltro de palabras clave</li>
               <li><strong>{provenance.counts.classifier_rejected}</strong> descartados por el clasificador por no tener alcance internacional</li>
@@ -42,6 +48,19 @@ export default function ProvenanceDisclosure({
                 <li><strong>{provenance.counts.links_removed}</strong> enlaces escritos por el modelo se eliminaron por no corresponder a una nota procesada</li>
               )}
             </ul>
+            {provenance.source_problems && provenance.source_problems.length > 0 && (
+              <details className={styles.problems}>
+                <summary>Medios que no aportaron titulares hoy ({provenance.source_problems.length})</summary>
+                <ul>
+                  {provenance.source_problems.map((p) => (
+                    <li key={p.name}>
+                      {p.name} ({p.country}) —{" "}
+                      {p.status === "error" ? "no se pudo descargar su feed" : "su feed no trajo notas recientes"}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
             <p>
               Modelos: clasificación con <code>{provenance.classify_models[0]}</code>, redacción con{" "}
               <code>{provenance.synthesize_models[0]}</code>

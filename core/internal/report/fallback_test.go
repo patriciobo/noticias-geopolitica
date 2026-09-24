@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-
-	"noticias/core/internal/model"
 )
 
 type stubSynthesizer struct {
@@ -13,7 +11,7 @@ type stubSynthesizer struct {
 	err      error
 }
 
-func (s stubSynthesizer) Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error) {
+func (s stubSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
 	return s.markdown, s.err
 }
 
@@ -28,7 +26,7 @@ func TestChainSynthesizerUsesFirstOnSuccess(t *testing.T) {
 		stubSynthesizer{markdown: report("first")},
 		stubSynthesizer{markdown: report("second")},
 	)
-	got, err := c.Synthesize(context.Background(), nil)
+	got, err := c.Synthesize(context.Background(), Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -43,7 +41,7 @@ func TestChainSynthesizerFallsThroughOnError(t *testing.T) {
 		stubSynthesizer{err: errors.New("también caído")},
 		stubSynthesizer{markdown: report("third")},
 	)
-	got, err := c.Synthesize(context.Background(), nil)
+	got, err := c.Synthesize(context.Background(), Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -58,7 +56,7 @@ func TestChainSynthesizerErrorsWhenAllFail(t *testing.T) {
 		stubSynthesizer{err: errors.New("primero falló")},
 		stubSynthesizer{err: wantErr},
 	)
-	_, err := c.Synthesize(context.Background(), nil)
+	_, err := c.Synthesize(context.Background(), Input{})
 	if !errors.Is(err, wantErr) {
 		t.Errorf("expected last error to propagate, got %v", err)
 	}
@@ -69,7 +67,7 @@ func TestChainSynthesizerSkipsOutputWithoutRequiredSections(t *testing.T) {
 		stubSynthesizer{markdown: "User Safety: safe"},
 		stubSynthesizer{markdown: report("second")},
 	)
-	got, err := c.Synthesize(context.Background(), nil)
+	got, err := c.Synthesize(context.Background(), Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -83,7 +81,7 @@ func TestChainSynthesizerSkipsTruncatedReport(t *testing.T) {
 		stubSynthesizer{markdown: "## Resumen ejecutivo\n\nx\n\n## Resumen por región\n\n- corte a mitad"},
 		stubSynthesizer{markdown: report("second")},
 	)
-	got, err := c.Synthesize(context.Background(), nil)
+	got, err := c.Synthesize(context.Background(), Input{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

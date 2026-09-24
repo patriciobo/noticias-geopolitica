@@ -18,10 +18,10 @@ decisiones que no se pueden inferir del código.
 - [x] **3. Atribuir siempre.** El prompt de síntesis recibe el tipo de medio
   y exige "según X" en todo lo afirmado; los medios estatales se nombran
   como tales ("la agencia estatal iraní IRNA").
-- [ ] **4. "Sin datos" ≠ "sin novedades".** Cobertura por región (medios
+- [x] **4. "Sin datos" ≠ "sin novedades".** Cobertura por región (medios
   que respondieron / configurados); con cobertura baja la región dice
   "Cobertura insuficiente hoy (X de Y medios respondieron)".
-- [ ] **5. Monitor de feeds.** El registro de auditoría guarda los medios
+- [x] **5. Monitor de feeds.** El registro de auditoría guarda los medios
   que fallaron o solo trajeron notas viejas; la web los muestra en "Cómo se
   hizo esta edición".
 - [ ] **6. Modelo por titular.** Cada entrada del registro guarda qué
@@ -62,3 +62,5 @@ decisiones que no se pueden inferir del código.
 - Paso 1 (2026-09-24): AutomationNotice en cada edición, sección "Qué es y qué no es" en /metodologia, aviso en el pie del newsletter.
 - Paso 2 (2026-09-24): ownership + ownership_note en los 131 medios (13 estatales, 3 partidarios, 3 ONG, 6 exilio); publicado en GET /sources y /metodologia. Revisar la clasificación.
 - Paso 3 (2026-09-24): Reglas de atribución obligatoria en el prompt de síntesis; cada titular llega con 'tipo: estatal (nota)'; 'confirman' → 'publicaron' en cobertura cruzada.
+- Paso 4 (2026-09-24): report.Input con cobertura por región; región vacía con menos de la mitad de sus medios respondiendo dice 'Cobertura insuficiente hoy (X de Y medios respondieron).'; EnsureAllRegionsPresent ahora corre para todos los proveedores.
+- Paso 5 (2026-09-24): SourceStatus por medio en el audit (sources) y los que fallaron en provenance.source_problems; la web los lista en 'Cómo se hizo esta edición'. Mismo commit que el paso 4.

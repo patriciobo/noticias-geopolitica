@@ -9,7 +9,8 @@ import "time"
 // terminó en el informe.
 type Audit struct {
 	Provenance
-	Headlines []AuditEntry `json:"headlines"`
+	Sources   []SourceStatus `json:"sources"` // estado de cada medio con feed en esta corrida
+	Headlines []AuditEntry   `json:"headlines"`
 }
 
 // Provenance describe la corrida que generó el reporte.
@@ -22,9 +23,15 @@ type Provenance struct {
 	SynthesizeModels []string          `json:"synthesize_models"` // en orden: principal y fallbacks
 	PromptSHA256     map[string]string `json:"prompt_sha256"`     // hash de cada prompt de sistema, verificable contra el código del commit
 	Counts           AuditCounts       `json:"counts"`
+	// SourceProblems son los medios que no aportaron titulares hoy (feed
+	// caído o sin notas recientes) — va en Provenance para que la web lo
+	// muestre sin tener que leer el registro completo.
+	SourceProblems []SourceStatus `json:"source_problems,omitempty"`
 }
 
 type AuditCounts struct {
+	SourcesConfigured  int `json:"sources_configured"`  // medios con feed consultados
+	SourcesResponded   int `json:"sources_responded"`   // medios que aportaron al menos un titular vigente
 	Fetched            int `json:"fetched"`             // titulares descargados de los feeds
 	PrefilterRejected  int `json:"prefilter_rejected"`  // descartados por el prefiltro de palabras clave
 	ClassifierRejected int `json:"classifier_rejected"` // descartados por el clasificador (no internacionales)
@@ -51,4 +58,24 @@ type AuditEntry struct {
 	Reason       string  `json:"reason,omitempty"`        // explicación del clasificador, o el error
 	RelationType string  `json:"relation_type,omitempty"` // solo si pasó por el clasificador
 	Confidence   float64 `json:"confidence,omitempty"`
+}
+
+// Estados posibles de un medio en una corrida (ver SourceStatus).
+const (
+	SourceOK       = "ok"
+	SourceError    = "error"        // el feed no se pudo descargar o leer
+	SourceNoRecent = "sin_vigentes" // respondió, pero sin titulares recientes
+)
+
+// SourceStatus es el resultado de consultar un medio con feed en una
+// corrida. Se publica en el registro de auditoría para que un medio caído
+// no pase inadvertido (el feed de El País estuvo congelado desde 2020 sin
+// que nada lo mostrara).
+type SourceStatus struct {
+	Name      string `json:"name"`
+	Country   string `json:"country"`
+	Region    string `json:"region"`
+	Status    string `json:"status"`
+	Detail    string `json:"detail,omitempty"`
+	Headlines int    `json:"headlines"`
 }

@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"noticias/core/internal/model"
 )
 
 // OllamaSynthesizer is the free/local alternative to ClaudeSynthesizer:
@@ -48,8 +46,8 @@ type ollamaChatResponse struct {
 	Error   string        `json:"error"`
 }
 
-func (s *OllamaSynthesizer) Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error) {
-	if len(items) == 0 {
+func (s *OllamaSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
+	if len(in.Items) == 0 {
 		return "", fmt.Errorf("ollama synthesizer: no classified articles to synthesize")
 	}
 
@@ -57,7 +55,7 @@ func (s *OllamaSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 		Model: s.Model,
 		Messages: []ollamaMessage{
 			{Role: "system", Content: synthesisSystemPrompt},
-			{Role: "user", Content: buildUserPrompt(items)},
+			{Role: "user", Content: buildUserPrompt(in)},
 		},
 		Stream:  false,
 		Think:   false,

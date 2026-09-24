@@ -65,3 +65,12 @@
 .verify {
   color: var(--muted);
 }
+
+.problems {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+}
+
+.problems summary {
+  cursor: pointer;
+}

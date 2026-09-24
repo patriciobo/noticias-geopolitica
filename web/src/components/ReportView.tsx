@@ -42,7 +42,8 @@ const genericMarkdownComponents: Components = {
     return <h3>{children}</h3>;
   },
   p({ children }) {
-    if (textContent(children).trim() === NO_NEWS_TEXT) {
+    const text = textContent(children).trim();
+    if (text === NO_NEWS_TEXT || text.startsWith("Cobertura insuficiente hoy")) {
       return <p className={styles.noNews}>{children}</p>;
     }
     return <p>{children}</p>;

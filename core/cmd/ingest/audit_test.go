@@ -20,9 +20,16 @@ func TestBuildAudit(t *testing.T) {
 		{Source: "C", Title: "x", Stage: model.StageClassifierError},
 		{Source: "A", Title: "b", Stage: model.StageAccepted},
 	}
-	a := buildAudit("gemini", []string{"m1", "openrouter:m2"}, []string{"s1"}, entries, 3)
+	statuses := []model.SourceStatus{
+		{Name: "A", Status: model.SourceOK, Headlines: 2},
+		{Name: "B", Status: model.SourceError, Detail: "403"},
+	}
+	a := buildAudit("gemini", []string{"m1", "openrouter:m2"}, []string{"s1"}, entries, statuses, 3)
+	if a.Counts.SourcesConfigured != 2 || a.Counts.SourcesResponded != 1 || len(a.SourceProblems) != 1 || a.SourceProblems[0].Name != "B" {
+		t.Errorf("estado de medios mal resumido: counts=%+v problems=%+v", a.Counts, a.SourceProblems)
+	}
 
-	want := model.AuditCounts{Fetched: 5, PrefilterRejected: 1, ClassifierRejected: 1, ClassifierErrors: 1, Accepted: 2, LinksRemoved: 3}
+	want := model.AuditCounts{SourcesConfigured: 2, SourcesResponded: 1, Fetched: 5, PrefilterRejected: 1, ClassifierRejected: 1, ClassifierErrors: 1, Accepted: 2, LinksRemoved: 3}
 	if a.Counts != want {
 		t.Errorf("Counts = %+v, want %+v", a.Counts, want)
 	}

@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"noticias/core/internal/model"
 )
 
 // OpenAICompatSynthesizer mirrors OpenAICompatClassifier: works with any
@@ -117,8 +115,8 @@ type compatChatResponse struct {
 	} `json:"error"`
 }
 
-func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error) {
-	if len(items) == 0 {
+func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
+	if len(in.Items) == 0 {
 		return "", fmt.Errorf("openai-compat synthesizer: no classified articles to synthesize")
 	}
 
@@ -126,7 +124,7 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, items []model.
 		Model: s.Model,
 		Messages: []compatMessage{
 			{Role: "system", Content: synthesisSystemPrompt},
-			{Role: "user", Content: buildUserPrompt(items)},
+			{Role: "user", Content: buildUserPrompt(in)},
 		},
 		Temperature: 0.3,
 		// Explícito: sin esto algunos proveedores de OpenRouter aplican un

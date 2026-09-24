@@ -20,7 +20,38 @@ const claudeAPIURL = "https://api.anthropic.com/v1/messages"
 // Synthesizer turns the day's classified international articles into the
 // three-section Spanish report the blog publishes.
 type Synthesizer interface {
-	Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error)
+	Synthesize(ctx context.Context, in Input) (string, error)
+}
+
+// Input es lo que recibe la síntesis: los titulares aceptados y cuántos
+// medios de cada región respondieron hoy. Sin la cobertura, una región sin
+// titulares se leía "sin novedades" aunque la causa fuera que sus feeds no
+// respondieron (pasó con Europa y Asia Oriental el 2026-09-24).
+type Input struct {
+	Items    []model.ClassifiedArticle
+	Coverage map[string]RegionCoverage // por id de región; nil = desconocida
+}
+
+// RegionCoverage cuenta los medios con feed configurados en una región y
+// cuántos devolvieron al menos un titular vigente en esta corrida.
+type RegionCoverage struct {
+	Configured int
+	Responded  int
+}
+
+// Low es true cuando respondió menos de la mitad de los medios de la región.
+func (c RegionCoverage) Low() bool {
+	return c.Configured > 0 && c.Responded*2 < c.Configured
+}
+
+// EmptyRegionText es la línea para una región sin titulares: "sin
+// novedades" solo si la cobertura fue suficiente; si no, dice cuántos
+// medios respondieron, para no presentar una falla técnica como un dato.
+func EmptyRegionText(c RegionCoverage) string {
+	if c.Low() {
+		return fmt.Sprintf("Cobertura insuficiente hoy (%d de %d medios respondieron).", c.Responded, c.Configured)
+	}
+	return "Sin novedades relevantes hoy."
 }
 
 // ClaudeSynthesizer uses a stronger model than the per-article classifier
@@ -230,8 +261,9 @@ func articleKey(a model.Article) string {
 	return a.SourceID + "|" + a.Title
 }
 
-func buildUserPrompt(items []model.ClassifiedArticle) string {
+func buildUserPrompt(in Input) string {
 	var b strings.Builder
+	items := in.Items
 
 	clusters := clusterStories(items)
 
@@ -276,10 +308,18 @@ func buildUserPrompt(items []model.ClassifiedArticle) string {
 
 	for _, region := range regionOrder {
 		arts := byRegion[region]
-		fmt.Fprintf(&b, "REGIÓN: %s\n", regionLabel(region))
+		cov, known := in.Coverage[region]
+		if known {
+			fmt.Fprintf(&b, "REGIÓN: %s (respondieron hoy %d de %d medios)\n", regionLabel(region), cov.Responded, cov.Configured)
+		} else {
+			fmt.Fprintf(&b, "REGIÓN: %s\n", regionLabel(region))
+		}
 		if len(arts) == 0 {
-			b.WriteString("(sin artículos internacionales clasificados hoy — escribí igual el subtítulo con una línea de \"Sin novedades relevantes hoy.\", sin inventar contenido)\n\n")
+			fmt.Fprintf(&b, "(sin artículos internacionales clasificados hoy — escribí igual el subtítulo con una única línea que diga exactamente \"%s\", sin inventar contenido)\n\n", EmptyRegionText(cov))
 			continue
+		}
+		if known && cov.Low() {
+			fmt.Fprintf(&b, "(cobertura parcial: arrancá el subtítulo con la línea \"_Cobertura parcial: respondieron %d de %d medios de la región._\" antes de los bullets)\n", cov.Responded, cov.Configured)
 		}
 		sort.SliceStable(arts, func(i, j int) bool {
 			return coverageByArticle[articleKey(arts[i].Article)].weight >
@@ -301,11 +341,11 @@ func buildUserPrompt(items []model.ClassifiedArticle) string {
 	return b.String()
 }
 
-func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.ClassifiedArticle) (string, error) {
+func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
 	if s.APIKey == "" {
 		return "", fmt.Errorf("synthesizer: no API key configured")
 	}
-	if len(items) == 0 {
+	if len(in.Items) == 0 {
 		return "", fmt.Errorf("synthesizer: no classified articles to synthesize")
 	}
 
@@ -313,7 +353,7 @@ func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 		Model:     s.Model,
 		MaxTokens: 4096,
 		System:    synthesisSystemPrompt,
-		Messages:  []claudeMessage{{Role: "user", Content: buildUserPrompt(items)}},
+		Messages:  []claudeMessage{{Role: "user", Content: buildUserPrompt(in)}},
 	}
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
@@ -349,7 +389,7 @@ func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 	if len(cr.Content) == 0 {
 		return "", fmt.Errorf("synthesizer: empty response")
 	}
-	return ensureAllRegionsPresent(cr.Content[0].Text), nil
+	return cr.Content[0].Text, nil
 }
 
 // ensureAllRegionsPresent repara determinísticamente el caso en que el LLM,
@@ -358,7 +398,7 @@ func (s *ClaudeSynthesizer) Synthesize(ctx context.Context, items []model.Classi
 // garantizar que todas las regiones de regionOrder aparezcan siempre. No falla el pipeline si
 // tiene que reparar algo — es un problema cosmético del LLM, no un motivo
 // para no publicar el reporte del día.
-func ensureAllRegionsPresent(report string) string {
+func EnsureAllRegionsPresent(report string, coverage map[string]RegionCoverage) string {
 	const sectionHeading = "## Resumen por región"
 	start := strings.Index(report, sectionHeading)
 	if start == -1 {
@@ -386,7 +426,7 @@ func ensureAllRegionsPresent(report string) string {
 
 	var repair strings.Builder
 	for _, region := range missing {
-		fmt.Fprintf(&repair, "\n### %s\n\nSin novedades relevantes hoy.\n", regionLabel(region))
+		fmt.Fprintf(&repair, "\n### %s\n\n%s\n", regionLabel(region), EmptyRegionText(coverage[region]))
 	}
 
 	return report[:end] + repair.String() + report[end:]

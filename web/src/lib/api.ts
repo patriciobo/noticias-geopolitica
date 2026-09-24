@@ -16,6 +16,8 @@ export type Provenance = {
   synthesize_models: string[];
   prompt_sha256: Record<string, string>;
   counts: {
+    sources_configured?: number; // ausentes en ediciones anteriores al 2026-09-25
+    sources_responded?: number;
     fetched: number;
     prefilter_rejected: number;
     classifier_rejected: number;
@@ -23,6 +25,16 @@ export type Provenance = {
     accepted: number;
     links_removed: number;
   };
+  source_problems?: SourceProblem[];
+};
+
+// Medio que no aportó titulares en la corrida (ver model.SourceStatus).
+export type SourceProblem = {
+  name: string;
+  country: string;
+  region: string;
+  status: "error" | "sin_vigentes";
+  detail?: string;
 };
 
 export type ReportResponse = {
