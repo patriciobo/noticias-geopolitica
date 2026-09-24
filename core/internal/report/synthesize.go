@@ -99,8 +99,8 @@ const synthesisSystemPrompt = `Sos el editor de un blog de noticias internaciona
 titulares ya filtrados por tener potencial internacional o multinacional (afectan
 tratados entre países o empresas que operan en varios países), agrupados por región,
 con su país de origen, orientación editorial del medio (oficialista/oposición),
-tipo de medio (estatal, privado, partidario, ong, exilio, con una aclaración cuando
-hace falta), países y empresas detectadas, y tipo de relación.
+tipo de medio (estatal, publico, privado, partidario, ong, exilio, con una aclaración
+cuando hace falta), países y empresas detectadas, y tipo de relación.
 
 Antes de la lista por región puede venir un bloque "COBERTURA CRUZADA": historias que
 salieron en más de un medio, ordenadas de mayor a menor relevancia. Cada una dice

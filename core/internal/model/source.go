@@ -7,7 +7,7 @@ type Source struct {
 	Country string `yaml:"country"`
 	Region  string `yaml:"region"`
 	Stance  string `yaml:"stance"`
-	// Ownership: estatal | privado | partidario | ong | exilio (ver
+	// Ownership: estatal | publico | privado | partidario | ong | exilio (ver
 	// config/sources.yaml). Se usa para atribuir con precisión en la
 	// síntesis ("la agencia estatal iraní IRNA").
 	Ownership     string `yaml:"ownership"`
