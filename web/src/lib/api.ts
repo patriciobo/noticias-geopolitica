@@ -39,6 +39,8 @@ export type PublicSource = {
   country: string;
   region: string;
   stance: string;
+  ownership: string; // estatal | privado | partidario | ong | exilio
+  ownership_note?: string;
   homepage: string;
   has_feed: boolean;
 };

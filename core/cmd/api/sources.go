@@ -14,12 +14,16 @@ import (
 // orientación editorial), sin exponer detalles operativos como la URL del
 // feed.
 type publicSource struct {
-	Name     string `json:"name"`
-	Country  string `json:"country"`
-	Region   string `json:"region"`
-	Stance   string `json:"stance"`
-	Homepage string `json:"homepage"`
-	HasFeed  bool   `json:"has_feed"` // false = configurado pero sin feed utilizable hoy (no se consulta)
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Region  string `json:"region"`
+	Stance  string `json:"stance"`
+	// Quién controla el medio (estatal, privado, partidario, ong, exilio) y
+	// una aclaración opcional — ver config/sources.yaml.
+	Ownership     string `json:"ownership"`
+	OwnershipNote string `json:"ownership_note,omitempty"`
+	Homepage      string `json:"homepage"`
+	HasFeed       bool   `json:"has_feed"` // false = configurado pero sin feed utilizable hoy (no se consulta)
 }
 
 // resolveSourcesPath busca config/sources.yaml: SOURCES_PATH si está
@@ -41,12 +45,14 @@ func toPublicSources(sources []model.Source) []publicSource {
 	out := make([]publicSource, 0, len(sources))
 	for _, s := range sources {
 		out = append(out, publicSource{
-			Name:     s.Name,
-			Country:  s.Country,
-			Region:   s.Region,
-			Stance:   s.Stance,
-			Homepage: s.Homepage,
-			HasFeed:  s.RSS != "" && s.RSS != "NO_RSS",
+			Name:          s.Name,
+			Country:       s.Country,
+			Region:        s.Region,
+			Stance:        s.Stance,
+			Ownership:     s.Ownership,
+			OwnershipNote: s.OwnershipNote,
+			Homepage:      s.Homepage,
+			HasFeed:       s.RSS != "" && s.RSS != "NO_RSS",
 		})
 	}
 	return out

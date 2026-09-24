@@ -12,7 +12,7 @@ decisiones que no se pueden inferir del código.
 - [x] **1. Decir qué es.** Aviso "resumen automatizado de titulares, no
   verifica hechos: atribuye lo que publica cada medio" en cada edición de la
   web, en el newsletter y en /metodologia.
-- [ ] **2. Ficha por medio.** Campo `ownership` en `config/sources.yaml`
+- [x] **2. Ficha por medio.** Campo `ownership` en `config/sources.yaml`
   (`estatal` | `privado` | `partidario` | `ong` | `exilio`) y publicado en
   `GET /sources`. Clasificación inicial hecha por Claude — revisar.
 - [ ] **3. Atribuir siempre.** El prompt de síntesis recibe el tipo de medio
@@ -60,3 +60,4 @@ decisiones que no se pueden inferir del código.
 
 (Una línea por paso terminado: fecha, commit, notas.)
 - Paso 1 (2026-09-24): AutomationNotice en cada edición, sección "Qué es y qué no es" en /metodologia, aviso en el pie del newsletter.
+- Paso 2 (2026-09-24): ownership + ownership_note en los 131 medios (13 estatales, 3 partidarios, 3 ONG, 6 exilio); publicado en GET /sources y /metodologia. Revisar la clasificación.

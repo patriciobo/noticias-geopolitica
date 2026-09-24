@@ -1,6 +1,13 @@
 # Fuentes de noticias a rastrear.
 # region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia, middle_east, africa, oceania)
 # stance: oficialista | oposicion (etiqueta editorial declarada por el usuario, no un juicio de valor propio)
+# ownership: estatal | privado | partidario | ong | exilio — quién controla el
+#   medio, independiente de su línea editorial. estatal = propiedad o control
+#   de un Estado (incluye emisoras públicas con independencia editorial, con
+#   nota); partidario = de un partido o movimiento; ong = sin fines de lucro;
+#   exilio = redacción que cubre su país desde afuera. Clasificación inicial
+#   del 2026-09-24 hecha con un asistente de IA: abierta a objeciones.
+# ownership_note: aclaración opcional que se muestra junto al medio.
 # rss: URL de feed RSS/Atom. Vacío = pendiente de investigar / requiere scraping puntual.
 # lang: idioma nativo del medio (el resumen final se emite en español independientemente de este campo)
 
@@ -11,6 +18,7 @@ sources:
     country: Canadá
     region: north_america
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.thestar.com
     rss: "https://www.thestar.com/search/?q=&f=rss&t=article&l=50&s=start_time&sd=desc"
@@ -19,6 +27,7 @@ sources:
     country: Canadá
     region: north_america
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.nationalobserver.com
     rss: "https://www.nationalobserver.com/front/rss"
@@ -27,6 +36,7 @@ sources:
     country: Canadá
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://nationalpost.com
     rss: "https://nationalpost.com/feed/"
@@ -35,6 +45,7 @@ sources:
     country: Canadá
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://torontosun.com
     rss: "https://torontosun.com/feed/"
@@ -43,6 +54,7 @@ sources:
     country: Canadá
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.rebelnews.com
     rss: "http://www.rebelnews.com/news.rss"
@@ -53,6 +65,7 @@ sources:
     country: Estados Unidos
     region: north_america
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.foxnews.com
     rss: "https://moxie.foxnews.com/google-publisher/latest.xml"
@@ -61,6 +74,7 @@ sources:
     country: Estados Unidos
     region: north_america
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.breitbart.com
     rss: "http://feeds.feedburner.com/breitbart"
@@ -69,6 +83,7 @@ sources:
     country: Estados Unidos
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.nytimes.com
     rss: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
@@ -77,6 +92,7 @@ sources:
     country: Estados Unidos
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.washingtonpost.com
     rss: "https://feeds.washingtonpost.com/rss/national"
@@ -85,6 +101,7 @@ sources:
     country: Estados Unidos
     region: north_america
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.cnn.com
     rss: "NO_RSS"
@@ -95,6 +112,7 @@ sources:
     country: México
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.jornada.com.mx
     rss: "https://www.jornada.com.mx/rss/edicion.xml"
@@ -103,6 +121,7 @@ sources:
     country: México
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.sinembargo.mx
     rss: "NO_RSS"
@@ -111,6 +130,7 @@ sources:
     country: México
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.reforma.com
     rss: "https://www.reforma.com/rss/portada.xml"
@@ -119,6 +139,7 @@ sources:
     country: México
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://latinus.us
     rss: "NO_RSS"
@@ -127,6 +148,7 @@ sources:
     country: México
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.animalpolitico.com
     rss: "NO_RSS"
@@ -137,6 +159,7 @@ sources:
     country: Colombia
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.semana.com
     rss: "https://www.semana.com/arc/outboundfeeds/rss/"
@@ -145,6 +168,7 @@ sources:
     country: Colombia
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.elcolombiano.com
     rss: "https://www.elcolombiano.com/rss/portada.xml"
@@ -153,6 +177,7 @@ sources:
     country: Colombia
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.lasillavacia.com
     rss: "https://www.lasillavacia.com/feed/"
@@ -161,6 +186,7 @@ sources:
     country: Colombia
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://voragine.co
     rss: "NO_RSS"
@@ -169,6 +195,7 @@ sources:
     country: Colombia
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://cuestionpublica.com
     rss: "https://cuestionpublica.com/feed/"
@@ -179,6 +206,7 @@ sources:
     country: Venezuela
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://iguanatv.net
     rss: "NO_RSS"
@@ -187,6 +215,7 @@ sources:
     country: Venezuela
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://misionverdad.com
     rss: "https://misionverdad.com/rss.xml"
@@ -195,6 +224,7 @@ sources:
     country: Venezuela
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://efectococuyo.com
     rss: "https://efectococuyo.com/feed/"
@@ -203,6 +233,7 @@ sources:
     country: Venezuela
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://armando.info
     rss: "https://armando.info/feed/"
@@ -211,6 +242,7 @@ sources:
     country: Venezuela
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://elpitazo.net
     rss: "https://elpitazo.net/feed/"
@@ -221,6 +253,7 @@ sources:
     country: Brasil
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: pt
     homepage: https://www.brasil247.com
     rss: "https://www.brasil247.com/rss"
@@ -229,6 +262,7 @@ sources:
     country: Brasil
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: pt
     homepage: https://revistaforum.com.br
     rss: "https://revistaforum.com.br/feed"
@@ -237,6 +271,7 @@ sources:
     country: Brasil
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: pt
     homepage: https://revistaoeste.com
     rss: "https://revistaoeste.com/feed/"
@@ -245,6 +280,7 @@ sources:
     country: Brasil
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: pt
     homepage: https://www.gazetadopovo.com.br
     rss: "https://www.gazetadopovo.com.br/feed/rss/ultimas-noticias.xml"
@@ -253,6 +289,7 @@ sources:
     country: Brasil
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: pt
     homepage: https://jovempan.com.br
     rss: "https://jovempan.com.br/feed"
@@ -263,6 +300,7 @@ sources:
     country: Perú
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://willax.tv
     rss: "NO_RSS"
@@ -271,6 +309,7 @@ sources:
     country: Perú
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.expreso.com.pe
     rss: "NO_RSS"
@@ -279,6 +318,7 @@ sources:
     country: Perú
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://larepublica.pe
     rss: "https://larepublica.pe/rss.xml"
@@ -287,6 +327,7 @@ sources:
     country: Perú
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://wayka.pe
     rss: "NO_RSS"
@@ -295,6 +336,7 @@ sources:
     country: Perú
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://elfoco.pe
     rss: "NO_RSS"
@@ -305,6 +347,7 @@ sources:
     country: Chile
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.ellibero.cl
     rss: "NO_RSS"
@@ -313,6 +356,7 @@ sources:
     country: Chile
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.emol.com
     rss: "NO_RSS"
@@ -321,6 +365,8 @@ sources:
     country: Chile
     region: latin_america
     stance: oposicion
+    ownership: ong
+    ownership_note: "centro de periodismo de investigación sin fines de lucro"
     lang: es
     homepage: https://www.ciperchile.cl
     rss: "https://www.ciperchile.cl/feed"
@@ -329,6 +375,7 @@ sources:
     country: Chile
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.elmostrador.cl
     rss: "NO_RSS"
@@ -337,6 +384,7 @@ sources:
     country: Chile
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://interferencia.cl
     rss: "https://interferencia.cl/rss.xml"
@@ -347,6 +395,7 @@ sources:
     country: Argentina
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.laderechadiario.com
     rss: "NO_RSS"
@@ -355,6 +404,7 @@ sources:
     country: Argentina
     region: latin_america
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.lanacion.com.ar
     rss: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/"
@@ -363,6 +413,7 @@ sources:
     country: Argentina
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.pagina12.com.ar
     rss: "https://www.pagina12.com.ar/arc/outboundfeeds/rss/portada"
@@ -371,6 +422,7 @@ sources:
     country: Argentina
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.eldestapeweb.com
     rss: "NO_RSS"
@@ -379,6 +431,7 @@ sources:
     country: Argentina
     region: latin_america
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.c5n.com
     rss: "NO_RSS"
@@ -389,6 +442,8 @@ sources:
     country: China
     region: east_asia
     stance: oficialista
+    ownership: estatal
+    ownership_note: "agencia oficial del Estado chino"
     lang: zh
     homepage: https://www.xinhuanet.com
     # El feed RSS de Xinhua quedó congelado en 2017-2018 (también en
@@ -399,6 +454,8 @@ sources:
     country: China
     region: east_asia
     stance: oficialista
+    ownership: estatal
+    ownership_note: "del grupo del Diario del Pueblo, órgano del Partido Comunista Chino"
     lang: en
     homepage: https://www.globaltimes.cn
     rss: "https://www.globaltimes.cn/rss/outbrain.xml"
@@ -407,6 +464,8 @@ sources:
     country: China
     region: east_asia
     stance: oposicion
+    ownership: exilio
+    ownership_note: "sitio con sede en EE. UU."
     lang: en
     homepage: https://chinadigitaltimes.net
     rss: "https://chinadigitaltimes.net/feed/"
@@ -415,6 +474,8 @@ sources:
     country: China
     region: east_asia
     stance: oposicion
+    ownership: partidario
+    ownership_note: "vinculado al movimiento Falun Gong"
     lang: en
     homepage: https://www.theepochtimes.com
     rss: "NO_RSS"
@@ -423,6 +484,8 @@ sources:
     country: China
     region: east_asia
     stance: oposicion
+    ownership: estatal
+    ownership_note: "financiada por el gobierno de EE. UU."
     lang: en
     homepage: https://www.rfa.org
     rss: "https://www.rfa.org/english/rss2.xml"
@@ -433,6 +496,7 @@ sources:
     country: Japón
     region: east_asia
     stance: oficialista
+    ownership: privado
     lang: ja
     homepage: https://www.yomiuri.co.jp
     rss: "NO_RSS"
@@ -441,6 +505,7 @@ sources:
     country: Japón
     region: east_asia
     stance: oficialista
+    ownership: privado
     lang: ja
     homepage: https://www.sankei.com
     rss: "NO_RSS"
@@ -449,6 +514,7 @@ sources:
     country: Japón
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ja
     homepage: https://www.asahi.com
     rss: "https://www.asahi.com/rss/asahi/newsheadlines.rdf"
@@ -457,6 +523,7 @@ sources:
     country: Japón
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ja
     homepage: https://mainichi.jp
     rss: "NO_RSS"
@@ -465,6 +532,7 @@ sources:
     country: Japón
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ja
     homepage: https://www.tokyo-np.co.jp
     rss: "NO_RSS"
@@ -475,6 +543,7 @@ sources:
     country: Corea del Sur
     region: east_asia
     stance: oficialista
+    ownership: privado
     lang: ko
     homepage: https://www.chosun.com
     rss: "NO_RSS"
@@ -483,6 +552,7 @@ sources:
     country: Corea del Sur
     region: east_asia
     stance: oficialista
+    ownership: privado
     lang: ko
     homepage: https://www.donga.com
     rss: "https://rss.donga.com/total.xml"
@@ -491,6 +561,7 @@ sources:
     country: Corea del Sur
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ko
     homepage: https://www.hani.co.kr
     rss: "https://english.hani.co.kr/rss/"
@@ -499,6 +570,7 @@ sources:
     country: Corea del Sur
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ko
     homepage: https://www.khan.co.kr
     rss: "https://www.khan.co.kr/rss/rssdata/total_news.xml"
@@ -507,6 +579,7 @@ sources:
     country: Corea del Sur
     region: east_asia
     stance: oposicion
+    ownership: privado
     lang: ko
     homepage: https://www.ohmynews.com
     rss: "https://rss.ohmynews.com/rss/ohmynews.xml"
@@ -517,6 +590,8 @@ sources:
     country: Rusia
     region: eurasia
     stance: oficialista
+    ownership: estatal
+    ownership_note: "financiado por el Estado ruso"
     lang: ru
     homepage: https://www.rt.com
     rss: "https://www.rt.com/rss/"
@@ -525,6 +600,8 @@ sources:
     country: Rusia
     region: eurasia
     stance: oficialista
+    ownership: estatal
+    ownership_note: "agencia del Estado ruso"
     lang: ru
     homepage: https://sputnikglobe.com
     rss: "https://sputnikglobe.com/export/rss2/archive/index.xml"
@@ -533,6 +610,8 @@ sources:
     country: Rusia
     region: eurasia
     stance: oposicion
+    ownership: exilio
+    ownership_note: "redacción rusa con sede en Riga"
     lang: ru
     homepage: https://meduza.io
     rss: "https://meduza.io/rss/en/all"
@@ -541,6 +620,8 @@ sources:
     country: Rusia
     region: eurasia
     stance: oposicion
+    ownership: exilio
+    ownership_note: "redacción rusa en el exilio"
     lang: ru
     homepage: https://novayagazeta.eu
     rss: "https://novayagazeta.eu/feed/rss"
@@ -549,6 +630,8 @@ sources:
     country: Rusia
     region: eurasia
     stance: oposicion
+    ownership: exilio
+    ownership_note: "redacción con sede en Ámsterdam"
     lang: en
     homepage: https://www.themoscowtimes.com
     rss: "https://www.themoscowtimes.com/rss/news"
@@ -559,6 +642,7 @@ sources:
     country: Reino Unido
     region: europe
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.theguardian.com
     rss: "https://www.theguardian.com/uk/rss"
@@ -567,6 +651,7 @@ sources:
     country: Reino Unido
     region: europe
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.mirror.co.uk
     rss: "https://www.mirror.co.uk/news/?service=rss"
@@ -575,6 +660,7 @@ sources:
     country: Reino Unido
     region: europe
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.telegraph.co.uk
     rss: "https://www.telegraph.co.uk/rss.xml"
@@ -583,6 +669,7 @@ sources:
     country: Reino Unido
     region: europe
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.dailymail.co.uk
     rss: "https://www.dailymail.co.uk/articles.rss"
@@ -591,6 +678,7 @@ sources:
     country: Reino Unido
     region: europe
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.thesun.co.uk
     rss: "https://www.thesun.co.uk/feed/"
@@ -601,6 +689,7 @@ sources:
     country: Alemania
     region: europe
     stance: oficialista
+    ownership: privado
     lang: de
     homepage: https://www.spiegel.de
     rss: "https://www.spiegel.de/schlagzeilen/index.rss"
@@ -609,6 +698,7 @@ sources:
     country: Alemania
     region: europe
     stance: oficialista
+    ownership: privado
     lang: de
     homepage: https://www.sueddeutsche.de
     rss: "https://rss.sueddeutsche.de/rss/Topthemen"
@@ -617,6 +707,7 @@ sources:
     country: Alemania
     region: europe
     stance: oposicion
+    ownership: privado
     lang: de
     homepage: https://www.welt.de
     rss: "https://www.welt.de/feeds/latest.rss"
@@ -625,6 +716,7 @@ sources:
     country: Alemania
     region: europe
     stance: oposicion
+    ownership: privado
     lang: de
     homepage: https://www.bild.de
     rss: "https://www.bild.de/feed/alles.xml"
@@ -633,6 +725,7 @@ sources:
     country: Alemania
     region: europe
     stance: oposicion
+    ownership: privado
     lang: de
     homepage: https://www.faz.net
     rss: "https://www.faz.net/rss/aktuell/"
@@ -643,6 +736,7 @@ sources:
     country: España
     region: europe
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://elpais.com
     # El feed viejo (elpais.com/rss/elpais/portada.xml) quedó congelado en
@@ -653,6 +747,7 @@ sources:
     country: España
     region: europe
     stance: oficialista
+    ownership: privado
     lang: es
     homepage: https://www.eldiario.es
     rss: "https://www.eldiario.es/rss/"
@@ -661,6 +756,7 @@ sources:
     country: España
     region: europe
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.elmundo.es
     rss: "https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml"
@@ -669,6 +765,7 @@ sources:
     country: España
     region: europe
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.abc.es
     rss: "https://www.abc.es/rss/feeds/abc_ultima.xml"
@@ -677,6 +774,7 @@ sources:
     country: España
     region: europe
     stance: oposicion
+    ownership: privado
     lang: es
     homepage: https://www.elconfidencial.com
     rss: "https://rss.elconfidencial.com/"
@@ -687,6 +785,7 @@ sources:
     country: Italia
     region: europe
     stance: oficialista
+    ownership: privado
     lang: it
     homepage: https://www.ilgiornale.it
     rss: "https://www.ilgiornale.it/arc/outboundfeeds/rss/"
@@ -695,6 +794,7 @@ sources:
     country: Italia
     region: europe
     stance: oficialista
+    ownership: privado
     lang: it
     homepage: https://www.liberoquotidiano.it
     rss: "https://www.liberoquotidiano.it/rss.xml"
@@ -703,6 +803,7 @@ sources:
     country: Italia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: it
     homepage: https://www.repubblica.it
     rss: "https://www.repubblica.it/rss/homepage/rss2.0.xml"
@@ -711,6 +812,7 @@ sources:
     country: Italia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: it
     homepage: https://www.ilfattoquotidiano.it
     rss: "https://www.ilfattoquotidiano.it/feed/"
@@ -719,6 +821,7 @@ sources:
     country: Italia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: it
     homepage: https://www.editorialedomani.it
     rss: "https://www.editorialedomani.it/rss"
@@ -729,6 +832,7 @@ sources:
     country: Francia
     region: europe
     stance: oficialista
+    ownership: privado
     lang: fr
     homepage: https://www.lemonde.fr
     rss: "https://www.lemonde.fr/rss/une.xml"
@@ -737,6 +841,7 @@ sources:
     country: Francia
     region: europe
     stance: oficialista
+    ownership: privado
     lang: fr
     homepage: https://www.leparisien.fr
     rss: "https://feeds.leparisien.fr/leparisien/rss"
@@ -745,6 +850,7 @@ sources:
     country: Francia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: fr
     homepage: https://www.lefigaro.fr
     rss: "https://www.lefigaro.fr/rss/figaro_actualites.xml"
@@ -753,6 +859,7 @@ sources:
     country: Francia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: fr
     homepage: https://www.mediapart.fr
     rss: "https://www.mediapart.fr/articles/feed"
@@ -761,6 +868,7 @@ sources:
     country: Francia
     region: europe
     stance: oposicion
+    ownership: privado
     lang: fr
     homepage: https://www.liberation.fr
     rss: "https://www.liberation.fr/arc/outboundfeeds/rss/"
@@ -771,6 +879,8 @@ sources:
     country: Sudáfrica
     region: africa
     stance: oficialista
+    ownership: estatal
+    ownership_note: "emisora pública sudafricana"
     lang: en
     homepage: https://www.sabcnews.com
     rss: "https://www.sabcnews.com/sabcnews/feed/"
@@ -779,6 +889,7 @@ sources:
     country: Sudáfrica
     region: africa
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.iol.co.za
     rss: NO_RSS
@@ -787,6 +898,7 @@ sources:
     country: Sudáfrica
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.dailymaverick.co.za
     rss: "https://www.dailymaverick.co.za/dmrss/"
@@ -795,6 +907,7 @@ sources:
     country: Sudáfrica
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.news24.com
     rss: NO_RSS
@@ -803,6 +916,7 @@ sources:
     country: Sudáfrica
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://mg.co.za
     rss: "https://mg.co.za/rss/"
@@ -813,6 +927,8 @@ sources:
     country: Egipto
     region: africa
     stance: oficialista
+    ownership: estatal
+    ownership_note: "diario estatal egipcio"
     lang: ar
     homepage: https://gate.ahram.org.eg
     rss: NO_RSS
@@ -821,6 +937,8 @@ sources:
     country: Egipto
     region: africa
     stance: oficialista
+    ownership: privado
+    ownership_note: "propiedad de United Media Services, vinculada al Estado egipcio"
     lang: ar
     homepage: https://www.youm7.com
     rss: "https://www.youm7.com/rss/SectionRss?SectionID=65"
@@ -829,6 +947,7 @@ sources:
     country: Egipto
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.madamasr.com
     rss: "https://www.madamasr.com/en/feed/"
@@ -837,6 +956,7 @@ sources:
     country: Egipto
     region: africa
     stance: oposicion
+    ownership: privado
     lang: ar
     homepage: https://www.almasryalyoum.com
     rss: NO_RSS
@@ -845,6 +965,8 @@ sources:
     country: Egipto
     region: africa
     stance: oposicion
+    ownership: partidario
+    ownership_note: "sitio de la Alianza Popular Socialista"
     lang: ar
     homepage: https://daaarb.com
     rss: "https://daaarb.com/feed/"
@@ -855,6 +977,8 @@ sources:
     country: Nigeria
     region: africa
     stance: oficialista
+    ownership: estatal
+    ownership_note: "televisora estatal nigeriana"
     lang: en
     homepage: https://nta.ng
     rss: NO_RSS
@@ -863,6 +987,8 @@ sources:
     country: Nigeria
     region: africa
     stance: oficialista
+    ownership: estatal
+    ownership_note: "emisora estatal nigeriana"
     lang: en
     homepage: https://von.gov.ng
     rss: "https://von.gov.ng/feed/"
@@ -871,6 +997,7 @@ sources:
     country: Nigeria
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.premiumtimesng.com
     rss: "https://www.premiumtimesng.com/feed"
@@ -879,6 +1006,8 @@ sources:
     country: Nigeria
     region: africa
     stance: oposicion
+    ownership: exilio
+    ownership_note: "sitio nigeriano con sede en Nueva York"
     lang: en
     homepage: https://saharareporters.com
     rss: "https://saharareporters.com/rss.xml"
@@ -887,6 +1016,7 @@ sources:
     country: Nigeria
     region: africa
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.thecable.ng
     rss: NO_RSS
@@ -897,6 +1027,7 @@ sources:
     country: Australia
     region: oceania
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.theaustralian.com.au
     rss: NO_RSS
@@ -905,6 +1036,7 @@ sources:
     country: Australia
     region: oceania
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.skynews.com.au
     rss: NO_RSS
@@ -913,6 +1045,7 @@ sources:
     country: Australia
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.theguardian.com/au
     rss: "https://www.theguardian.com/au/rss"
@@ -921,6 +1054,7 @@ sources:
     country: Australia
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.crikey.com.au
     rss: "https://www.crikey.com.au/feed/"
@@ -929,6 +1063,7 @@ sources:
     country: Australia
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://newmatilda.com
     rss: NO_RSS
@@ -939,6 +1074,7 @@ sources:
     country: Nueva Zelanda
     region: oceania
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.nzherald.co.nz
     rss: NO_RSS
@@ -947,6 +1083,8 @@ sources:
     country: Nueva Zelanda
     region: oceania
     stance: oficialista
+    ownership: estatal
+    ownership_note: "TVNZ, emisora pública con independencia editorial"
     lang: en
     homepage: https://www.1news.co.nz
     rss: NO_RSS
@@ -955,6 +1093,7 @@ sources:
     country: Nueva Zelanda
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://thespinoff.co.nz
     rss: "https://thespinoff.co.nz/feed"
@@ -963,6 +1102,7 @@ sources:
     country: Nueva Zelanda
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.newsroom.co.nz
     rss: NO_RSS
@@ -971,6 +1111,7 @@ sources:
     country: Nueva Zelanda
     region: oceania
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.scoop.co.nz
     rss: NO_RSS
@@ -986,6 +1127,7 @@ sources:
     country: Israel
     region: middle_east
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.israelnationalnews.com
     rss: "https://www.israelnationalnews.com/Rss.aspx"
@@ -994,6 +1136,7 @@ sources:
     country: Israel
     region: middle_east
     stance: oficialista
+    ownership: privado
     lang: en
     homepage: https://www.jpost.com
     rss: "https://www.jpost.com/rss/rssfeedsfrontpage.aspx"
@@ -1002,6 +1145,7 @@ sources:
     country: Israel
     region: middle_east
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://www.haaretz.com
     rss: "https://www.haaretz.com/srv/haaretz-latest-headlines"
@@ -1010,6 +1154,8 @@ sources:
     country: Israel
     region: middle_east
     stance: oposicion
+    ownership: ong
+    ownership_note: "revista sin fines de lucro de periodistas israelíes y palestinos"
     lang: en
     homepage: https://www.972mag.com
     rss: "https://www.972mag.com/feed/"
@@ -1023,6 +1169,7 @@ sources:
     country: Palestina
     region: middle_east
     stance: oficialista
+    ownership: privado
     lang: ar
     homepage: https://www.alquds.com
     rss: "https://www.alquds.com/feed/"
@@ -1031,6 +1178,8 @@ sources:
     country: Palestina
     region: middle_east
     stance: oposicion
+    ownership: partidario
+    ownership_note: "diario de Gaza cercano a Hamás"
     lang: ar
     homepage: https://felesteen.news
     rss: "https://felesteen.news/rss"
@@ -1043,6 +1192,8 @@ sources:
     country: Irán
     region: middle_east
     stance: oficialista
+    ownership: estatal
+    ownership_note: "vinculado a la Organización de Propaganda Islámica del Estado iraní"
     lang: en
     homepage: https://www.tehrantimes.com
     rss: "https://www.tehrantimes.com/rss"
@@ -1051,6 +1202,8 @@ sources:
     country: Irán
     region: middle_east
     stance: oficialista
+    ownership: estatal
+    ownership_note: "agencia oficial de la República Islámica de Irán"
     lang: en
     homepage: https://en.irna.ir
     rss: "https://en.irna.ir/rss"
@@ -1059,6 +1212,8 @@ sources:
     country: Irán
     region: middle_east
     stance: oposicion
+    ownership: exilio
+    ownership_note: "canal con sede en Londres; su financiamiento es objeto de controversia"
     lang: en
     homepage: https://www.iranintl.com
     rss: "https://www.iranintl.com/en/feed"
@@ -1069,6 +1224,8 @@ sources:
     country: Turquía
     region: middle_east
     stance: oficialista
+    ownership: privado
+    ownership_note: "del grupo Turkuvaz, cercano al gobierno turco"
     lang: en
     homepage: https://www.dailysabah.com
     rss: "https://www.dailysabah.com/rss/homepage"
@@ -1077,6 +1234,8 @@ sources:
     country: Turquía
     region: middle_east
     stance: oficialista
+    ownership: estatal
+    ownership_note: "agencia estatal turca"
     lang: en
     homepage: https://www.aa.com.tr/en
     rss: "https://www.aa.com.tr/en/rss/default?cat=guncel"
@@ -1085,6 +1244,7 @@ sources:
     country: Turquía
     region: middle_east
     stance: oposicion
+    ownership: privado
     lang: tr
     homepage: https://www.cumhuriyet.com.tr
     rss: "https://www.cumhuriyet.com.tr/rss/son_dakika.xml"
@@ -1093,6 +1253,7 @@ sources:
     country: Turquía
     region: middle_east
     stance: oposicion
+    ownership: privado
     lang: en
     homepage: https://bianet.org/english
     rss: "https://bianet.org/english/rss"
@@ -1106,6 +1267,8 @@ sources:
     country: Arabia Saudita
     region: middle_east
     stance: oficialista
+    ownership: privado
+    ownership_note: "del grupo SRMG, cercano a la familia real saudí"
     lang: en
     homepage: https://www.arabnews.com
     # El feed (arabnews.com/rss.xml) responde 403 al fetcher por detección
@@ -1116,6 +1279,8 @@ sources:
     country: Arabia Saudita
     region: middle_east
     stance: oficialista
+    ownership: privado
+    ownership_note: "del grupo SRMG, cercano a la familia real saudí"
     lang: en
     homepage: https://english.aawsat.com
     rss: "https://english.aawsat.com/feed"
@@ -1124,6 +1289,8 @@ sources:
     country: Arabia Saudita
     region: middle_east
     stance: oposicion
+    ownership: ong
+    ownership_note: "organización de derechos humanos fundada por Jamal Khashoggi; publica análisis, no noticias diarias"
     lang: en
     homepage: https://dawnmena.org
     rss: "https://dawnmena.org/feed/"

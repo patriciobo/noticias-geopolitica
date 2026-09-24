@@ -13,6 +13,14 @@ export const metadata: Metadata = {
 // Ver REVALIDATE_SECONDS en lib/api.ts (acá tiene que ser un literal).
 export const revalidate = 300;
 
+const OWNERSHIP_LABELS: Record<string, string> = {
+  estatal: "medio estatal",
+  privado: "privado",
+  partidario: "partidario",
+  ong: "sin fines de lucro",
+  exilio: "en el exilio",
+};
+
 const STANCE_LABELS: Record<string, string> = {
   oficialista: "Oficialista",
   oposicion: "Opositor",
@@ -147,6 +155,10 @@ export default async function MetodologiaPage() {
               {summary.inactive > 0 &&
                 ` (otros ${summary.inactive} están en la lista, pero no tienen hoy un feed público utilizable y no se consultan)`}
               . En cada país se buscó incluir medios de línea oficialista y opositora, para contrastar encuadres.
+              Además, cada medio está clasificado según quién lo controla (estatal, privado, partidario, sin fines
+              de lucro o en el exilio): los medios estatales se incluyen para mostrar la posición oficial de su
+              país y el informe los nombra como tales. Esta clasificación es revisable: si creés que un medio
+              está mal clasificado, podés objetarla abriendo un issue en el repositorio.
               La etiqueta de cada medio es una clasificación editorial nuestra, discutible, y está publicada en{" "}
               <a href={repoFileURL("config/sources.yaml")}>config/sources.yaml</a>.
             </p>
@@ -185,6 +197,8 @@ export default async function MetodologiaPage() {
                     <li key={s.name}>
                       <a href={s.homepage} target="_blank" rel="noopener noreferrer">{s.name}</a> — {s.country},{" "}
                       {(STANCE_LABELS[s.stance] ?? s.stance).toLowerCase()}
+                      {s.ownership && `, ${OWNERSHIP_LABELS[s.ownership] ?? s.ownership}`}
+                      {s.ownership_note && ` (${s.ownership_note})`}
                     </li>
                   ))}
               </ul>
