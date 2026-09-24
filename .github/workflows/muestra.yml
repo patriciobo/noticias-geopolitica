@@ -1,0 +1,38 @@
+name: Revisión semanal por muestreo
+
+# Abre un issue con 20 titulares clasificados y 10 afirmaciones de los
+# informes de la última semana, elegidos al azar, para que una persona los
+# revise a mano (ver core/cmd/muestra). Es el control independiente del
+# modelo: el chequeo de fidelidad automático lo hace otro modelo.
+
+on:
+  schedule:
+    - cron: "23 13 * * 1" # lunes ~10:23 Argentina
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  muestra:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+      - name: Armar la muestra
+        working-directory: core
+        run: go run ./cmd/muestra > "$RUNNER_TEMP/muestra.md"
+      - name: Abrir el issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Revisión semanal por muestreo — $(date -u +%F)" \
+            --label revision-semanal \
+            --body-file "$RUNNER_TEMP/muestra.md"
