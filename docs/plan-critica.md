@@ -47,7 +47,8 @@ decisiones que no se pueden inferir del código.
   issue con 20 clasificaciones y 10 bullets al azar para revisar a mano.
 - [ ] **14. Gobernanza [necesita al usuario].** Página /quienes-somos:
   responsable, contacto, financiamiento, conflictos de interés, política
-  de correcciones. Se deja el borrador con los datos faltantes marcados.
+  de correcciones. Borrador listo en `docs/quienes-somos-borrador.md`;
+  falta que el usuario conteste las 5 preguntas del final para publicarla.
 
 ## Fuera de alcance por ahora
 
