@@ -37,8 +37,8 @@ func main() {
 	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
 	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
 	subject := "Radar Global"
-	cafecitoURL := config.EnvOrDefault("DONATION_CAFECITO_URL", "https://cafecito.app/radar-global")
-	tecitoURL := config.EnvOrDefault("DONATION_TECITO_URL", "https://tecito.app/radar-global")
+	cafecitoURL := config.EnvOrDefault("DONATION_CAFECITO_URL", "https://cafecito.app/radarglobal")
+	tecitoURL := config.EnvOrDefault("DONATION_TECITO_URL", "https://tecito.app/radarglobal")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
