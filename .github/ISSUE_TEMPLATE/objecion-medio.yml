@@ -1,0 +1,22 @@
+name: Objeción a un medio o a su clasificación
+description: Un medio mal clasificado (oficialista/oposición, estatal/privado...), un medio que debería sumarse o sacarse.
+title: "[Medio] "
+labels: ["medios"]
+body:
+  - type: input
+    id: medio
+    attributes:
+      label: Medio
+    validations:
+      required: true
+  - type: textarea
+    id: objecion
+    attributes:
+      label: Qué cambiarías y por qué
+      description: La clasificación actual está en config/sources.yaml (campos stance, ownership y ownership_note).
+    validations:
+      required: true
+  - type: textarea
+    id: fuentes
+    attributes:
+      label: Fuentes que respaldan la objeción

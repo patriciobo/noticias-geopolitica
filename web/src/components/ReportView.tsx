@@ -75,7 +75,7 @@ export function ReportBody({
   return (
     <>
       <VersionNotice provenance={provenance} />
-      <AutomationNotice />
+      <AutomationNotice date={date} />
       <div className={styles.markdown}>
         {sections.map((section) => {
           const icon = SECTION_ICONS[section.heading];

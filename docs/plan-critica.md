@@ -29,7 +29,7 @@ decisiones que no se pueden inferir del código.
 - [x] **7. Versiones visibles.** Regenerar una edición incrementa su
   versión y guarda el motivo (input `motivo` del workflow); la web muestra
   "Versión N — motivo". Página /correcciones.
-- [ ] **8. Reportar un error.** Plantilla de issue en el repo y link
+- [x] **8. Reportar un error.** Plantilla de issue en el repo y link
   "¿Encontraste un error?" en cada edición y en el newsletter.
 - [ ] **9. Cada afirmación con su cita.** Los titulares van numerados al
   modelo; cada bullet termina en [n]; el código valida que las citas
@@ -66,3 +66,4 @@ decisiones que no se pueden inferir del código.
 - Paso 5 (2026-09-24): SourceStatus por medio en el audit (sources) y los que fallaron en provenance.source_problems; la web los lista en 'Cómo se hizo esta edición'. Mismo commit que el paso 4.
 - Paso 6 (2026-09-24): AuditEntry.model por titular; provenance.classify_models_used (conteo) y synthesize_model_used; la web lista los modelos usados y avisa si entró un respaldo.
 - Paso 7 (2026-09-24): provenance.version/revisions con motivo (input 'motivo' del workflow → REGENERATION_REASON); GET /corrections; aviso de versión en la edición; página /correcciones con política y nota histórica del 24/09.
+- Paso 8 (2026-09-24): Plantillas .github/ISSUE_TEMPLATE/error-en-edicion.yml y objecion-medio.yml (labels creados); link '¿Encontraste un error?' con la fecha precargada en cada edición y en el newsletter.

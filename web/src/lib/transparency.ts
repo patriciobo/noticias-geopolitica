@@ -3,6 +3,12 @@
 export const REPO_URL = process.env.REPO_URL ?? "https://github.com/patriciobo/noticias-geopolitica";
 
 // "dueño/repo", para el comando de verificación de atestaciones.
+// Link para reportar un error en una edición, con la fecha precargada en
+// la plantilla .github/ISSUE_TEMPLATE/error-en-edicion.yml.
+export function reportErrorURL(date: string): string {
+  return `${REPO_URL}/issues/new?template=error-en-edicion.yml&fecha=${encodeURIComponent(date)}&title=${encodeURIComponent(`[Error] Edición ${date}`)}`;
+}
+
 export const REPO_SLUG = REPO_URL.replace(/^https:\/\/github\.com\//, "").replace(/\/$/, "");
 
 export function repoFileURL(path: string, ref = "main"): string {

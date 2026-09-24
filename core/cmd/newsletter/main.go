@@ -100,6 +100,7 @@ func main() {
 	base := newsletter.EmailData{
 		SiteURL:          siteURL,
 		EditionURL:       fmt.Sprintf("%s/reportes/%s", siteURL, reportDate),
+		ReportErrorURL:   fmt.Sprintf("%s/issues/new?template=error-en-edicion.yml&fecha=%s", config.EnvOrDefault("REPO_URL", "https://github.com/patriciobo/noticias-geopolitica"), reportDate),
 		DateLabel:        newsletter.FormatDateEs(reportDate),
 		AbstractHTML:     template.HTML(newsletter.MarkdownFragmentToHTML(abstract)),
 		PopulatedRegions: populated,

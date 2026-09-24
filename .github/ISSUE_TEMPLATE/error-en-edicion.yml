@@ -1,0 +1,42 @@
+name: Error en una edición
+description: Un dato mal atribuido, una traducción equivocada, una noticia que no corresponde o que falta, un texto cortado...
+title: "[Error] Edición "
+labels: ["error-en-edicion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. Radar Global es un resumen automatizado: los errores se corrigen regenerando la edición o ajustando el proceso, y cada corrección se publica en /correcciones.
+  - type: input
+    id: fecha
+    attributes:
+      label: Fecha de la edición
+      placeholder: AAAA-MM-DD
+    validations:
+      required: true
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo de error
+      options:
+        - Dato o declaración atribuido a un medio que no lo publicó
+        - Algo presentado como hecho que era la versión de un medio
+        - Traducción o resumen que cambia el sentido de la nota
+        - Noticia incluida que no tiene alcance internacional
+        - Noticia importante que quedó afuera
+        - Texto cortado, sección vacía o región sin datos
+        - Otro
+    validations:
+      required: true
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Qué está mal
+      description: Copiá la frase del informe y explicá el problema.
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia
+      description: Link a la nota original u otra fuente que muestre el error.

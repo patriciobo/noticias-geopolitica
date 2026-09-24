@@ -12,6 +12,7 @@ import (
 type EmailData struct {
 	SiteURL          string // home del blog, base de los links de header/CTA
 	EditionURL       string // link a la edición completa de este día
+	ReportErrorURL   string // plantilla de issue "Error en una edición" con la fecha precargada
 	DateLabel        string // "miércoles, 23 de septiembre de 2026" (CSS lo pasa a mayúscula)
 	AbstractHTML     template.HTML
 	PopulatedRegions []RegionBlock
@@ -113,7 +114,7 @@ const emailTemplateSrc = `<!doctype html>
 </td></tr>
 
 <tr><td style="background:#f4f4f4; padding: 20px 28px; font-size:12px; line-height:1.6; color:#888888;">
-Radar Global es un resumen automatizado de titulares: un modelo de lenguaje selecciona y resume lo que publicaron los medios consultados. No verifica los hechos; atribuye cada dato al medio que lo publicó. <a href="{{.SiteURL}}/metodologia" style="color:#c81e1e;">Cómo se hace</a><br><br>
+Radar Global es un resumen automatizado de titulares: un modelo de lenguaje selecciona y resume lo que publicaron los medios consultados. No verifica los hechos; atribuye cada dato al medio que lo publicó. <a href="{{.SiteURL}}/metodologia" style="color:#c81e1e;">Cómo se hace</a> &middot; <a href="{{.ReportErrorURL}}" style="color:#c81e1e;">¿Encontraste un error?</a><br><br>
 Recibiste este correo porque estás suscrito al boletín de Radar Global.<br>
 <a href="{{.UnsubscribeURL}}" style="color:#c81e1e;">Darme de baja</a>
 </td></tr>
