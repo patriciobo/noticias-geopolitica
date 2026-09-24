@@ -7,6 +7,7 @@ export const REGION_LABELS: Record<string, string> = {
   europe: "Europa",
   east_asia: "Asia Oriental",
   eurasia: "Eurasia",
+  middle_east: "Medio Oriente",
   africa: "África",
   oceania: "Oceanía",
 };
@@ -23,6 +24,7 @@ export const REGION_THEME: Record<string, RegionTheme> = {
   Europa: { emoji: "🏛️" },
   "Asia Oriental": { emoji: "🏯" },
   Eurasia: { emoji: "🌍" },
+  "Medio Oriente": { emoji: "🕌" },
   África: { emoji: "🌍" },
   Oceanía: { emoji: "🌏" },
 };

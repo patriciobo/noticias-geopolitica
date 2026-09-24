@@ -174,17 +174,18 @@ var regionLabels = map[string]string{
 	"europe":        "Europa",
 	"east_asia":     "Asia Oriental",
 	"eurasia":       "Eurasia",
+	"middle_east":   "Medio Oriente",
 	"africa":        "África",
 	"oceania":       "Oceanía",
 }
 
 // regionOrder fija el orden editorial en que aparecen las regiones en el
-// reporte (Américas → Europa → Asia/Eurasia → África/Oceanía), en vez de
+// reporte (Américas → Europa → Asia/Eurasia → Medio Oriente → África/Oceanía), en vez de
 // depender del orden de iteración de un map (no determinístico en Go) o de
 // qué regiones tengan artículos ese día — buildUserPrompt itera esta lista
 // completa siempre. África y Oceanía van al final para no reordenar el
 // resto: agregarlas ahí es el cambio mínimo sobre el orden ya existente.
-var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia", "africa", "oceania"}
+var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia", "middle_east", "africa", "oceania"}
 
 func regionLabel(region string) string {
 	if label, ok := regionLabels[region]; ok {

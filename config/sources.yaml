@@ -1,5 +1,5 @@
 # Fuentes de noticias a rastrear.
-# region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia, africa, oceania)
+# region: agrupador usado en el resumen por región (north_america, latin_america, europe, east_asia, eurasia, middle_east, africa, oceania)
 # stance: oficialista | oposicion (etiqueta editorial declarada por el usuario, no un juicio de valor propio)
 # rss: URL de feed RSS/Atom. Vacío = pendiente de investigar / requiere scraping puntual.
 # lang: idioma nativo del medio (el resumen final se emite en español independientemente de este campo)
@@ -974,3 +974,156 @@ sources:
     lang: en
     homepage: https://www.scoop.co.nz
     rss: NO_RSS
+
+  # --- Medio Oriente (agregado 2026-09-24) ---
+  # stance en medios de países sin prensa opositora local (Irán, Arabia
+  # Saudita) o con dos autoridades en disputa (Palestina): ver comentario
+  # de cada medio.
+
+  # Israel
+  - id: arutz-sheva
+    name: Arutz Sheva (Israel National News)
+    country: Israel
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.israelnationalnews.com
+    rss: "https://www.israelnationalnews.com/Rss.aspx"
+  - id: jerusalem-post
+    name: The Jerusalem Post
+    country: Israel
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.jpost.com
+    rss: "https://www.jpost.com/rss/rssfeedsfrontpage.aspx"
+  - id: haaretz
+    name: Haaretz
+    country: Israel
+    region: middle_east
+    stance: oposicion
+    lang: en
+    homepage: https://www.haaretz.com
+    rss: "https://www.haaretz.com/srv/haaretz-latest-headlines"
+  - id: 972-magazine
+    name: +972 Magazine
+    country: Israel
+    region: middle_east
+    stance: oposicion
+    lang: en
+    homepage: https://www.972mag.com
+    rss: "https://www.972mag.com/feed/"
+
+  # Palestina
+  # oficialista = cercano a la Autoridad Palestina (Cisjordania);
+  # oposicion = cercano a Hamás (Gaza). La agencia oficial WAFA no tiene
+  # RSS accesible (404).
+  - id: al-quds
+    name: Al-Quds
+    country: Palestina
+    region: middle_east
+    stance: oficialista
+    lang: ar
+    homepage: https://www.alquds.com
+    rss: "https://www.alquds.com/feed/"
+  - id: felesteen
+    name: Felesteen
+    country: Palestina
+    region: middle_east
+    stance: oposicion
+    lang: ar
+    homepage: https://felesteen.news
+    rss: "https://felesteen.news/rss"
+
+  # Irán
+  # Sin prensa opositora legal dentro del país: la oposición es un medio
+  # del exilio (Londres).
+  - id: tehran-times
+    name: Tehran Times
+    country: Irán
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.tehrantimes.com
+    rss: "https://www.tehrantimes.com/rss"
+  - id: irna
+    name: IRNA
+    country: Irán
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://en.irna.ir
+    rss: "https://en.irna.ir/rss"
+  - id: iran-international
+    name: Iran International
+    country: Irán
+    region: middle_east
+    stance: oposicion
+    lang: en
+    homepage: https://www.iranintl.com
+    rss: "https://www.iranintl.com/en/feed"
+
+  # Turquía
+  - id: daily-sabah
+    name: Daily Sabah
+    country: Turquía
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.dailysabah.com
+    rss: "https://www.dailysabah.com/rss/homepage"
+  - id: anadolu
+    name: Anadolu Agency
+    country: Turquía
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.aa.com.tr/en
+    rss: "https://www.aa.com.tr/en/rss/default?cat=guncel"
+  - id: cumhuriyet
+    name: Cumhuriyet
+    country: Turquía
+    region: middle_east
+    stance: oposicion
+    lang: tr
+    homepage: https://www.cumhuriyet.com.tr
+    rss: "https://www.cumhuriyet.com.tr/rss/son_dakika.xml"
+  - id: bianet
+    name: bianet
+    country: Turquía
+    region: middle_east
+    stance: oposicion
+    lang: en
+    homepage: https://bianet.org/english
+    rss: "https://bianet.org/english/rss"
+
+  # Arabia Saudita
+  # Sin prensa opositora dentro del país: la oposición es DAWN, la
+  # organización fundada por Jamal Khashoggi (Washington), que publica
+  # análisis críticos del gobierno saudí — pocas notas por semana.
+  - id: arab-news
+    name: Arab News
+    country: Arabia Saudita
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://www.arabnews.com
+    # El feed (arabnews.com/rss.xml) responde 403 al fetcher por detección
+    # de bots; queda listado sin RSS.
+    rss: "NO_RSS"
+  - id: asharq-al-awsat
+    name: Asharq Al-Awsat
+    country: Arabia Saudita
+    region: middle_east
+    stance: oficialista
+    lang: en
+    homepage: https://english.aawsat.com
+    rss: "https://english.aawsat.com/feed"
+  - id: dawn-mena
+    name: DAWN
+    country: Arabia Saudita
+    region: middle_east
+    stance: oposicion
+    lang: en
+    homepage: https://dawnmena.org
+    rss: "https://dawnmena.org/feed/"
