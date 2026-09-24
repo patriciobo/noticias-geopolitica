@@ -249,6 +249,7 @@ func main() {
 			// y tiran error en vez de ignorarlo — el prompt ya pide JSON
 			// puro por texto, alcanza sin el parámetro forzado.
 			c.DisableJSONMode = true
+			c.DisableReasoning = true
 			return c
 		}
 		newSynth := func(m string) report.Synthesizer {

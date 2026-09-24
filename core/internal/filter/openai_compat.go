@@ -32,6 +32,11 @@ type OpenAICompatClassifier struct {
 	// se pierde la garantía dura del formato, compensada abajo con un
 	// parseo más tolerante.
 	DisableJSONMode bool
+	// DisableReasoning manda reasoning.enabled=false (parámetro de
+	// OpenRouter). Clasificar no necesita razonamiento: con DeepSeek V4
+	// Flash, un lote de 16 titulares pasaba de ~12 s a ~50 s y 4 veces los
+	// tokens, y con el prompt completo vencía el timeout (2026-09-24).
+	DisableReasoning bool
 }
 
 func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatClassifier {
@@ -47,10 +52,15 @@ func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatC
 }
 
 type compatChatRequest struct {
-	Model          string          `json:"model"`
-	Messages       []compatMessage `json:"messages"`
-	ResponseFormat *compatRespFmt  `json:"response_format,omitempty"`
-	Temperature    float64         `json:"temperature"`
+	Model          string           `json:"model"`
+	Messages       []compatMessage  `json:"messages"`
+	ResponseFormat *compatRespFmt   `json:"response_format,omitempty"`
+	Temperature    float64          `json:"temperature"`
+	Reasoning      *compatReasoning `json:"reasoning,omitempty"`
+}
+
+type compatReasoning struct {
+	Enabled bool `json:"enabled"`
 }
 
 type compatMessage struct {
@@ -254,6 +264,9 @@ func isHardQuotaExceeded(body []byte) bool {
 }
 
 func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatRequest) (string, error) {
+	if c.DisableReasoning {
+		reqBody.Reasoning = &compatReasoning{Enabled: false}
+	}
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", err
