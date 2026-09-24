@@ -37,8 +37,8 @@ const emailTemplateSrc = `<!doctype html>
 
 <tr><td align="center" style="background:#171717; padding: 22px 28px 14px 28px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/logo.png" alt="Noticias Internacionales" width="104" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:104px; height:104px; margin:0 auto;"></a></td>
-<td style="padding-left:14px;"><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/nombre-sf.png" alt="Noticias Internacionales" width="139" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:139px; height:104px; margin:0 auto;"></a></td>
+<td><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/email/logo.png" alt="Noticias Internacionales" width="104" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:104px; height:104px; margin:0 auto;"></a></td>
+<td style="padding-left:14px;"><a href="{{.SiteURL}}"><img src="{{.SiteURL}}/email/nombre-sf.png" alt="Noticias Internacionales" width="139" height="104" style="display:block; border:0; outline:none; text-decoration:none; width:139px; height:104px; margin:0 auto;"></a></td>
 </tr></table>
 <div style="text-align:center; font-family: Georgia, serif; font-size:15px; font-weight:bold; letter-spacing:0.14em; text-transform:uppercase; color:#ffffff; padding-top:12px;">Radar Global</div>
 <div style="text-align:center; padding-top:12px; font-size:12px; color:#cccccc;">
@@ -96,13 +96,13 @@ const emailTemplateSrc = `<!doctype html>
 <table role="presentation" cellpadding="0" cellspacing="0">
 {{if .CafecitoURL}}
 <tr><td style="background:#c81e1e; border-radius:8px;">
-<a href="{{.CafecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/donar-cafecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un cafecito &middot; desde $500 ARS</a>
+<a href="{{.CafecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/email/donar-cafecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un cafecito &middot; desde $500 ARS</a>
 </td></tr>
 {{end}}
 {{if .TecitoURL}}
 <tr><td style="height:10px; font-size:1px; line-height:1px;">&nbsp;</td></tr>
 <tr><td style="background:#c81e1e; border-radius:8px;">
-<a href="{{.TecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/donar-tecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un tecito &middot; desde USD 1</a>
+<a href="{{.TecitoURL}}" style="display:block; padding:8px 14px; color:#ffffff; font-weight:bold; font-size:13px; text-decoration:none;"><img src="{{.SiteURL}}/email/donar-tecito.png" width="22" height="22" alt="" style="vertical-align:middle; border:0; border-radius:5px; margin-right:8px;">Invitanos un tecito &middot; desde USD 1</a>
 </td></tr>
 {{end}}
 </table>

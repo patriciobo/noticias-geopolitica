@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"noticias/core/internal/config"
@@ -37,6 +38,17 @@ func main() {
 	senderEmail := config.EnvOrDefault("BREVO_SENDER_EMAIL", "")
 	senderName := config.EnvOrDefault("BREVO_SENDER_NAME", "Noticias Internacionales")
 	subject := "Radar Global"
+	// En CI, un SITE_URL/API_BASE_URL sin configurar cae al default de
+	// localhost y el mail sale con imágenes y links rotos (pasó hasta el
+	// 2026-09-24: la variable SITE_URL no existía en el repo). Mejor no
+	// mandar nada que mandar eso a todos los suscriptores.
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		for name, v := range map[string]string{"SITE_URL": siteURL, "API_BASE_URL": apiBaseURL} {
+			if strings.Contains(v, "localhost") {
+				log.Fatalf("%s apunta a %s en GitHub Actions — configurá la variable del repo (Settings → Secrets and variables → Actions → Variables); no se envía el newsletter", name, v)
+			}
+		}
+	}
 	cafecitoURL := config.EnvOrDefault("DONATION_CAFECITO_URL", "https://cafecito.app/radarglobal")
 	tecitoURL := config.EnvOrDefault("DONATION_TECITO_URL", "https://tecito.app/radarglobal")
 
