@@ -37,7 +37,7 @@ decisiones que no se pueden inferir del código.
 - [x] **10. Confirmación independiente.** Detectar cables de agencias
   (Reuters, AFP, AP, EFE, ...) en la cobertura cruzada: contar "fuentes
   independientes" aparte de "medios que lo publicaron".
-- [ ] **11. Chequeo de fidelidad.** Segunda pasada del LLM que contrasta
+- [x] **11. Chequeo de fidelidad.** Segunda pasada del LLM que contrasta
   cada bullet con sus notas citadas; se publica cuántos quedaron sin
   respaldo y cuáles.
 - [ ] **12. Evaluación del clasificador.** Conjunto de titulares
@@ -69,3 +69,4 @@ decisiones que no se pueden inferir del código.
 - Paso 8 (2026-09-24): Plantillas .github/ISSUE_TEMPLATE/error-en-edicion.yml y objecion-medio.yml (labels creados); link '¿Encontraste un error?' con la fecha precargada en cada edición y en el newsletter.
 - Paso 9 (2026-09-24): Titulares numerados en el prompt; report.ResolveCitations convierte [n] en link a la nota, saca números inventados y cuenta bullets sin cita (counts.citations_*, uncited_bullets); web muestra superíndices; el newsletter renderiza links.
 - Paso 10 (2026-09-24): report/wire.go detecta cables (Reuters, AFP, AP, EFE, ...) y agrupa medios estatales del mismo país como una voz; la cobertura cruzada informa fuentes independientes y cables, y el peso usa voces, no medios.
+- Paso 11 (2026-09-24): report.CheckFidelity: lotes de 30 afirmaciones con sus notas citadas → respaldada/inferencia/sin_respaldo; counts.claims_* y fidelity_issues en la edición; FIDELITY_CHECK=off lo apaga. Lo hace el mismo modelo que redactó (control de consistencia, no revisión independiente).

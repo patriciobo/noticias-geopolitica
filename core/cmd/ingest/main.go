@@ -344,6 +344,19 @@ func main() {
 	// código a partir de notas procesadas, no el modelo.
 	markdown, citeStats := report.ResolveCitations(markdown, classified)
 	log.Printf("citas: %d resueltas, %d inventadas (sacadas), %d bullets sin cita", citeStats.Resolved, citeStats.Invalid, citeStats.Uncited)
+
+	// Chequeo de fidelidad: una segunda pasada contrasta cada afirmación
+	// citada con sus notas. No bloquea la publicación — el resultado se
+	// publica en la edición para que cualquiera vea qué quedó sin respaldo.
+	var fidelity report.FidelityResult
+	if comp, ok := synth.(report.Completer); ok && os.Getenv("FIDELITY_CHECK") != "off" {
+		var ferr error
+		fidelity, ferr = report.CheckFidelity(ctx, comp, markdown, classified)
+		if ferr != nil {
+			log.Printf("chequeo de fidelidad falló: %v", ferr)
+		}
+		log.Printf("fidelidad: %d chequeadas, %d respaldadas, %d inferencias, %d sin respaldo", fidelity.Checked, fidelity.Supported, fidelity.Inference, fidelity.Unsupported)
+	}
 	if linksRemoved > 0 {
 		log.Printf("se sacaron %d enlace(s) del texto del LLM que no correspondían a notas procesadas", linksRemoved)
 	}
@@ -377,6 +390,11 @@ func main() {
 	audit.Counts.CitationsResolved = citeStats.Resolved
 	audit.Counts.CitationsInvalid = citeStats.Invalid
 	audit.Counts.UncitedBullets = citeStats.Uncited
+	audit.Counts.ClaimsChecked = fidelity.Checked
+	audit.Counts.ClaimsSupported = fidelity.Supported
+	audit.Counts.ClaimsInference = fidelity.Inference
+	audit.Counts.ClaimsUnsupported = fidelity.Unsupported
+	audit.FidelityIssues = fidelity.Issues
 	audit.Version, audit.Revisions = nextRevision(auditPath, audit.GeneratedAt, os.Getenv("REGENERATION_REASON"))
 	if audit.Version > 1 {
 		log.Printf("edición regenerada: versión %d (motivo: %s)", audit.Version, audit.Revisions[len(audit.Revisions)-1].Reason)

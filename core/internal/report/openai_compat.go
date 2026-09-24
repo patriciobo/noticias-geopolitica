@@ -119,14 +119,19 @@ func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, in Input) (str
 	if len(in.Items) == 0 {
 		return "", fmt.Errorf("openai-compat synthesizer: no classified articles to synthesize")
 	}
+	return s.Complete(ctx, synthesisSystemPrompt, buildUserPrompt(in), 0.3)
+}
 
+// Complete manda un pedido de chat genérico (system + user) con los mismos
+// reintentos que la síntesis. Lo usa también el chequeo de fidelidad.
+func (s *OpenAICompatSynthesizer) Complete(ctx context.Context, system, user string, temperature float64) (string, error) {
 	reqBody := compatChatRequest{
 		Model: s.Model,
 		Messages: []compatMessage{
-			{Role: "system", Content: synthesisSystemPrompt},
-			{Role: "user", Content: buildUserPrompt(in)},
+			{Role: "system", Content: system},
+			{Role: "user", Content: user},
 		},
-		Temperature: 0.3,
+		Temperature: temperature,
 		// Explícito: sin esto algunos proveedores de OpenRouter aplican un
 		// tope por defecto chico y el informe sale cortado a mitad de frase
 		// (pasó con DeepSeek el 2026-09-24).

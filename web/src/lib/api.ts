@@ -27,12 +27,24 @@ export type Provenance = {
     citations_resolved?: number;
     citations_invalid?: number;
     uncited_bullets?: number;
+    claims_checked?: number;
+    claims_supported?: number;
+    claims_inference?: number;
+    claims_unsupported?: number;
   };
   source_problems?: SourceProblem[];
+  fidelity_issues?: FidelityIssue[];
   version?: number;
   revisions?: Revision[];
   classify_models_used?: Record<string, number>;
   synthesize_model_used?: string;
+};
+
+export type FidelityIssue = {
+  section: string;
+  text: string;
+  citations: number[];
+  problem: string;
 };
 
 export type Revision = {

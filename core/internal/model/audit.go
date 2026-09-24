@@ -30,6 +30,10 @@ type Provenance struct {
 	// Modelos que efectivamente se usaron: cuántos titulares clasificó cada
 	// uno y cuál redactó el informe. Con una cadena de respaldo pueden no
 	// ser los primeros de ClassifyModels/SynthesizeModels.
+	// FidelityIssues son las afirmaciones que el chequeo de fidelidad no
+	// encontró respaldadas por las notas que citan.
+	FidelityIssues []FidelityIssue `json:"fidelity_issues,omitempty"`
+
 	// Version cuenta cuántas veces se generó la edición de esa fecha (1 =
 	// original). Revisions guarda cada versión con su motivo, para que una
 	// regeneración nunca reemplace una edición en silencio.
@@ -52,6 +56,10 @@ type AuditCounts struct {
 	CitationsResolved  int `json:"citations_resolved"`  // citas [n] convertidas en link a su nota
 	CitationsInvalid   int `json:"citations_invalid"`   // citas a números que no existían (se sacaron)
 	UncitedBullets     int `json:"uncited_bullets"`     // bullets o resúmenes sin ninguna cita
+	ClaimsChecked      int `json:"claims_checked"`      // afirmaciones citadas que pasó el chequeo de fidelidad
+	ClaimsSupported    int `json:"claims_supported"`    // respaldadas por sus notas
+	ClaimsInference    int `json:"claims_inference"`    // análisis razonable, no dato de las notas
+	ClaimsUnsupported  int `json:"claims_unsupported"`  // sin respaldo en sus notas
 }
 
 // Etapas posibles de un AuditEntry.
@@ -100,4 +108,13 @@ type Revision struct {
 	Version     int       `json:"version"`
 	GeneratedAt time.Time `json:"generated_at"`
 	Reason      string    `json:"reason,omitempty"`
+}
+
+// FidelityIssue es una afirmación del informe que el chequeo de fidelidad
+// no encontró respaldada por las notas que cita.
+type FidelityIssue struct {
+	Section   string `json:"section"`
+	Text      string `json:"text"`
+	Citations []int  `json:"citations"`
+	Problem   string `json:"problem"`
 }

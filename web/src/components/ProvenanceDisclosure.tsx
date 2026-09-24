@@ -53,6 +53,13 @@ export default function ProvenanceDisclosure({
                     `; ${provenance.counts.citations_invalid} citas del modelo apuntaban a notas inexistentes y se sacaron`}
                 </li>
               )}
+              {(provenance.counts.claims_checked ?? 0) > 0 && (
+                <li>
+                  Chequeo de fidelidad: de <strong>{provenance.counts.claims_checked}</strong> afirmaciones con cita,{" "}
+                  {provenance.counts.claims_supported} están respaldadas por sus notas, {provenance.counts.claims_inference} son
+                  análisis a partir de ellas y <strong>{provenance.counts.claims_unsupported}</strong> no encontraron respaldo
+                </li>
+              )}
               {provenance.counts.links_removed > 0 && (
                 <li><strong>{provenance.counts.links_removed}</strong> enlaces escritos por el modelo se eliminaron por no corresponder a una nota procesada</li>
               )}
@@ -68,6 +75,19 @@ export default function ProvenanceDisclosure({
                     </li>
                   ))}
                 </ul>
+              </details>
+            )}
+            {provenance.fidelity_issues && provenance.fidelity_issues.length > 0 && (
+              <details className={styles.problems}>
+                <summary>Afirmaciones sin respaldo en sus notas ({provenance.fidelity_issues.length})</summary>
+                <ul>
+                  {provenance.fidelity_issues.map((f, i) => (
+                    <li key={i}>
+                      <em>{f.text}</em> (notas {f.citations.join(", ")}) — {f.problem}
+                    </li>
+                  ))}
+                </ul>
+                <p>El chequeo lo hace un modelo de lenguaje y también puede equivocarse.</p>
               </details>
             )}
             <ModelsUsed provenance={provenance} />

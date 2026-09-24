@@ -77,7 +77,8 @@ export default async function MetodologiaPage() {
           <li>
             <strong>Cada afirmación tiene su fuente:</strong> termina en un número que enlaza a la nota de la
             que sale. El sistema descarta los números que no corresponden a ninguna nota procesada y publica
-            cuántas afirmaciones quedaron sin cita.
+            cuántas afirmaciones quedaron sin cita. Después, una segunda pasada automática compara cada
+            afirmación con las notas que cita y publica cuáles no encontraron respaldo.
           </li>
           <li>
             <strong>Que varios medios publiquen lo mismo no lo confirma:</strong> muchas veces repiten el

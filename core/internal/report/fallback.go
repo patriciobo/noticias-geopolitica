@@ -71,3 +71,30 @@ func ModelName(s Synthesizer) string {
 	}
 	return ""
 }
+
+// Completer lo cumplen los sintetizadores que aceptan un pedido de chat
+// genérico (hoy, los compatibles con OpenAI: Gemini, OpenRouter).
+type Completer interface {
+	Complete(ctx context.Context, system, user string, temperature float64) (string, error)
+}
+
+// Complete prueba en orden los links de la cadena que saben completar. En
+// la práctica el chequeo de fidelidad lo hace el mismo modelo principal que
+// redactó: es un control de consistencia con las notas, no una revisión
+// independiente (esa es la revisión humana por muestreo).
+func (c *ChainSynthesizer) Complete(ctx context.Context, system, user string, temperature float64) (string, error) {
+	var lastErr error = fmt.Errorf("ningún proveedor de la cadena acepta pedidos genéricos")
+	for _, link := range c.Links {
+		comp, ok := link.(Completer)
+		if !ok {
+			continue
+		}
+		out, err := comp.Complete(ctx, system, user, temperature)
+		if err == nil {
+			return out, nil
+		}
+		log.Printf("complete: proveedor %s falló (%v), probando el siguiente", ModelName(link), err)
+		lastErr = err
+	}
+	return "", lastErr
+}
