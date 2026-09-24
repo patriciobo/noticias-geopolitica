@@ -56,6 +56,7 @@ type compatChatRequest struct {
 	Messages       []compatMessage  `json:"messages"`
 	ResponseFormat *compatRespFmt   `json:"response_format,omitempty"`
 	Temperature    float64          `json:"temperature"`
+	MaxTokens      int              `json:"max_tokens,omitempty"`
 	Reasoning      *compatReasoning `json:"reasoning,omitempty"`
 }
 
@@ -219,6 +220,10 @@ const maxRateLimitRetries = 6
 // fallido por timeout ya consumió el timeout entero del cliente.
 const maxTransportRetries = 2
 
+// classifyMaxTokens alcanza de sobra para un lote de 16 clasificaciones
+// (~100 tokens cada una).
+const classifyMaxTokens = 8000
+
 var rateLimitBackoff = []time.Duration{2 * time.Second, 4 * time.Second, 8 * time.Second, 15 * time.Second, 30 * time.Second, 30 * time.Second}
 
 func isRetryableStatus(code int) bool {
@@ -267,6 +272,9 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 	if c.DisableReasoning {
 		reqBody.Reasoning = &compatReasoning{Enabled: false}
 	}
+	// Explícito: sin tope, algunos proveedores de OpenRouter cortan la
+	// respuesta de un lote a mitad del JSON (pasó con DeepSeek).
+	reqBody.MaxTokens = classifyMaxTokens
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", err

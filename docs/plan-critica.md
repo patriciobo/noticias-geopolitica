@@ -50,6 +50,18 @@ decisiones que no se pueden inferir del código.
   de correcciones. Borrador listo en `docs/quienes-somos-borrador.md`;
   falta que el usuario conteste las 5 preguntas del final para publicarla.
 
+## Pendientes detectados al probar (2026-09-24)
+
+- [ ] **15. Agrupamiento de la cobertura cruzada.** Agrupa por países +
+  tipo de relación (o empresa + relación), así que mezcla historias
+  distintas: en la prueba local el chequeo de fidelidad marcó 3 de las 8
+  afirmaciones sin respaldo en "Cobertura cruzada" porque el título del
+  grupo no correspondía a todas sus notas. Agrupar también por similitud
+  de título (o pedirle al modelo que agrupe) antes de contar fuentes.
+- [ ] **16. Revisar las etiquetas de `eval/classify.jsonl`** (hechas por
+  Claude) y la clasificación `ownership` de `config/sources.yaml`
+  **[necesita al usuario]**.
+
 ## Fuera de alcance por ahora
 
 - Titular original junto a la traducción: la lista "Noticias utilizadas" ya

@@ -27,6 +27,17 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, in Input) (string, er
 		markdown, err := link.Synthesize(ctx, in)
 		if err == nil {
 			err = validateReport(markdown)
+			if err != nil {
+				// Una respuesta incompleta suele ser puntual del proveedor
+				// que tocó (DeepSeek devolvió una sin "Clima internacional"
+				// el 2026-09-24): un reintento con el mismo modelo antes de
+				// pasar al siguiente, que suele ser de menor calidad.
+				log.Printf("synthesize: proveedor %d/%d devolvió un informe incompleto (%d caracteres: %v), reintentando una vez", i+1, len(c.Links), len(markdown), err)
+				markdown, err = link.Synthesize(ctx, in)
+				if err == nil {
+					err = validateReport(markdown)
+				}
+			}
 		}
 		if err == nil {
 			c.Used = ModelName(link)
