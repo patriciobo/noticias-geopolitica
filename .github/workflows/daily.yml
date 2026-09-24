@@ -3,13 +3,13 @@ name: Informe diario
 on:
   # El cron de GitHub es "best effort": en la práctica llegó con horas de
   # atraso o directamente no disparó (22/09 nada, 23/09 recién 14:57 UTC).
-  # Por eso hay varios horarios de respaldo; el job `check` hace que solo
+  # Por eso hay un intento cada 20 minutos; el job `check` hace que solo
   # el primero que llegue genere el informe y el resto se saltee.
   schedule:
-    - cron: "13 10 * * *" # ~07:13 Argentina — horario principal
-    - cron: "43 11 * * *" # ~08:43 Argentina — respaldo
-    - cron: "17 13 * * *" # ~10:17 Argentina — respaldo
-    - cron: "47 15 * * *" # ~12:47 Argentina — último respaldo
+    # 08:07 a 10:47 UTC cada 20 min = 05:07 a 07:47 Argentina (9 intentos,
+    # el último antes de las 08:00). Minutos fuera del :00 para esquivar
+    # el pico de carga de GitHub.
+    - cron: "7,27,47 8-10 * * *"
   workflow_dispatch: # botón "Run workflow" para probar a mano (siempre genera)
 
 # Por defecto sin permisos; el job pide solo los que usa.
