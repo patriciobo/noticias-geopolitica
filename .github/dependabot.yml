@@ -18,6 +18,15 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+    # typescript-eslint (vía eslint-config-next) todavía no soporta
+    # TypeScript 7 ni ESLint 10: con esas versiones `npm run lint` falla
+    # antes de revisar nada (PR #2, 2026-09-24). Sacar estos ignore cuando
+    # typescript-eslint publique soporte.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
