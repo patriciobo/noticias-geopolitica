@@ -15,7 +15,7 @@ decisiones que no se pueden inferir del código.
 - [x] **2. Ficha por medio.** Campo `ownership` en `config/sources.yaml`
   (`estatal` | `privado` | `partidario` | `ong` | `exilio`) y publicado en
   `GET /sources`. Clasificación inicial hecha por Claude — revisar.
-- [ ] **3. Atribuir siempre.** El prompt de síntesis recibe el tipo de medio
+- [x] **3. Atribuir siempre.** El prompt de síntesis recibe el tipo de medio
   y exige "según X" en todo lo afirmado; los medios estatales se nombran
   como tales ("la agencia estatal iraní IRNA").
 - [ ] **4. "Sin datos" ≠ "sin novedades".** Cobertura por región (medios
@@ -61,3 +61,4 @@ decisiones que no se pueden inferir del código.
 (Una línea por paso terminado: fecha, commit, notas.)
 - Paso 1 (2026-09-24): AutomationNotice en cada edición, sección "Qué es y qué no es" en /metodologia, aviso en el pie del newsletter.
 - Paso 2 (2026-09-24): ownership + ownership_note en los 131 medios (13 estatales, 3 partidarios, 3 ONG, 6 exilio); publicado en GET /sources y /metodologia. Revisar la clasificación.
+- Paso 3 (2026-09-24): Reglas de atribución obligatoria en el prompt de síntesis; cada titular llega con 'tipo: estatal (nota)'; 'confirman' → 'publicaron' en cobertura cruzada.

@@ -65,12 +65,13 @@ const synthesisSystemPrompt = `Sos el editor de un blog de noticias internaciona
 titulares ya filtrados por tener potencial internacional o multinacional (afectan
 tratados entre países o empresas que operan en varios países), agrupados por región,
 con su país de origen, orientación editorial del medio (oficialista/oposición),
-países y empresas detectadas, y tipo de relación.
+tipo de medio (estatal, privado, partidario, ong, exilio, con una aclaración cuando
+hace falta), países y empresas detectadas, y tipo de relación.
 
 Antes de la lista por región puede venir un bloque "COBERTURA CRUZADA": historias que
 salieron en más de un medio, ordenadas de mayor a menor relevancia. Un medio más =
 más peso; medios de países distintos pesan el doble que medios repetidos dentro del
-mismo país (una historia que confirman portales de varios países es más relevante que
+mismo país (una historia que publican portales de varios países es más relevante que
 la misma cantidad de repeticiones dentro de un solo país). Esto es una señal adicional,
 no un filtro: tratá con el mismo nivel normal de desarrollo a TODAS las noticias con
 potencial internacional real, sean de un medio o de varios — el criterio principal
@@ -80,6 +81,22 @@ bullets extra de contexto a la historia con más peso — nunca para achicar o r
 el desarrollo de una noticia relevante que salió en un solo medio. Cada item de la
 lista por región trae opcionalmente "[cobertura: N medios, M país(es)]" con el mismo
 criterio a nivel de bullet individual.
+
+Atribución (obligatoria). Esto es un resumen de lo que publicaron los medios, no una
+verificación de los hechos, y tiene que leerse así:
+- Todo hecho, cifra, declaración o valoración va atribuido al medio que lo publicó
+  ("según Haaretz", "informó la agencia estatal iraní IRNA", "de acuerdo con Daily
+  Sabah, cercano al gobierno turco"). Nunca lo afirmes como un hecho propio.
+- Si el tipo de medio es estatal, partidario o exilio, decilo al citarlo por primera
+  vez en cada sección (por ejemplo "la agencia estatal china Xinhua", "Felesteen,
+  diario de Gaza cercano a Hamás", "Meduza, medio ruso en el exilio"). Usá la
+  aclaración que viene con el tipo cuando la haya.
+- Que varios medios publiquen lo mismo no lo convierte en un hecho comprobado:
+  escribí "lo publicaron N medios", nunca "se confirmó" ni "está confirmado".
+- Si dos medios dan versiones distintas del mismo hecho, mostrá las dos, cada una
+  atribuida, sin decidir cuál es la verdadera.
+- En el Resumen ejecutivo podés atribuir de forma agregada ("según medios de X
+  países", "según la prensa estatal iraní").
 
 Escribí todo el texto en español formal de Argentina: voseo ("vos", "tenés", "podés"),
 nunca "tú" ni conjugación de tuteo; registro profesional y periodístico, sin modismos
@@ -108,7 +125,7 @@ textual lo que vas a repetir más abajo, resumí con tus palabras.
 
 Si el bloque COBERTURA CRUZADA no está vacío, arrancá esta sección con un subtítulo
 "### Cobertura cruzada" — un bullet por cada historia ahí listada, título corto +
-qué países/medios la confirman. Marcá con "🌐 " al inicio del bullet las que tienen
+qué países/medios la publicaron. Marcá con "🌐 " al inicio del bullet las que tienen
 medios de países distintos (más de un país en el dato de cobertura): son las que más
 peso real tienen, remarcalas. Las que se repiten en varios medios pero dentro de un
 mismo país van sin el ícono, más al final de la lista. Si no hay ninguna historia con
@@ -187,6 +204,19 @@ var regionLabels = map[string]string{
 // resto: agregarlas ahí es el cambio mínimo sobre el orden ya existente.
 var regionOrder = []string{"north_america", "latin_america", "europe", "east_asia", "eurasia", "middle_east", "africa", "oceania"}
 
+// sourceKind describe el tipo de medio para el prompt de síntesis:
+// "estatal (agencia oficial del Estado chino)", "privado", etc.
+func sourceKind(src model.Source) string {
+	kind := src.Ownership
+	if kind == "" {
+		kind = "sin clasificar"
+	}
+	if src.OwnershipNote != "" {
+		kind += " (" + src.OwnershipNote + ")"
+	}
+	return kind
+}
+
 func regionLabel(region string) string {
 	if label, ok := regionLabels[region]; ok {
 		return label
@@ -261,8 +291,8 @@ func buildUserPrompt(items []model.ClassifiedArticle) string {
 			if cov.sources > 1 {
 				note = fmt.Sprintf(" [cobertura: %d medios, %d país(es)]", cov.sources, cov.countries)
 			}
-			fmt.Fprintf(&b, "- [%s | %s | %s] %s (países: %v, empresas: %v, relación: %s)%s\n",
-				a.Source.Country, a.Source.Name, a.Source.Stance,
+			fmt.Fprintf(&b, "- [%s | %s | %s | tipo: %s] %s (países: %v, empresas: %v, relación: %s)%s\n",
+				a.Source.Country, a.Source.Name, a.Source.Stance, sourceKind(a.Source),
 				a.Article.Title, a.Classification.Countries, a.Classification.Companies,
 				a.Classification.RelationType, note)
 		}

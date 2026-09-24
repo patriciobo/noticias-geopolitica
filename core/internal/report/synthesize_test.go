@@ -60,3 +60,14 @@ func TestEnsureAllRegionsPresentNoopWhenComplete(t *testing.T) {
 		t.Errorf("expected no changes when all regions present, got:\n%s", got)
 	}
 }
+
+func TestBuildUserPromptIncludesSourceKind(t *testing.T) {
+	items := []model.ClassifiedArticle{{
+		Article: model.Article{Title: "Irán anuncia algo", SourceID: "irna"},
+		Source:  model.Source{Name: "IRNA", Country: "Irán", Region: "middle_east", Stance: "oficialista", Ownership: "estatal", OwnershipNote: "agencia oficial"},
+	}}
+	got := buildUserPrompt(items)
+	if !strings.Contains(got, "tipo: estatal (agencia oficial)") {
+		t.Errorf("el prompt no incluye el tipo de medio:\n%s", got)
+	}
+}
