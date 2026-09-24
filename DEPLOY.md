@@ -52,9 +52,47 @@ El workflow ya está en `.github/workflows/daily.yml`.
 4. Verificá que aparezca un commit `chore: informe del AAAA-MM-DD` con
    `reports/AAAA-MM-DD.md` y `.sources.json`.
 
-Corre todos los días a las 10:00 UTC (07:00 Argentina). Editá el `cron` para
-cambiar la hora. Si el free tier de Gemini devuelve 429 seguido, bajá
-`GEMINI_CLASSIFY_CONCURRENCY` (ya defaultea a 2).
+El cron de GitHub intenta cada 20 minutos entre 05:07 y 07:47 (Argentina);
+el primer intento genera el informe y el resto se saltea. Ese cron es "best
+effort" (GitHub lo atrasa horas o lo saltea), así que para garantizar la
+hora conviene sumar el disparo externo de abajo. Si el free tier de Gemini
+devuelve 429 seguido, bajá `GEMINI_CLASSIFY_CONCURRENCY` (ya defaultea a 2).
+
+### Disparo externo puntual (cron-job.org)
+
+cron-job.org (gratis) sí respeta la hora: llama a la API de GitHub para
+lanzar el workflow con `solo_si_falta=true`, así que si el informe ya
+existe la corrida termina en segundos sin duplicar nada.
+
+1. **Token de GitHub** — *Settings (de tu cuenta) → Developer settings →
+   Personal access tokens → Fine-grained tokens → Generate new token*:
+   - *Repository access*: **Only select repositories** → `noticias-geopolitica`.
+   - *Permissions → Repository permissions → Actions*: **Read and write**.
+     Nada más (Metadata: Read queda puesto solo).
+   - *Expiration*: la más larga que permita; anotá la fecha para renovarlo.
+   Este token solo puede lanzar/cancelar workflows de este repo: no lee ni
+   escribe código ni secrets. Igual tratálo como secreto: pegalo solo en
+   cron-job.org.
+2. **cron-job.org** → *Create cronjob*:
+   - *URL*:
+     `https://api.github.com/repos/patriciobo/noticias-geopolitica/actions/workflows/daily.yml/dispatches`
+   - *Schedule*: custom, zona horaria **America/Argentina/Buenos_Aires**,
+     horas `5,6,7`, minutos `0,30` (seis intentos, 05:00 a 07:30).
+   - *Advanced → Request method*: **POST**.
+   - *Advanced → Headers*:
+     - `Authorization: Bearer <el token>`
+     - `Accept: application/vnd.github+json`
+     - `X-GitHub-Api-Version: 2022-11-28`
+     - `Content-Type: application/json`
+   - *Advanced → Request body*:
+     `{"ref":"main","inputs":{"solo_si_falta":"true"}}`
+   - *Notifications*: activá "on failure" para enterarte si el token vence.
+3. *Test run* en cron-job.org: tiene que responder **204** y aparecer una
+   corrida nueva en *Actions → Informe diario* (si el informe de hoy ya
+   existe, termina en el job `check`).
+
+Si responde 401 el token venció o está mal copiado; 404, el token no tiene
+acceso al repo o falta el permiso *Actions*.
 
 Caveats:
 - Algunos medios pueden bloquear IPs de datacenter (GitHub); esos feeds fallan
