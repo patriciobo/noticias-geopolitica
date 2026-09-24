@@ -113,7 +113,8 @@ const emailTemplateSrc = `<!doctype html>
 </td></tr>
 
 <tr><td style="background:#f4f4f4; padding: 20px 28px; font-size:12px; line-height:1.6; color:#888888;">
-Recibiste este correo porque estás suscrito al boletín de Noticias Internacionales.<br>
+Radar Global es un resumen automatizado de titulares: un modelo de lenguaje selecciona y resume lo que publicaron los medios consultados. No verifica los hechos; atribuye cada dato al medio que lo publicó. <a href="{{.SiteURL}}/metodologia" style="color:#c81e1e;">Cómo se hace</a><br><br>
+Recibiste este correo porque estás suscrito al boletín de Radar Global.<br>
 <a href="{{.UnsubscribeURL}}" style="color:#c81e1e;">Darme de baja</a>
 </td></tr>
 

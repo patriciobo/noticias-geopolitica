@@ -9,7 +9,7 @@ decisiones que no se pueden inferir del código.
 
 ## Estado
 
-- [ ] **1. Decir qué es.** Aviso "resumen automatizado de titulares, no
+- [x] **1. Decir qué es.** Aviso "resumen automatizado de titulares, no
   verifica hechos: atribuye lo que publica cada medio" en cada edición de la
   web, en el newsletter y en /metodologia.
 - [ ] **2. Ficha por medio.** Campo `ownership` en `config/sources.yaml`
@@ -59,3 +59,4 @@ decisiones que no se pueden inferir del código.
 ## Registro
 
 (Una línea por paso terminado: fecha, commit, notas.)
+- Paso 1 (2026-09-24): AutomationNotice en cada edición, sección "Qué es y qué no es" en /metodologia, aviso en el pie del newsletter.

@@ -55,6 +55,29 @@ export default async function MetodologiaPage() {
       </p>
 
       <section>
+        <h2>Qué es y qué no es</h2>
+        <ul>
+          <li>
+            <strong>Es</strong> un resumen de lo que publicaron ese día los medios de la lista, seleccionado y
+            redactado por un modelo de lenguaje, con cada dato atribuido al medio que lo publicó.
+          </li>
+          <li>
+            <strong>No es</strong> una verificación de los hechos. El modelo lee el titular y el copete de
+            cada nota (no la nota completa) y no consulta otras fuentes: si un medio publica algo falso, el
+            resumen lo va a repetir, atribuido a ese medio.
+          </li>
+          <li>
+            <strong>Que varios medios publiquen lo mismo no lo confirma:</strong> muchas veces repiten el
+            mismo cable de una agencia.
+          </li>
+          <li>
+            <strong>Los medios estatales</strong> (por ejemplo, agencias oficiales de gobiernos) se incluyen
+            para mostrar la posición oficial de su país, no como fuentes independientes.
+          </li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Cómo se arma cada informe</h2>
         <ol>
           <li>
