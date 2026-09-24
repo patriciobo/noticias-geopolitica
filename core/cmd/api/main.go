@@ -78,7 +78,7 @@ func main() {
 				os.Getenv("BREVO_SENDER_EMAIL"),
 				config.EnvOrDefault("BREVO_SENDER_NAME", "Radar Global"),
 			),
-			apiBaseURL:     config.EnvOrDefault("API_BASE_URL", "http://localhost"+addr),
+			apiBaseURL:     apiBaseURL(addr),
 			siteURL:        config.EnvOrDefault("SITE_URL", "http://localhost:3000"),
 			internalSecret: os.Getenv("INTERNAL_API_SECRET"),
 			enabled:        config.EnvOrDefault("SUBSCRIPTIONS_ENABLED", "true") != "false",
@@ -91,6 +91,11 @@ func main() {
 			// que acumular pendientes que nunca se van a poder confirmar.
 			subs.enabled = false
 			log.Print("BREVO_API_KEY/BREVO_SENDER_EMAIL no configurados: altas nuevas deshabilitadas")
+		}
+		for name, v := range map[string]string{"API_BASE_URL": subs.apiBaseURL, "SITE_URL": subs.siteURL} {
+			if os.Getenv("RENDER") != "" && strings.Contains(v, "localhost") {
+				log.Printf("ADVERTENCIA: %s apunta a %s — los links de los mails de confirmación van a estar rotos; configurala en Render → Environment", name, v)
+			}
 		}
 		if subs.internalSecret == "" {
 			log.Print("ADVERTENCIA: INTERNAL_API_SECRET vacío — POST /subscribers acepta pedidos de cualquier origen")
@@ -246,4 +251,20 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Cache-Control", "public, max-age=300")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+// apiBaseURL es la base pública de los links de confirmación y baja. Sin
+// API_BASE_URL explícita usa RENDER_EXTERNAL_URL, que Render define solo
+// (https://<servicio>.onrender.com); recién sin ninguna de las dos cae a
+// localhost, que solo sirve en desarrollo. Hasta el 2026-09-24 el default
+// era directo localhost y el botón de confirmar llevaba a
+// http://localhost:10000/subscribers/confirm en producción.
+func apiBaseURL(addr string) string {
+	if v := os.Getenv("API_BASE_URL"); v != "" {
+		return strings.TrimSuffix(v, "/")
+	}
+	if v := os.Getenv("RENDER_EXTERNAL_URL"); v != "" {
+		return strings.TrimSuffix(v, "/")
+	}
+	return "http://localhost" + addr
 }

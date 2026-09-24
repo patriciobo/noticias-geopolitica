@@ -162,7 +162,9 @@ enteramente opcional. Si querés habilitarlo:
      manda el mail de confirmación del doble opt-in; sin Brevo, las altas
      nuevas quedan deshabilitadas).
    - `API_BASE_URL` = la URL de este mismo servicio en Render (links de
-     confirmación y baja) y `SITE_URL` = la URL del blog.
+     confirmación y baja; si falta, usa `RENDER_EXTERNAL_URL`, que Render
+     define solo) y `SITE_URL` = la URL del blog (obligatoria: sin ella los
+     mails de confirmación enlazan a localhost).
    - `INTERNAL_API_SECRET` = un valor aleatorio largo (por ejemplo, la
      salida de `openssl rand -hex 32`). El mismo valor va en Vercel (paso 5).
 4. **GitHub** (Settings → Secrets and variables → Actions) → agregá, además
