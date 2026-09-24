@@ -80,6 +80,11 @@ Veredictos:
   medio que no lo publicó, presenta como hecho comprobado lo que una nota atribuye a
   una fuente, o contradice las notas.
 
+Los conteos de cobertura ("N medios en M país(es)", "fuentes independientes", "cable de
+X en N medios", "lo publicaron N medios") los calcula el sistema a partir de todas las
+notas del día, no salen de las notas citadas: no los verifiques ni los cuentes como
+falta de respaldo. Juzgá solo el contenido de la afirmación.
+
 Respondé EXCLUSIVAMENTE con un array JSON, un objeto por afirmación, con esta forma:
 [{"id": <número de la afirmación>, "verdict": "respaldada" | "inferencia" | "sin_respaldo", "problem": "si no está respaldada, una oración breve en español que explique qué falta o qué está mal; si no, vacío"}]
 
