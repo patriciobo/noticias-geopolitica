@@ -52,7 +52,7 @@ El workflow ya está en `.github/workflows/daily.yml`.
 4. Verificá que aparezca un commit `chore: informe del AAAA-MM-DD` con
    `reports/AAAA-MM-DD.md` y `.sources.json`.
 
-El cron de GitHub intenta cada 20 minutos entre 05:07 y 07:47 (Argentina);
+El cron de GitHub intenta cada 20 minutos entre 08:07 y 09:47 UTC;
 el primer intento genera el informe y el resto se saltea. Ese cron es "best
 effort" (GitHub lo atrasa horas o lo saltea), así que para garantizar la
 hora conviene sumar el disparo externo de abajo. Si el free tier de Gemini
@@ -76,8 +76,9 @@ existe la corrida termina en segundos sin duplicar nada.
 2. **cron-job.org** → *Create cronjob*:
    - *URL*:
      `https://api.github.com/repos/patriciobo/noticias-geopolitica/actions/workflows/daily.yml/dispatches`
-   - *Schedule*: custom, zona horaria **America/Argentina/Buenos_Aires**,
-     horas `5,6,7`, minutos `0,30` (seis intentos, 05:00 a 07:30).
+   - *Schedule*: custom, zona horaria **UTC**, expresión `0,30 8-9 * * *`
+     (cuatro intentos: 08:00, 08:30, 09:00 y 09:30 UTC; la edición sale
+     con el primero).
    - *Advanced → Request method*: **POST**.
    - *Advanced → Headers*:
      - `Authorization: Bearer <el token>`

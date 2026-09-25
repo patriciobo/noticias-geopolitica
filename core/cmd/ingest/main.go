@@ -22,6 +22,7 @@ import (
 	"noticias/core/internal/ingest"
 	"noticias/core/internal/model"
 	"noticias/core/internal/report"
+	"noticias/core/internal/usage"
 )
 
 const (
@@ -38,6 +39,9 @@ const (
 	// 2020 y Xinhua de 2017 el 2026-09-24): sin prefiltro, el clasificador
 	// las aceptaba como noticias del día.
 	defaultMaxArticleAgeHours = 72
+	// Tope de gasto por corrida en modelos pagos (el usuario pidió no pasar
+	// de USD 0,10 por día; queda margen para una regeneración).
+	defaultMaxCostUSD = 0.08
 )
 
 func envOrDefault(key, def string) string {
@@ -45,6 +49,14 @@ func envOrDefault(key, def string) string {
 		return v
 	}
 	return def
+}
+
+func envOrDefaultFloat(key string, def float64) float64 {
+	v, err := strconv.ParseFloat(os.Getenv(key), 64)
+	if err != nil {
+		return def
+	}
+	return v
 }
 
 func envOrDefaultInt(key string, def int) int {
@@ -295,6 +307,11 @@ func main() {
 		log.Printf("cadena de síntesis: %s", strings.Join(synthModelNames, " → "))
 	}
 
+	// CLASSIFY_CONCURRENCY pisa el default del proveedor: con DeepSeek pago
+	// por OpenRouter no hace falta el límite bajo pensado para el free tier
+	// de Gemini, y de a 2 lotes la clasificación tardaba ~12 minutos.
+	classifyConcurrency = envOrDefaultInt("CLASSIFY_CONCURRENCY", classifyConcurrency)
+
 	sources, err := ingest.LoadSources(sourcesPath)
 	if err != nil {
 		log.Fatalf("cargando sources: %v", err)
@@ -328,7 +345,12 @@ func main() {
 	usePrefilter := strings.ToLower(envOrDefault("PREFILTER", defaultPrefilter)) == "on"
 	log.Printf("prefiltro por palabras clave: %v", usePrefilter)
 
-	classified, auditEntries := classifyAll(ctx, articles, sources, gaz, usePrefilter, classifier, classifyConcurrency)
+	// Presupuesto por corrida: si clasificar y redactar ya lo consumieron,
+	// las etapas opcionales (agrupar por hecho, chequear fidelidad) se
+	// saltean en vez de pasarse. El costo real lo informa OpenRouter.
+	budget := envOrDefaultFloat("MAX_COST_USD", defaultMaxCostUSD)
+
+	classified, auditEntries := classifyAll(usage.WithStage(ctx, "clasificacion"), articles, sources, gaz, usePrefilter, classifier, classifyConcurrency)
 	log.Printf("titulares con potencial internacional: %d", len(classified))
 
 	if len(classified) == 0 {
@@ -339,8 +361,10 @@ func main() {
 	// (países + tipo de relación) mezclaba historias distintas en la
 	// cobertura cruzada. Si falla, se usa ese agrupamiento como antes.
 	var groups []report.StoryGroup
-	if comp, ok := synth.(report.Completer); ok {
-		g, gerr := report.GroupStories(ctx, comp, classified)
+	if comp, ok := synth.(report.Completer); ok && usage.Total() >= budget {
+		log.Printf("agrupamiento por hecho salteado: ya se gastaron USD %.4f de USD %.2f", usage.Total(), budget)
+	} else if ok {
+		g, gerr := report.GroupStories(usage.WithoutReasoning(usage.WithStage(ctx, "agrupamiento")), comp, classified)
 		if gerr != nil {
 			log.Printf("agrupamiento por hecho falló, uso el de entidades: %v", gerr)
 		} else {
@@ -349,7 +373,10 @@ func main() {
 		}
 	}
 
-	markdown, err := synth.Synthesize(ctx, report.Input{Items: classified, Coverage: coverage, Groups: groups})
+	// Razonamiento en esfuerzo bajo: sin razonamiento DeepSeek inventaba
+	// nombres de región y bajaba la fidelidad; con el razonamiento por
+	// defecto tardaba más de 5 minutos (2026-09-25).
+	markdown, err := synth.Synthesize(usage.WithReasoningEffort(usage.WithStage(ctx, "redaccion"), "low"), report.Input{Items: classified, Coverage: coverage, Groups: groups})
 	if err != nil {
 		log.Fatalf("sintetizando reporte: %v", err)
 	}
@@ -367,9 +394,11 @@ func main() {
 	// citada con sus notas. No bloquea la publicación — el resultado se
 	// publica en la edición para que cualquiera vea qué quedó sin respaldo.
 	var fidelity report.FidelityResult
-	if comp, ok := synth.(report.Completer); ok && os.Getenv("FIDELITY_CHECK") != "off" {
+	if comp, ok := synth.(report.Completer); ok && os.Getenv("FIDELITY_CHECK") != "off" && usage.Total() >= budget {
+		log.Printf("chequeo de fidelidad salteado: ya se gastaron USD %.4f de USD %.2f", usage.Total(), budget)
+	} else if ok && os.Getenv("FIDELITY_CHECK") != "off" {
 		var ferr error
-		fidelity, ferr = report.CheckFidelity(ctx, comp, markdown, classified)
+		fidelity, ferr = report.CheckFidelity(usage.WithoutReasoning(usage.WithStage(ctx, "fidelidad")), comp, markdown, classified)
 		if ferr != nil {
 			log.Printf("chequeo de fidelidad falló: %v", ferr)
 		}
@@ -413,6 +442,14 @@ func main() {
 	audit.Counts.ClaimsInference = fidelity.Inference
 	audit.Counts.ClaimsUnsupported = fidelity.Unsupported
 	audit.FidelityIssues = fidelity.Issues
+	audit.CostUSD = usage.Total()
+	audit.CostByStage = map[string]model.StageCost{}
+	for _, st := range usage.Stages() {
+		t := usage.ByStage()[st]
+		audit.CostByStage[st] = model.StageCost(t)
+		log.Printf("costo %s: USD %.4f (%d pedidos, %d tokens de entrada, %d de salida)", st, t.CostUSD, t.Requests, t.PromptTokens, t.CompletionTokens)
+	}
+	log.Printf("costo total de la corrida: USD %.4f (presupuesto USD %.2f)", audit.CostUSD, budget)
 	audit.Version, audit.Revisions = nextRevision(auditPath, audit.GeneratedAt, os.Getenv("REGENERATION_REASON"))
 	if audit.Version > 1 {
 		log.Printf("edición regenerada: versión %d (motivo: %s)", audit.Version, audit.Revisions[len(audit.Revisions)-1].Reason)

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"noticias/core/internal/usage"
 )
 
 // OpenAICompatSynthesizer mirrors OpenAICompatClassifier: works with any
@@ -29,7 +31,9 @@ func NewOpenAICompatSynthesizer(baseURL, apiKey, modelName string) *OpenAICompat
 		BaseURL: strings.TrimSuffix(baseURL, "/"),
 		APIKey:  apiKey,
 		Model:   modelName,
-		Client:  &http.Client{Timeout: 300 * time.Second},
+		// 600 s: con razonamiento, DeepSeek llegó a pasar los 300 s en la
+		// redacción (2026-09-25) y la edición caía al respaldo.
+		Client: &http.Client{Timeout: 600 * time.Second},
 	}
 }
 
@@ -94,10 +98,38 @@ func truncate(s string, n int) string {
 }
 
 type compatChatRequest struct {
-	Model       string          `json:"model"`
-	MaxTokens   int             `json:"max_tokens,omitempty"`
-	Messages    []compatMessage `json:"messages"`
-	Temperature float64         `json:"temperature"`
+	Model       string           `json:"model"`
+	MaxTokens   int              `json:"max_tokens,omitempty"`
+	Messages    []compatMessage  `json:"messages"`
+	Temperature float64          `json:"temperature"`
+	Reasoning   *compatReasoning `json:"reasoning,omitempty"`
+	Usage       *compatUsageReq  `json:"usage,omitempty"`
+	Provider    *compatProvider  `json:"provider,omitempty"`
+}
+
+type compatReasoning struct {
+	Enabled *bool  `json:"enabled,omitempty"`
+	Effort  string `json:"effort,omitempty"`
+}
+
+// compatUsageReq pide a OpenRouter que informe el costo de cada pedido.
+type compatUsageReq struct {
+	Include bool `json:"include"`
+}
+
+// compatProvider elige, entre los proveedores de OpenRouter que sirven el
+// modelo, el más barato (sin esto reparte por carga y puede tocar uno más
+// caro).
+type compatProvider struct {
+	Sort string `json:"sort"`
+}
+
+// compatUsage es el uso que devuelve la respuesta; Cost solo lo informa
+// OpenRouter.
+type compatUsage struct {
+	PromptTokens     int     `json:"prompt_tokens"`
+	CompletionTokens int     `json:"completion_tokens"`
+	Cost             float64 `json:"cost"`
 }
 
 type compatMessage struct {
@@ -113,6 +145,7 @@ type compatChatResponse struct {
 	Error *struct {
 		Message string `json:"message"`
 	} `json:"error"`
+	Usage *compatUsage `json:"usage"`
 }
 
 func (s *OpenAICompatSynthesizer) Synthesize(ctx context.Context, in Input) (string, error) {
@@ -136,6 +169,21 @@ func (s *OpenAICompatSynthesizer) Complete(ctx context.Context, system, user str
 		// tope por defecto chico y el informe sale cortado a mitad de frase
 		// (pasó con DeepSeek el 2026-09-24).
 		MaxTokens: synthMaxTokens,
+	}
+	if strings.Contains(s.BaseURL, "openrouter.ai") {
+		reqBody.Usage = &compatUsageReq{Include: true}
+		// Sin "provider.sort=price" acá (sí en la clasificación): con
+		// pedidos largos, el proveedor más barato de DeepSeek truncó el
+		// mensaje de entrada ("el mensaje llegó truncado") y la redacción
+		// cayó al respaldo (2026-09-25). El ahorro sería de centésimos.
+		// Agrupar y chequear fidelidad no necesitan razonar: con DeepSeek
+		// el razonamiento multiplicaba los tokens de salida que se pagan.
+		if usage.ReasoningDisabled(ctx) {
+			off := false
+			reqBody.Reasoning = &compatReasoning{Enabled: &off}
+		} else if e := usage.ReasoningEffort(ctx); e != "" {
+			reqBody.Reasoning = &compatReasoning{Effort: e}
+		}
 	}
 
 	payload, err := json.Marshal(reqBody)
@@ -208,6 +256,9 @@ func (s *OpenAICompatSynthesizer) Complete(ctx context.Context, system, user str
 	}
 	if len(cr.Choices) == 0 {
 		return "", fmt.Errorf("openai-compat synthesizer: respuesta vacía")
+	}
+	if cr.Usage != nil {
+		usage.Record(ctx, cr.Usage.Cost, cr.Usage.PromptTokens, cr.Usage.CompletionTokens)
 	}
 	if cr.Choices[0].FinishReason == "length" {
 		return "", fmt.Errorf("openai-compat synthesizer (%s): respuesta cortada por límite de tokens", s.Model)

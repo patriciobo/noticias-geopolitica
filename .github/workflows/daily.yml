@@ -6,10 +6,11 @@ on:
   # Por eso hay un intento cada 20 minutos; el job `check` hace que solo
   # el primero que llegue genere el informe y el resto se saltee.
   schedule:
-    # 08:07 a 10:47 UTC cada 20 min = 05:07 a 07:47 Argentina (9 intentos,
-    # el último antes de las 08:00). Minutos fuera del :00 para esquivar
-    # el pico de carga de GitHub.
-    - cron: "7,27,47 8-10 * * *"
+    # Edición a las 08:00 UTC (05:00 Argentina). El disparo principal es
+    # cron-job.org a las 08:00 UTC (ver DEPLOY.md); estos crons de GitHub
+    # son respaldo cada 20 min hasta las 09:47 UTC por si ese falla.
+    # Minutos fuera del :00 para esquivar el pico de carga de GitHub.
+    - cron: "7,27,47 8-9 * * *"
   # Botón "Run workflow" (siempre genera) y disparo externo desde
   # cron-job.org (ver DEPLOY.md), que sí respeta la hora y manda
   # solo_si_falta=true para comportarse como un cron más.
@@ -119,6 +120,9 @@ jobs:
           OPENROUTER_PRIMARY_CLASSIFY_MODELS: qwen/qwen3.8-27b:free,deepseek/deepseek-v4-flash
           OPENROUTER_CLASSIFY_MODELS: nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free
           OPENROUTER_PRIMARY_SYNTHESIZE_MODELS: deepseek/deepseek-v4-flash
+          # De a 6 lotes en paralelo (el default de Gemini es 2): DeepSeek
+          # pago no tiene el límite por minuto del free tier.
+          CLASSIFY_CONCURRENCY: "6"
           SOURCES_PATH: ../config/sources.yaml
           GAZETTEER_PATH: ../config/gazetteer.yaml
           OUT_DIR: ../reports

@@ -97,7 +97,10 @@ func countUncited(markdown string) int {
 			continue
 		}
 		isBullet := strings.HasPrefix(t, "- ") || strings.HasPrefix(t, "* ")
-		if (isBullet || section == "Resumen ejecutivo") && !strings.Contains(t, "[[") {
+		// Bullets, el resumen ejecutivo y los párrafos de los informes por
+		// región (que desde el 2026-09-25 van en prosa) tienen que citar.
+		prose := section == "Resumen ejecutivo" || section == "Resumen por región"
+		if (isBullet || prose) && !strings.Contains(t, "[[") {
 			uncited++
 		}
 	}

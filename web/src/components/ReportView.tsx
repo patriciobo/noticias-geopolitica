@@ -12,6 +12,7 @@ import ProvenanceDisclosure from "./ProvenanceDisclosure";
 import SourcesDisclosure from "./SourcesDisclosure";
 import { splitAbstract, splitNewsLinks } from "@/lib/newsLinks";
 import { splitTopSections } from "@/lib/reportSections";
+import { readingLabel } from "@/lib/readingTime";
 import type { Provenance, SourceSummary } from "@/lib/api";
 import styles from "./ReportView.module.css";
 
@@ -119,7 +120,9 @@ export default function ReportView({
   const { abstract, body } = splitAbstract(markdown);
   return (
     <article className={styles.article}>
-      <p className={styles.date}>Edición del {formatDate(date)}</p>
+      <p className={styles.date}>
+        Edición del {formatDate(date)} · {readingLabel(markdown)}
+      </p>
       {abstract && <Abstract markdown={abstract} />}
       <ReportBody date={date} markdown={body} sources={sources} provenance={provenance} />
     </article>

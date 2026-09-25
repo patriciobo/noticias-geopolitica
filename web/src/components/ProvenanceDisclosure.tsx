@@ -91,6 +91,12 @@ export default function ProvenanceDisclosure({
               </details>
             )}
             <ModelsUsed provenance={provenance} />
+            {provenance.cost_usd !== undefined && provenance.cost_usd > 0 && (
+              <p>
+                Costo de esta edición en modelos de lenguaje: USD{" "}
+                {provenance.cost_usd.toLocaleString("es-AR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })}.
+              </p>
+            )}
             <ul className={styles.links}>
               <li>
                 <a href={repoFileURL(auditPath)} target="_blank" rel="noopener noreferrer">Registro completo</a>: cada titular descargado y qué pasó con él

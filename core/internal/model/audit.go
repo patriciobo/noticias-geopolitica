@@ -40,6 +40,11 @@ type Provenance struct {
 	Version   int        `json:"version,omitempty"`
 	Revisions []Revision `json:"revisions,omitempty"`
 
+	// CostUSD es lo que costó la corrida en modelos pagos (según OpenRouter),
+	// y CostByStage el detalle por etapa.
+	CostUSD     float64              `json:"cost_usd"`
+	CostByStage map[string]StageCost `json:"cost_by_stage,omitempty"`
+
 	ClassifyModelsUsed  map[string]int `json:"classify_models_used,omitempty"`
 	SynthesizeModelUsed string         `json:"synthesize_model_used,omitempty"`
 }
@@ -117,4 +122,12 @@ type FidelityIssue struct {
 	Text      string `json:"text"`
 	Citations []int  `json:"citations"`
 	Problem   string `json:"problem"`
+}
+
+// StageCost es el gasto de una etapa de la corrida.
+type StageCost struct {
+	CostUSD          float64 `json:"cost_usd"`
+	Requests         int     `json:"requests"`
+	PromptTokens     int     `json:"prompt_tokens"`
+	CompletionTokens int     `json:"completion_tokens"`
 }

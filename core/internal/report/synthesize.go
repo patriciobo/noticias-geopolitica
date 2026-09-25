@@ -111,11 +111,11 @@ de fuentes independientes y de países distintos entre ellas, no la cantidad de 
 no un filtro: tratá con el mismo nivel normal de desarrollo a TODAS las noticias con
 potencial internacional real, sean de un medio o de varios — el criterio principal
 sigue siendo la relevancia del hecho en sí. Usá la cobertura cruzada solo para decidir
-qué va primero dentro de cada región/sección y, cuando quede lugar, darle uno o dos
-bullets extra de contexto a la historia con más peso — nunca para achicar o recortar
+qué va primero dentro de cada región/sección y, cuando quede lugar, darle una o dos
+oraciones extra de contexto a la historia con más peso — nunca para achicar o recortar
 el desarrollo de una noticia relevante que salió en un solo medio. Cada item de la
 lista por región trae opcionalmente "[cobertura: N medios, M país(es), K fuentes
-independientes]" con el mismo criterio a nivel de bullet individual.
+independientes]" con el mismo criterio a nivel de nota individual.
 
 Atribución (obligatoria). Esto es un resumen de lo que publicaron los medios, no una
 verificación de los hechos, y tiene que leerse así:
@@ -134,23 +134,23 @@ verificación de los hechos, y tiene que leerse así:
   países", "según la prensa estatal iraní").
 
 Citas (obligatorias). Cada titular de la lista viene con un número entre corchetes
-([12]). Terminá cada bullet, y cada oración del Resumen ejecutivo, con los números de
-las notas en que se basa: "[12]" o "[12][40]". Usá solo números que estén en la lista,
-nunca inventes uno. Un bullet sin una nota que lo respalde no se escribe. Las citas se
+([12]). Terminá cada oración que afirme algo (en el Resumen ejecutivo, en los informes
+por región y en los bullets) con los números de las notas en que se basa: "[12]" o
+"[12][40]". Usá solo números que estén en la lista, nunca inventes uno. Una afirmación
+sin una nota que la respalde no se escribe. Las citas son lo que le permite al lector
+ampliar por su cuenta cada tema: no las omitas aunque el texto sea en prosa. Las citas se
 convierten solas en links a cada nota: no escribas enlaces ni la lista de notas.
 
 Escribí todo el texto en español formal de Argentina: voseo ("vos", "tenés", "podés"),
 nunca "tú" ni conjugación de tuteo; registro profesional y periodístico, sin modismos
 coloquiales (nada de "che", "boludo", etc.) y sin mexicanismos ni neutro genérico.
 
-Priorizá que se lea rápido y se escanee fácil, no que suene a ensayo:
-- Usá bullets (listas con "-") como forma por defecto para transmitir información,
-  en vez de párrafos largos. Un párrafo corto de apertura por subtítulo está bien,
-  pero el contenido en sí va en bullets.
-- Usá subtítulos con frecuencia para cortar el texto en bloques chicos y navegables
-  (por región, por país, por tema), no un bloque de texto corrido por sección.
-- Negrita ("**...**") para el país, empresa o dato clave al arranque de cada bullet,
-  así se puede escanear la lista sin leer cada palabra.
+Priorizá que la edición completa se lea en pocos minutos:
+- En "Resumen por región" escribí prosa periodística, no listas: un único informe por
+  región que integre sus países, sin subtítulos por país ni bullets. Seleccioná lo más
+  relevante; lo que no entre lo puede ampliar el lector con las citas.
+- En "Clima internacional" y "Empresas potencialmente afectadas" usá bullets cortos,
+  con el dato clave en negrita al inicio.
 
 Escribí el post del día en Markdown, con EXACTAMENTE estas cuatro secciones,
 en este orden:
@@ -165,7 +165,8 @@ textual lo que vas a repetir más abajo, resumí con tus palabras.
 ## Resumen por región
 
 Si el bloque COBERTURA CRUZADA no está vacío, arrancá esta sección con un subtítulo
-"### Cobertura cruzada" — un bullet por cada historia ahí listada, título corto +
+"### Cobertura cruzada" — un bullet por cada una de las CINCO historias más relevantes
+de ese bloque como máximo, título corto +
 qué países/medios la publicaron, y si es un cable decilo ("cable de Reuters publicado por
 3 medios"). Marcá con "🌐 " al inicio del bullet las que tienen fuentes independientes de
 más de un país (el dato "fuentes independientes: N, de M país(es)" con M mayor a 1): son las que más
@@ -178,20 +179,25 @@ indica abajo, no lo repitas dos veces con el mismo nivel de detalle.
 Después, escribí SIEMPRE un subtítulo "### <región>" por CADA región listada en el
 mensaje (todas, sin saltear ninguna), en el mismo orden en que aparecen los bloques
 "REGIÓN: ..." del mensaje, incluso si esa región no tiene artículos. Para una región sin
-artículos, escribí una única línea: "Sin
-novedades relevantes hoy." — no inventes ni extrapoles contenido de otras regiones para
-rellenarla. Para una región con artículos, un bullet por país o hecho relevante (no un
-párrafo corrido), con el país o tema en negrita al inicio. Contrastá cuando la cobertura
-oficialista y de oposición de un mismo país difiera en énfasis o interpretación, sin
-tomar partido — solo señalar la diferencia de encuadre, como bullet aparte o aclaración
-dentro del mismo bullet.
+artículos, escribí la única línea que indica el mensaje — no inventes ni extrapoles
+contenido de otras regiones para rellenarla. Para una región con artículos, escribí un
+único informe en prosa de ENTRE UNO Y SEIS PÁRRAFOS COMO MÁXIMO (menos si hay poco para
+contar), de no más de 250 palabras en total, que integre lo de todos sus países en orden
+de importancia: sin subtítulos por país, sin bullets. Separá los párrafos con una línea
+en blanco; cada uno desarrolla un tema o hecho en dos a cuatro oraciones, y cada oración
+que afirma algo termina con sus citas. No enumeres todo: elegí lo más relevante y
+dejá que el lector amplíe con las citas. Podés marcar en negrita el nombre del país o actor principal la
+primera vez que aparece en un párrafo, para que se pueda recorrer rápido. Cuando la
+cobertura oficialista y de oposición de un mismo país difiera en énfasis o
+interpretación, señalalo dentro del texto, sin tomar partido.
 
 Si alguno de los titulares menciona a Argentina de forma directa (noticia del propio
 país) o indirecta (un país o empresa que tiene vínculo comercial, diplomático o de
 mercado con Argentina — un socio del Mercosur, un comprador o vendedor de materias
 primas argentinas, una multinacional con operación local, etc.), desarrollá ese punto
-con un poco más de detalle que el resto — un par de bullets más, explicando el
-posible impacto o conexión con Argentina — sin que eso desbalancee el resto del resumen.
+con un poco más de detalle que el resto — una o dos oraciones más, explicando el
+posible impacto o conexión con Argentina — sin pasar el máximo de seis párrafos ni
+desbalancear el resto del resumen.
 
 ## Clima internacional: comercio, industria y materias primas
 
@@ -200,15 +206,17 @@ se están moviendo el comercio internacional, el desarrollo industrial y la comp
 de materias primas ese día. Organizalo con subtítulos temáticos cortos (### Comercio,
 ### Industria, ### Materias primas, u otros que surjan de las noticias) y bullets
 dentro de cada uno, señalando relaciones entre países y bloques cuando se puedan
-inferir de los titulares. Si hay una conexión con Argentina (directa o vía un socio
+inferir de los titulares. COMO MÁXIMO SEIS BULLETS EN TODA LA SECCIÓN, de una o dos
+oraciones cada uno: solo los movimientos más significativos. Si hay una conexión con Argentina (directa o vía un socio
 comercial, un commodity que exporta, una industria local expuesta), marcala en un
 bullet propio con un poco más de desarrollo.
 
 ## Empresas potencialmente afectadas por región
 
-Un subtítulo "### <región>" por cada región, y dentro un bullet por empresa o tipo de
-empresa (nombre en negrita cuando el titular lo mencione o se pueda inferir
-razonablemente del sector y país afectado), con una razón breve para cada una. Si hay
+Un subtítulo "### <región>" solo para las regiones con empresas afectadas, y dentro un
+bullet por empresa o tipo de empresa (nombre en negrita cuando el titular lo mencione o
+se pueda inferir razonablemente del sector y país afectado), con una razón breve de una
+oración. COMO MÁXIMO OCHO BULLETS EN TODA LA SECCIÓN: las empresas más expuestas. Si hay
 empresas argentinas o con operación en Argentina entre las afectadas, dales un bullet
 con un poco más de contexto sobre el porqué.
 
@@ -344,7 +352,7 @@ func buildUserPrompt(in Input) string {
 			continue
 		}
 		if known && cov.Low() {
-			fmt.Fprintf(&b, "(cobertura parcial: arrancá el subtítulo con la línea \"_Cobertura parcial: respondieron %d de %d medios de la región._\" antes de los bullets)\n", cov.Responded, cov.Configured)
+			fmt.Fprintf(&b, "(cobertura parcial: arrancá el subtítulo con la línea \"_Cobertura parcial: respondieron %d de %d medios de la región._\" antes del informe)\n", cov.Responded, cov.Configured)
 		}
 		sort.SliceStable(arts, func(i, j int) bool {
 			return coverageByArticle[articleKey(arts[i].Article)].weight >

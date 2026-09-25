@@ -34,6 +34,7 @@ export type Provenance = {
   };
   source_problems?: SourceProblem[];
   fidelity_issues?: FidelityIssue[];
+  cost_usd?: number; // costo en modelos de lenguaje pagos, según OpenRouter
   version?: number;
   revisions?: Revision[];
   classify_models_used?: Record<string, number>;

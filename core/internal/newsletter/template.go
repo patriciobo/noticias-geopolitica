@@ -12,6 +12,7 @@ import (
 type EmailData struct {
 	SiteURL          string // home del blog, base de los links de header/CTA
 	EditionURL       string // link a la edición completa de este día
+	ReadingMinutes   int    // tiempo estimado de lectura de la edición completa
 	ReportErrorURL   string // plantilla de issue "Error en una edición" con la fecha precargada
 	DateLabel        string // "miércoles, 23 de septiembre de 2026" (CSS lo pasa a mayúscula)
 	AbstractHTML     template.HTML
@@ -87,7 +88,7 @@ const emailTemplateSrc = `<!doctype html>
 <p style="margin:24px 0 16px; font-size:13px; line-height:1.5; color:#666666;">La edición completa incluye además el clima de comercio, industria y materias primas, las empresas potencialmente afectadas por región, las fuentes consultadas y las ediciones anteriores.</p>
 
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#c81e1e; padding: 10px 18px; margin-bottom: 24px;">
-<a href="{{.EditionURL}}" style="color:#ffffff; font-weight:bold; font-size:14px; text-decoration:none;">Ver edición completa &rarr;</a>
+<a href="{{.EditionURL}}" style="color:#ffffff; font-weight:bold; font-size:14px; text-decoration:none;">Ver edición completa{{if .ReadingMinutes}} ({{.ReadingMinutes}} min de lectura){{end}} &rarr;</a>
 </td></tr></table>
 
 {{if or .CafecitoURL .TecitoURL}}

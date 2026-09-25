@@ -50,3 +50,10 @@ func TestBuildUserPromptNumbersItems(t *testing.T) {
 		t.Errorf("titulares sin número:\n%s", got)
 	}
 }
+
+func TestCountUncitedProseParagraphs(t *testing.T) {
+	md := "## Resumen por región\n\n### Europa\n\nUn párrafo con cita [[1]](<https://a>).\n\nOtro párrafo sin cita.\n\n### Asia Oriental\n\nSin novedades relevantes hoy.\n\n## Clima internacional\n\nIntroducción sin cita que no cuenta.\n"
+	if got := countUncited(md); got != 1 {
+		t.Errorf("countUncited = %d, want 1 (el párrafo de Europa sin cita)", got)
+	}
+}

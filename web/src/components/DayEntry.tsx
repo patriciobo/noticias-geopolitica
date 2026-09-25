@@ -1,6 +1,7 @@
 import type { ReportResponse } from "@/lib/api";
 import { splitAbstract } from "@/lib/newsLinks";
 import Abstract from "./Abstract";
+import { readingLabel } from "@/lib/readingTime";
 import { ReportBody, formatDate } from "./ReportView";
 import styles from "./DayEntry.module.css";
 
@@ -25,6 +26,7 @@ export default function DayEntry({
   const { abstract, body } = splitAbstract(report.markdown);
   const links = linkCount(report.markdown);
   const meta = [
+    readingLabel(report.markdown),
     `${report.source_count} medios consultados`,
     links > 0 ? `${links} noticias con enlace` : null,
   ]

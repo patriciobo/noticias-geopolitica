@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"noticias/core/internal/model"
+	"noticias/core/internal/usage"
 )
 
 // OpenAICompatClassifier works with any provider that speaks the OpenAI
@@ -63,6 +64,28 @@ type compatChatRequest struct {
 	Temperature    float64          `json:"temperature"`
 	MaxTokens      int              `json:"max_tokens,omitempty"`
 	Reasoning      *compatReasoning `json:"reasoning,omitempty"`
+	Usage          *compatUsageReq  `json:"usage,omitempty"`
+	Provider       *compatProvider  `json:"provider,omitempty"`
+}
+
+// compatUsageReq pide a OpenRouter que informe el costo de cada pedido.
+type compatUsageReq struct {
+	Include bool `json:"include"`
+}
+
+// compatProvider elige, entre los proveedores de OpenRouter que sirven el
+// modelo, el más barato (sin esto reparte por carga y puede tocar uno más
+// caro).
+type compatProvider struct {
+	Sort string `json:"sort"`
+}
+
+// compatUsage es el uso que devuelve la respuesta; Cost solo lo informa
+// OpenRouter.
+type compatUsage struct {
+	PromptTokens     int     `json:"prompt_tokens"`
+	CompletionTokens int     `json:"completion_tokens"`
+	Cost             float64 `json:"cost"`
 }
 
 type compatReasoning struct {
@@ -85,6 +108,7 @@ type compatChatResponse struct {
 	Error *struct {
 		Message string `json:"message"`
 	} `json:"error"`
+	Usage *compatUsage `json:"usage"`
 }
 
 func (c *OpenAICompatClassifier) Classify(ctx context.Context, a model.Article, pre PrefilterResult) (model.Classification, error) {
@@ -280,6 +304,10 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 	// Explícito: sin tope, algunos proveedores de OpenRouter cortan la
 	// respuesta de un lote a mitad del JSON (pasó con DeepSeek).
 	reqBody.MaxTokens = classifyMaxTokens
+	if strings.Contains(c.BaseURL, "openrouter.ai") {
+		reqBody.Usage = &compatUsageReq{Include: true}
+		reqBody.Provider = &compatProvider{Sort: "price"}
+	}
 	payload, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", err
@@ -353,6 +381,9 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 	}
 	if cr.Error != nil {
 		return "", fmt.Errorf("%s", cr.Error.Message)
+	}
+	if cr.Usage != nil {
+		usage.Record(ctx, cr.Usage.Cost, cr.Usage.PromptTokens, cr.Usage.CompletionTokens)
 	}
 	if len(cr.Choices) == 0 {
 		return "", fmt.Errorf("respuesta vacía (status %d): %s", statusCode, truncate(string(body), 300))

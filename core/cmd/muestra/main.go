@@ -109,7 +109,8 @@ func extractClaims(date, markdown string) []claimSample {
 			section = strings.TrimPrefix(t, "## ")
 			continue
 		}
-		if section == "Noticias utilizadas" || !strings.HasPrefix(t, "- ") {
+		// Bullets y párrafos (los informes por región van en prosa).
+		if section == "Noticias utilizadas" || t == "" || strings.HasPrefix(t, "#") {
 			continue
 		}
 		ms := citationRe.FindAllStringSubmatch(t, -1)
