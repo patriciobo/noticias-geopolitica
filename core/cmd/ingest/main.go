@@ -250,6 +250,9 @@ func main() {
 			// puro por texto, alcanza sin el parámetro forzado.
 			c.DisableJSONMode = true
 			c.DisableReasoning = true
+			if strings.HasSuffix(m, ":free") {
+				c.MaxRetries = 2
+			}
 			return c
 		}
 		newSynth := func(m string) report.Synthesizer {

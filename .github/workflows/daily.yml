@@ -23,6 +23,10 @@ on:
         description: "Motivo de la regeneración (se publica en la edición si ya existía una versión de hoy)"
         type: string
         default: ""
+      prueba:
+        description: "Prueba: corre todo el pipeline pero no commitea, no firma, no manda el newsletter ni despliega"
+        type: boolean
+        default: false
       enviar_newsletter:
         description: "Mandar el newsletter (desmarcar al regenerar un informe que ya se envió)"
         type: boolean
@@ -32,7 +36,8 @@ on:
 permissions: {}
 
 concurrency:
-  group: daily-report
+  # Una prueba va en su propio grupo: nunca cancela ni espera a la corrida real.
+  group: daily-report${{ inputs.prueba && '-prueba' || '' }}
   # Un dispatch manual cancela corridas viejas encoladas en vez de
   # amontonarse — evita que una corrida vieja ejecute contra un commit
   # desactualizado y choque el push contra main. Un cron (de GitHub o
@@ -70,7 +75,10 @@ jobs:
     needs: check
     if: needs.check.outputs.skip != 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 60: la corrida completa (clasificar ~500 titulares, agrupar, redactar y
+    # chequear fidelidad) tardó ~21 min en la prueba del 2026-09-24, y más
+    # si los modelos gratuitos fallan y entra el respaldo.
+    timeout-minutes: 60
     permissions:
       contents: write # para commitear el reporte generado
       id-token: write # para firmar la atestación con Sigstore (OIDC de GitHub)
@@ -128,7 +136,21 @@ jobs:
       # puede verificar que el archivo publicado es exactamente el que
       # generó el pipeline, sin ediciones a mano posteriores:
       #   gh attestation verify reports/AAAA-MM-DD.md -R <dueño>/<repo>
+      - name: Resumen de la prueba
+        if: inputs.prueba
+        env:
+          REPORT_DATE: ${{ steps.ingest.outputs.report_date }}
+        run: |
+          {
+            echo "## Prueba: edición que se habría publicado"
+            echo '```'
+            python3 -c "import json;a=json.load(open('reports/$REPORT_DATE.audit.json'));print(json.dumps({k:a[k] for k in ('counts','classify_models_used','synthesize_model_used')},indent=1,ensure_ascii=False))"
+            echo '```'
+            head -c 6000 "reports/$REPORT_DATE.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Firmar la edición (atestación de origen)
+        if: ${{ !inputs.prueba }}
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
@@ -138,6 +160,7 @@ jobs:
 
       - name: Commitear reporte
         id: commit
+        if: ${{ !inputs.prueba }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

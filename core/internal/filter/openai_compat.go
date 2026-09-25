@@ -37,6 +37,11 @@ type OpenAICompatClassifier struct {
 	// Flash, un lote de 16 titulares pasaba de ~12 s a ~50 s y 4 veces los
 	// tokens, y con el prompt completo vencía el timeout (2026-09-24).
 	DisableReasoning bool
+	// MaxRetries limita los reintentos ante 429/503/"Provider returned
+	// error" (0 = maxRateLimitRetries). Para modelos gratuitos conviene
+	// pocos: cuando fallan suelen seguir fallando un rato, y cada ronda de
+	// reintentos demoraba ~90 s antes de pasar al respaldo.
+	MaxRetries int
 }
 
 func NewOpenAICompatClassifier(baseURL, apiKey, modelName string) *OpenAICompatClassifier {
@@ -321,7 +326,11 @@ func (c *OpenAICompatClassifier) chat(ctx context.Context, reqBody compatChatReq
 			return "", fmt.Errorf("%w: %s", ErrQuotaExhausted, truncate(extractErrorMessage(body), 300))
 		}
 		retryable := isRetryableStatus(statusCode) || isTransientErrorMessage(extractErrorMessage(body))
-		if !retryable || attempt >= maxRateLimitRetries {
+		limit := maxRateLimitRetries
+		if c.MaxRetries > 0 {
+			limit = c.MaxRetries
+		}
+		if !retryable || attempt >= limit {
 			break
 		}
 		select {

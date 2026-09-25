@@ -9,19 +9,19 @@ export default function SiteHeader() {
 	return (
 		<header className={styles.header}>
 			<div className={styles.bar}>
-				<a href='/' className={styles.brand}>
+				<Link href='/' className={styles.brand}>
 					<Image
 						src='/nombre-sf.png'
-						alt='Noticias Internacionales'
+						alt='Radar Global'
 						width={1536}
 						height={1152}
 						className={styles.logoName}
 					/>
-				</a>
+				</Link>
 				<nav className={styles.nav}>
-					<a href='/#ediciones-anteriores'>Ediciones</a>
-					<a href='/#resumen-por-region'>Regiones</a>
-					<a href='/#fuentes-consultadas'>Fuentes</a>
+					<Link href='/#ediciones-anteriores'>Ediciones</Link>
+					<Link href='/#resumen-por-region'>Regiones</Link>
+					<Link href='/#fuentes-consultadas'>Fuentes</Link>
 					<Link href='/metodologia'>Metodología</Link>
 				</nav>
 			</div>
