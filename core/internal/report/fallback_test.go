@@ -3,6 +3,7 @@ package report
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -87,5 +88,13 @@ func TestChainSynthesizerSkipsTruncatedReport(t *testing.T) {
 	}
 	if got != report("second") {
 		t.Errorf("expected second link's result, got %q", got)
+	}
+}
+
+func TestNormalizeHeadings(t *testing.T) {
+	in := "# Resumen ejecutivo\n\nx\n\n---\n\n# Resumen por región\n\n### Europa\n\n# Clima internacional: comercio\n\n# Empresas potencialmente afectadas por región\n\n# Otro título"
+	got := normalizeHeadings(in)
+	if validateReport(got) != nil || !strings.Contains(got, "# Otro título") || strings.Contains(got, "---") {
+		t.Errorf("normalizeHeadings:\n%s", got)
 	}
 }

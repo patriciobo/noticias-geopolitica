@@ -373,10 +373,11 @@ func main() {
 		}
 	}
 
-	// Razonamiento en esfuerzo bajo: sin razonamiento DeepSeek inventaba
-	// nombres de región y bajaba la fidelidad; con el razonamiento por
-	// defecto tardaba más de 5 minutos (2026-09-25).
-	markdown, err := synth.Synthesize(usage.WithReasoningEffort(usage.WithStage(ctx, "redaccion"), "low"), report.Input{Items: classified, Coverage: coverage, Groups: groups})
+	// Razonamiento con tope de 3000 tokens: sin razonamiento DeepSeek
+	// inventaba nombres de región y bajaba la fidelidad; sin tope, algunos
+	// proveedores razonaban 30.000 tokens y pasaban los 10 minutos
+	// (2026-09-25). Con tope, ~1 minuto y medio centavo.
+	markdown, err := synth.Synthesize(usage.WithReasoningBudget(usage.WithStage(ctx, "redaccion"), 3000), report.Input{Items: classified, Coverage: coverage, Groups: groups})
 	if err != nil {
 		log.Fatalf("sintetizando reporte: %v", err)
 	}

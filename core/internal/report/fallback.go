@@ -25,6 +25,7 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, in Input) (string, er
 	var lastErr error
 	for i, link := range c.Links {
 		markdown, err := link.Synthesize(ctx, in)
+		markdown = normalizeHeadings(markdown)
 		if err == nil {
 			err = validateReport(markdown)
 			if err != nil {
@@ -34,6 +35,7 @@ func (c *ChainSynthesizer) Synthesize(ctx context.Context, in Input) (string, er
 				// pasar al siguiente, que suele ser de menor calidad.
 				log.Printf("synthesize: proveedor %d/%d devolvió un informe incompleto (%d caracteres: %v), reintentando una vez", i+1, len(c.Links), len(markdown), err)
 				markdown, err = link.Synthesize(ctx, in)
+				markdown = normalizeHeadings(markdown)
 				if err == nil {
 					err = validateReport(markdown)
 				}
@@ -108,4 +110,29 @@ func (c *ChainSynthesizer) Complete(ctx context.Context, system, user string, te
 		lastErr = err
 	}
 	return "", lastErr
+}
+
+// normalizeHeadings corrige el nivel de los títulos de sección: a veces el
+// modelo escribe "# Resumen ejecutivo" en vez de "## Resumen ejecutivo"
+// (pasó con DeepSeek el 2026-09-25) y un informe correcto se descartaba
+// por no tener las secciones. También saca separadores "---".
+func normalizeHeadings(markdown string) string {
+	lines := strings.Split(markdown, "\n")
+	out := lines[:0]
+	for _, l := range lines {
+		t := strings.TrimSpace(l)
+		if t == "---" {
+			continue
+		}
+		if strings.HasPrefix(t, "# ") {
+			for _, h := range requiredSections {
+				if strings.HasPrefix("#"+t, h) {
+					l = "#" + t
+					break
+				}
+			}
+		}
+		out = append(out, l)
+	}
+	return strings.Join(out, "\n")
 }

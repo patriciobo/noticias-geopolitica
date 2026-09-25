@@ -108,8 +108,9 @@ type compatChatRequest struct {
 }
 
 type compatReasoning struct {
-	Enabled *bool  `json:"enabled,omitempty"`
-	Effort  string `json:"effort,omitempty"`
+	Enabled   *bool  `json:"enabled,omitempty"`
+	Effort    string `json:"effort,omitempty"`
+	MaxTokens int    `json:"max_tokens,omitempty"`
 }
 
 // compatUsageReq pide a OpenRouter que informe el costo de cada pedido.
@@ -172,15 +173,17 @@ func (s *OpenAICompatSynthesizer) Complete(ctx context.Context, system, user str
 	}
 	if strings.Contains(s.BaseURL, "openrouter.ai") {
 		reqBody.Usage = &compatUsageReq{Include: true}
-		// Sin "provider.sort=price" acá (sí en la clasificación): con
-		// pedidos largos, el proveedor más barato de DeepSeek truncó el
-		// mensaje de entrada ("el mensaje llegó truncado") y la redacción
-		// cayó al respaldo (2026-09-25). El ahorro sería de centésimos.
+		// El proveedor más rápido, no el más barato: con pedidos largos el
+		// más barato de DeepSeek truncó la entrada, y el de por defecto
+		// llegó a tardar más de 5 minutos (2026-09-25).
+		reqBody.Provider = &compatProvider{Sort: "throughput"}
 		// Agrupar y chequear fidelidad no necesitan razonar: con DeepSeek
 		// el razonamiento multiplicaba los tokens de salida que se pagan.
 		if usage.ReasoningDisabled(ctx) {
 			off := false
 			reqBody.Reasoning = &compatReasoning{Enabled: &off}
+		} else if n := usage.ReasoningBudget(ctx); n > 0 {
+			reqBody.Reasoning = &compatReasoning{MaxTokens: n}
 		} else if e := usage.ReasoningEffort(ctx); e != "" {
 			reqBody.Reasoning = &compatReasoning{Effort: e}
 		}

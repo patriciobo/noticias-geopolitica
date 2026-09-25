@@ -18,6 +18,7 @@ const (
 	stageKey ctxKey = iota
 	noReasoningKey
 	effortKey
+	budgetKey
 )
 
 // WithStage marca el contexto con la etapa a la que se le carga el costo.
@@ -50,6 +51,19 @@ func WithReasoningEffort(ctx context.Context, effort string) context.Context {
 func ReasoningEffort(ctx context.Context) string {
 	s, _ := ctx.Value(effortKey).(string)
 	return s
+}
+
+// WithReasoningBudget pone un tope de tokens de razonamiento. Es más
+// predecible que el esfuerzo: algunos proveedores ignoran "effort: low" y
+// razonan 30.000 tokens (más de 5 minutos).
+func WithReasoningBudget(ctx context.Context, tokens int) context.Context {
+	return context.WithValue(ctx, budgetKey, tokens)
+}
+
+// ReasoningBudget devuelve el tope pedido, o 0.
+func ReasoningBudget(ctx context.Context) int {
+	n, _ := ctx.Value(budgetKey).(int)
+	return n
 }
 
 // ReasoningDisabled indica si el contexto pidió no razonar.
