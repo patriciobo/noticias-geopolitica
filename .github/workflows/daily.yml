@@ -102,11 +102,12 @@ jobs:
           # cuesta ~USD 0,60/mes con el volumen actual, pagado con créditos
           # de OpenRouter. Si se quedan sin saldo, falla con 402 y la cadena
           # sigue con Gemini y los modelos free.
-          # Clasificación: Qwen (free) primero y DeepSeek de respaldo. En la
-          # evaluación del 2026-09-24 (eval/resultados-2026-09-24.md, 115
-          # titulares) Qwen acertó 108 y DeepSeek 98: DeepSeek marca como
-          # internacional demasiado (precisión 57% contra 80%). La redacción
-          # sigue con DeepSeek. Volver a evaluar antes de cambiar.
+          # Clasificación: Qwen (free) primero y DeepSeek de respaldo. Con las
+          # etiquetas verificadas por tres jueces (eval/resultados-2026-09-25.md)
+          # Qwen tiene F1 0.92 y DeepSeek 0.86: Qwen es más preciso (95% contra
+          # 77%) pero falla seguido por ser gratis (16 de 115 sin respuesta);
+          # lo que falla lo cubre DeepSeek. La redacción sigue con DeepSeek.
+          # Volver a evaluar antes de cambiar.
           OPENROUTER_PRIMARY_CLASSIFY_MODELS: qwen/qwen3.8-27b:free,deepseek/deepseek-v4-flash
           OPENROUTER_CLASSIFY_MODELS: nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free
           OPENROUTER_PRIMARY_SYNTHESIZE_MODELS: deepseek/deepseek-v4-flash

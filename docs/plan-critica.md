@@ -61,9 +61,9 @@ decisiones que no se pueden inferir del código.
 - [x] **16. Verificar la clasificación `ownership` de los medios.** Hecho
   con fuentes públicas (docs/clasificacion-medios.md): 13 correcciones y
   categoría nueva `publico`.
-- [ ] **17. Revisar las etiquetas de `eval/classify.jsonl`** (hechas por
-  Claude). No se pueden verificar con fuentes externas: son juicios
-  editoriales sobre titulares puntuales **[necesita a una persona]**.
+- [x] **17. Verificar las etiquetas de `eval/classify.jsonl`.** Con tres
+  jueces de proveedores distintos que la plataforma no usa para clasificar
+  (`eval/verificar_etiquetas.py`); solo se cambia con unanimidad.
 
 ## Fuera de alcance por ahora
 
@@ -91,3 +91,4 @@ decisiones que no se pueden inferir del código.
 - Paso 15 (2026-09-24): report.GroupStories: el modelo agrupa las notas por hecho concreto (multilingüe) con validación; la cobertura cruzada usa el hecho del grupo como título; si falla, vuelve al agrupamiento por entidades.
 - Prueba completa local (2026-09-24, config de producción): 499 titulares, 205 aceptados, 18 historias agrupadas por hecho, 344 citas resueltas y 0 inventadas, 4 bullets sin cita; fidelidad 92 chequeadas / 48 respaldadas / 28 inferencias / 16 sin respaldo (6 eran conteos de cobertura, corregido en 69d692b). Qwen free falló 7 lotes ("Provider returned error") y DeepSeek los cubrió: vigilar si conviene volver a DeepSeek como principal.
 - Paso 16 (2026-09-25): 131 medios verificados con 2-3 fuentes cada uno (Wikipedia, Media Ownership Monitor, State Media Monitor, MBFC, sitios propios); 13 correcciones (p. ej. Youm7 → estatal por ser de la inteligencia egipcia; SABC, TVNZ y RFA → publico); documento en docs/clasificacion-medios.md.
+- Paso 17 (2026-09-25): Claude Sonnet 5, Gemini 3.5 Flash y GPT-5.4 mini vía OpenRouter; 96 confirmadas, 3 cambiadas por unanimidad, 16 sin consenso (se mantienen). Reevaluación: Qwen F1 0.92 (16 errores técnicos), DeepSeek 0.86, Nemotron 0.77; se mantiene Qwen principal + DeepSeek respaldo.
