@@ -124,3 +124,40 @@ func TestParseDateOnly(t *testing.T) {
 		t.Errorf("parseDate(\"2018-01-24\") = %v", got)
 	}
 }
+
+// Como el feed del NYT o Feedburner: <atom:link> vacío después del <link>.
+const sampleRSS2AtomLink = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>
+<atom:link href="https://example.com/feed.xml" rel="self" type="application/rss+xml"/>
+<item>
+  <title>Con atom:link después</title>
+  <link>https://example.com/nyt-1</link>
+  <guid isPermaLink="true">https://example.com/nyt-1</guid>
+  <atom:link href="https://example.com/nyt-1" rel="standout"></atom:link>
+</item>
+<item>
+  <title>Solo atom:link</title>
+  <atom:link href="https://example.com/solo-atom"/>
+</item>
+<item>
+  <title>Solo guid</title>
+  <guid isPermaLink="false">https://example.com/solo-guid</guid>
+</item>
+<item>
+  <title>Guid que no es URL</title>
+  <guid>tag:example.com,2026:123</guid>
+</item>
+</channel></rss>`
+
+func TestParseRSS2KeepsLinkNextToAtomLink(t *testing.T) {
+	articles := parseRSS2([]byte(sampleRSS2AtomLink), "medio-prueba", 10)
+	want := []string{"https://example.com/nyt-1", "https://example.com/solo-atom", "https://example.com/solo-guid", ""}
+	if len(articles) != len(want) {
+		t.Fatalf("esperaba %d artículos, dio %d", len(want), len(articles))
+	}
+	for i, w := range want {
+		if articles[i].Link != w {
+			t.Errorf("artículo %d (%q): link %q, esperaba %q", i, articles[i].Title, articles[i].Link, w)
+		}
+	}
+}

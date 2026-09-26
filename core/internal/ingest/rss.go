@@ -20,12 +20,40 @@ var httpClient = &http.Client{Timeout: 15 * time.Second}
 type rss2Feed struct {
 	Channel struct {
 		Items []struct {
-			Title       string `xml:"title"`
-			Link        string `xml:"link"`
-			Description string `xml:"description"`
-			PubDate     string `xml:"pubDate"`
+			Title       string    `xml:"title"`
+			Links       []rssLink `xml:"link"`
+			GUID        string    `xml:"guid"`
+			Description string    `xml:"description"`
+			PubDate     string    `xml:"pubDate"`
 		} `xml:"item"`
 	} `xml:"channel"`
+}
+
+// rssLink captura tanto <link>URL</link> como <atom:link href="URL"/>:
+// encoding/xml compara solo el nombre local, así que los dos caen en el
+// mismo campo. Con un string simple, el <atom:link/> vacío que publican el
+// NYT o Feedburner (Breitbart) después del <link> pisaba la URL y la nota
+// quedaba sin enlace.
+type rssLink struct {
+	Value string `xml:",chardata"`
+	Href  string `xml:"href,attr"`
+}
+
+// pickRSSLink devuelve el primer <link> con texto, si no el primer href de
+// un <atom:link>, y como último recurso el <guid> (cleanLink descarta los
+// que no son URL).
+func pickRSSLink(links []rssLink, guid string) string {
+	for _, l := range links {
+		if s := cleanLink(l.Value); s != "" {
+			return s
+		}
+	}
+	for _, l := range links {
+		if s := cleanLink(l.Href); s != "" {
+			return s
+		}
+	}
+	return cleanLink(guid)
 }
 
 // atomFeed maps the common subset of Atom used by news outlets.
@@ -47,10 +75,10 @@ type atomFeed struct {
 // Unlike RSS 2.0, <item> elements are siblings of <channel>, not nested in it.
 type rdfFeed struct {
 	Items []struct {
-		Title       string `xml:"title"`
-		Link        string `xml:"link"`
-		Description string `xml:"description"`
-		Date        string `xml:"http://purl.org/dc/elements/1.1/ date"`
+		Title       string    `xml:"title"`
+		Links       []rssLink `xml:"link"`
+		Description string    `xml:"description"`
+		Date        string    `xml:"http://purl.org/dc/elements/1.1/ date"`
 	} `xml:"item"`
 }
 
@@ -172,7 +200,7 @@ func parseRSS2(body []byte, sourceID string, maxItems int) []model.Article {
 		articles = append(articles, model.Article{
 			SourceID:    sourceID,
 			Title:       cleanText(it.Title, maxTitleRunes),
-			Link:        cleanLink(it.Link),
+			Link:        pickRSSLink(it.Links, it.GUID),
 			Snippet:     cleanText(it.Description, maxSnippetRunes),
 			PublishedAt: parseDate(it.PubDate),
 		})
@@ -231,7 +259,7 @@ func parseRDF(body []byte, sourceID string, maxItems int) []model.Article {
 		articles = append(articles, model.Article{
 			SourceID:    sourceID,
 			Title:       cleanText(it.Title, maxTitleRunes),
-			Link:        cleanLink(it.Link),
+			Link:        pickRSSLink(it.Links, ""),
 			Snippet:     cleanText(it.Description, maxSnippetRunes),
 			PublishedAt: parseDate(it.Date),
 		})
