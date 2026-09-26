@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { fetchSources, type PublicSource } from "@/lib/api";
 import { REGION_LABELS } from "@/lib/regionTheme";
 import { REPO_SLUG, REPO_URL, repoFileURL } from "@/lib/transparency";
+import ExternalLink from "@/components/ExternalLink";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -55,7 +56,7 @@ export default async function MetodologiaPage() {
   const summary = sources ? summarize(sources) : null;
 
   return (
-    <main className={styles.page}>
+    <main id="contenido" className={styles.page}>
       <h1>Metodología</h1>
       <p className={styles.lead}>
         Radar Global es un resumen diario generado de forma automática. Ninguna persona elige, edita ni
@@ -171,22 +172,25 @@ export default async function MetodologiaPage() {
               La etiqueta de cada medio es una clasificación editorial nuestra, discutible, y está publicada en{" "}
               <a href={repoFileURL("config/sources.yaml")}>config/sources.yaml</a>.
             </p>
-            <div className={styles.tableWrap}>
+            <div className={styles.tableWrap} role="region" aria-labelledby="tabla-medios" tabIndex={0}>
               <table className={styles.table}>
+                <caption id="tabla-medios" className="sr-only">
+                  Medios consultados por región y línea editorial
+                </caption>
                 <thead>
                   <tr>
-                    <th>Región</th>
+                    <th scope="col">Región</th>
                     {summary.stances.map((s) => (
-                      <th key={s}>{STANCE_LABELS[s] ?? s}</th>
+                      <th key={s} scope="col">{STANCE_LABELS[s] ?? s}</th>
                     ))}
-                    <th>Total</th>
-                    <th>Países</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Países</th>
                   </tr>
                 </thead>
                 <tbody>
                   {summary.sorted.map((row) => (
                     <tr key={row.region}>
-                      <td>{REGION_LABELS[row.region] ?? row.region}</td>
+                      <th scope="row">{REGION_LABELS[row.region] ?? row.region}</th>
                       {summary.stances.map((s) => (
                         <td key={s}>{row.byStance[s] ?? 0}</td>
                       ))}
@@ -204,7 +208,7 @@ export default async function MetodologiaPage() {
                   .sort((a, b) => a.country.localeCompare(b.country, "es") || a.name.localeCompare(b.name, "es"))
                   .map((s) => (
                     <li key={s.name}>
-                      <a href={s.homepage} target="_blank" rel="noopener noreferrer">{s.name}</a> — {s.country},{" "}
+                      <ExternalLink href={s.homepage}>{s.name}</ExternalLink> — {s.country},{" "}
                       {(STANCE_LABELS[s.stance] ?? s.stance).toLowerCase()}
                       {s.ownership && `, ${OWNERSHIP_LABELS[s.ownership] ?? s.ownership}`}
                       {s.ownership_note && ` (${s.ownership_note})`}

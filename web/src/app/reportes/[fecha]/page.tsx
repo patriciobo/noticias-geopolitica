@@ -37,9 +37,9 @@ export default async function ReportePage({
   }
 
   return (
-    <>
+    <main id="contenido">
       <ReportView date={report.date} markdown={report.markdown} sources={report.sources} provenance={report.provenance} />
       <DonationSupport variant="article" />
-    </>
+    </main>
   );
 }

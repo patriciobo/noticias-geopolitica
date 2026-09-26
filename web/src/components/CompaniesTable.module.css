@@ -21,7 +21,7 @@
 .tag {
   align-self: start;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -29,8 +29,8 @@
   border: 1px solid var(--accent);
   border-radius: 4px;
   padding: 0.2rem 0.5rem;
-  white-space: nowrap;
   width: fit-content;
+  max-width: 100%;
 }
 
 .markdown ul {
@@ -45,6 +45,11 @@
 .markdown li {
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+.markdown a:not([aria-label]) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .markdown strong {

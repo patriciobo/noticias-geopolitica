@@ -7,7 +7,9 @@ import styles from "./Abstract.module.css";
 export default function Abstract({ markdown }: { markdown: string }) {
   return (
     <div className={styles.box}>
-      <p className={styles.label}>📝 Resumen</p>
+      <p className={styles.label}>
+        <span aria-hidden="true">📝 </span>Resumen
+      </p>
       <div className={styles.content}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <MarkdownLink href={href}>{children}</MarkdownLink> }}>
           {markdown}

@@ -22,7 +22,7 @@
   display: inline-block;
   width: fit-content;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -44,9 +44,31 @@
 .meta {
   grid-area: meta;
   justify-self: end;
-  font-size: 0.82rem;
+  text-align: right;
+  font-size: 0.85rem;
   color: var(--muted);
-  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .header,
+  .headerRow {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "badge"
+      "date"
+      "meta";
+  }
+
+  .headerRow {
+    grid-template-areas:
+      "date"
+      "meta";
+  }
+
+  .meta {
+    justify-self: start;
+    text-align: left;
+  }
 }
 
 .entry:not(.latest) {
@@ -67,10 +89,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 44px;
   cursor: pointer;
   list-style: none;
   user-select: none;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--accent);
 }

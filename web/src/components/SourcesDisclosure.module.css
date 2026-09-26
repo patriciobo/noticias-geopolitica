@@ -19,13 +19,36 @@
   display: none;
 }
 
+/* Sin el triángulo nativo hace falta otra señal visual de que se despliega. */
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.summary::after {
+  content: "";
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.disclosure[open] > .summary::after {
+  transform: rotate(-135deg);
+}
+
 .summary:hover {
   color: var(--accent);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
   gap: 1rem 1.5rem;
   padding: 0 1.25rem 1.25rem;
   border-top: 1px solid var(--border);

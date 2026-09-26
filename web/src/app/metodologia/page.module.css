@@ -6,7 +6,7 @@
 }
 
 .page h1 {
-  font-size: 2.25rem;
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
   font-weight: 800;
   line-height: 1.15;
   margin-bottom: 1rem;
@@ -41,6 +41,8 @@
 
 .page a {
   color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .page code {
@@ -75,6 +77,10 @@
   white-space: nowrap;
 }
 
+.table tbody th {
+  font-weight: 400;
+}
+
 .table td:not(.countries) {
   white-space: nowrap;
 }
@@ -101,4 +107,15 @@
 
 .fullList li {
   margin-bottom: 0.25rem;
+}
+
+@media (max-width: 560px) {
+  .countries {
+    min-width: 9rem;
+  }
+
+  .tableWrap {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
 }

@@ -40,7 +40,12 @@ const genericMarkdownComponents: Components = {
   h3({ children }) {
     const text = textContent(children).trim();
     if (text === "Cobertura cruzada") {
-      return <h3 className={styles.crossCoverage}>🌐 {children}</h3>;
+      return (
+        <h3 className={styles.crossCoverage}>
+          <span aria-hidden="true">🌐 </span>
+          {children}
+        </h3>
+      );
     }
     return <h3>{children}</h3>;
   },
@@ -53,6 +58,10 @@ const genericMarkdownComponents: Components = {
   },
   a({ href, children }) {
     return <MarkdownLink href={href}>{children}</MarkdownLink>;
+  },
+  // Safari/VoiceOver deja de anunciar como lista un <ul> con list-style: none.
+  ul({ children }) {
+    return <ul role="list">{children}</ul>;
   },
 };
 
@@ -81,7 +90,7 @@ export function ReportBody({
           return (
             <section key={section.heading}>
               <h2 id={id}>
-                {icon ? `${icon} ` : ""}
+                {icon && <span aria-hidden="true">{icon} </span>}
                 {section.heading}
               </h2>
               {section.heading === "Clima internacional: comercio, industria y materias primas" ? (
@@ -120,9 +129,10 @@ export default function ReportView({
   const { abstract, body } = splitAbstract(markdown);
   return (
     <article className={styles.article}>
-      <p className={styles.date}>
-        Edición del {formatDate(date)} · {readingLabel(markdown)}
-      </p>
+      <h1 className={styles.date}>
+        Edición del {formatDate(date)}
+        <span className={styles.readingTime}> · {readingLabel(markdown)}</span>
+      </h1>
       {abstract && <Abstract markdown={abstract} />}
       <ReportBody date={date} markdown={body} sources={sources} provenance={provenance} />
     </article>

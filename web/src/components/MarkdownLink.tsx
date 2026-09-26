@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import ExternalLink, { NEW_TAB_TEXT } from "./ExternalLink";
 import styles from "./MarkdownLink.module.css";
 
 function text(node: ReactNode): string {
@@ -19,14 +20,10 @@ export default function MarkdownLink({ href, children }: { href?: string; childr
   const m = CITATION_RE.exec(text(children).trim());
   if (m) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={styles.citation} aria-label={`Fuente ${m[1]}`}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className={styles.citation} aria-label={`Fuente ${m[1]} (${NEW_TAB_TEXT})`}>
         {m[1]}
       </a>
     );
   }
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer">
-      {children}
-    </a>
-  );
+  return <ExternalLink href={href}>{children}</ExternalLink>;
 }

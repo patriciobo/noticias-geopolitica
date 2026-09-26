@@ -8,6 +8,9 @@ const components: Components = {
   a({ href, children }) {
     return <MarkdownLink href={href}>{children}</MarkdownLink>;
   },
+  ul({ children }) {
+    return <ul role="list">{children}</ul>;
+  },
 };
 
 /**

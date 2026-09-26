@@ -50,13 +50,14 @@ export default function DayEntry({
   return (
     <article className={styles.entry} id={report.date}>
       <header className={`${styles.header} ${styles.headerRow}`}>
-        <span className={styles.date}>{formatDate(report.date)}</span>
-        <span className={styles.meta}>{meta}</span>
+        <h3 className={styles.date}>{formatDate(report.date)}</h3>
+        <p className={styles.meta}>{meta}</p>
       </header>
       {abstract && <Abstract markdown={abstract} />}
       <details className={styles.details}>
         <summary className={styles.summary}>
           Ver informe completo
+          <span className="sr-only"> del {formatDate(report.date)}</span>
           <span className={styles.toggle} aria-hidden="true" />
         </summary>
         <div className={styles.content}>

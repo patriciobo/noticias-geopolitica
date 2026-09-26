@@ -30,7 +30,7 @@ export default async function CorreccionesPage() {
   }
 
   return (
-    <main className={styles.page}>
+    <main id="contenido" className={styles.page}>
       <h1>Correcciones</h1>
       <p className={styles.lead}>
         Cuando una edición sale mal (por una falla técnica, un feed roto o un error del modelo), se vuelve a

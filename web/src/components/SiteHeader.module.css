@@ -12,7 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   border-bottom: 1px solid var(--border);
 }
 
@@ -20,29 +21,61 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
-  padding-right: 19px;
 }
 
 .logoName {
   display: block;
-  height: 34px;
+  height: 48px;
   width: auto;
-  transform: scale(1.4);
-  transform-origin: left center;
 }
 
-.nav {
+.nav ul {
   display: flex;
-  gap: 1.25rem;
-  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  list-style: none;
+  font-size: 0.9rem;
 }
 
+/* Área táctil mínima de 44px de alto sin agrandar el texto. */
 .nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.25rem;
   color: var(--muted);
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav a[aria-current="page"] {
   color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* En pantallas chicas (o con zoom alto) el header fijo se come buena
+   parte de la pantalla: pasa a scrollear con la página. */
+@media (max-width: 560px) {
+  .header {
+    position: static;
+  }
+
+  .bar {
+    padding: 0.5rem 1rem 0.25rem;
+  }
+
+  .logoName {
+    height: 44px;
+  }
+
+  .nav {
+    width: 100%;
+  }
+
+  .nav ul {
+    justify-content: space-between;
+    gap: 0 0.5rem;
+  }
 }
 
 .accentBar {

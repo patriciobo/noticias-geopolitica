@@ -26,12 +26,11 @@
 
 html {
   height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  /* El header es sticky: sin esto, los anclas (#resumen-por-region) y el
+     foco de teclado quedan tapados debajo de él. */
+  scroll-padding-top: 7rem;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -49,6 +48,80 @@ body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+/* body es flex column: sin min-width 0, un texto que no corta (fechas,
+   tags, URLs) estira main más allá del viewport y en el celular queda
+   media pantalla afuera. */
+body > * {
+  min-width: 0;
+}
+
+main {
+  width: 100%;
+}
+
+/* Palabras largas (URLs, nombres de modelos) cortan en vez de desbordar. */
+p,
+li,
+h1,
+h2,
+h3,
+td,
+dd {
+  overflow-wrap: break-word;
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Solo para lectores de pantalla: presente en el árbol de accesibilidad,
+   invisible en pantalla. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+  border-radius: 4px;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 a {

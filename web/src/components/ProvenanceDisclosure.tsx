@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Provenance } from "@/lib/api";
 import { REPO_SLUG, repoFileURL, repoHistoryURL, repoTreeURL } from "@/lib/transparency";
+import ExternalLink from "./ExternalLink";
 import styles from "./ProvenanceDisclosure.module.css";
 
 /**
@@ -99,20 +100,20 @@ export default function ProvenanceDisclosure({
             )}
             <ul className={styles.links}>
               <li>
-                <a href={repoFileURL(auditPath)} target="_blank" rel="noopener noreferrer">Registro completo</a>: cada titular descargado y qué pasó con él
+                <ExternalLink href={repoFileURL(auditPath)}>Registro completo</ExternalLink>: cada titular descargado y qué pasó con él
               </li>
               {provenance.run_url && (
                 <li>
-                  <a href={provenance.run_url} target="_blank" rel="noopener noreferrer">Log de la corrida</a> en GitHub Actions
+                  <ExternalLink href={provenance.run_url}>Log de la corrida</ExternalLink> en GitHub Actions
                 </li>
               )}
               {provenance.commit && (
                 <li>
-                  <a href={repoTreeURL(provenance.commit)} target="_blank" rel="noopener noreferrer">Código exacto</a> que la generó (incluye los prompts)
+                  <ExternalLink href={repoTreeURL(provenance.commit)}>Código exacto</ExternalLink> que la generó (incluye los prompts)
                 </li>
               )}
               <li>
-                <a href={repoHistoryURL(reportPath)} target="_blank" rel="noopener noreferrer">Historial del archivo</a>: cualquier cambio posterior quedaría a la vista
+                <ExternalLink href={repoHistoryURL(reportPath)}>Historial del archivo</ExternalLink>: cualquier cambio posterior quedaría a la vista
               </li>
             </ul>
             <p className={styles.verify}>
@@ -122,7 +123,7 @@ export default function ProvenanceDisclosure({
         ) : (
           <p>
             Esta edición es anterior al registro de auditoría por edición. Igual podés ver el{" "}
-            <a href={repoHistoryURL(reportPath)} target="_blank" rel="noopener noreferrer">historial del archivo</a> en el repositorio público.
+            <ExternalLink href={repoHistoryURL(reportPath)}>historial del archivo</ExternalLink> en el repositorio público.
           </p>
         )}
         <p>

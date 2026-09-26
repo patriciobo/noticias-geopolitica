@@ -16,9 +16,9 @@ export default function VersionNotice({ provenance }: { provenance?: Provenance 
     timeStyle: "short",
   });
   return (
-    <aside className={styles.notice} aria-label="Versión de la edición">
+    <div className={styles.notice} role="note" aria-label="Versión de la edición">
       <strong>Versión {provenance.version} de esta edición</strong> (actualizada el {when}, hora argentina).
       Motivo: {last.reason ?? "sin motivo declarado"}. <Link href="/correcciones">Ver todas las correcciones</Link>
-    </aside>
+    </div>
   );
 }

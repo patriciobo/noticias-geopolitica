@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { subscribeEmail } from "@/lib/api";
 import styles from "./SubscribeForm.module.css";
 
@@ -39,6 +39,8 @@ export default function SubscribeForm({ turnstileSiteKey }: { turnstileSiteKey?:
   const [turnstileToken, setTurnstileToken] = useState("");
   const widgetRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
+  const inputId = useId();
+  const errorId = useId();
 
   function renderTurnstile() {
     if (!turnstileSiteKey || !widgetRef.current || !window.turnstile || widgetId.current) return;
@@ -73,54 +75,69 @@ export default function SubscribeForm({ turnstileSiteKey }: { turnstileSiteKey?:
     }
   }
 
-  if (status === "success") {
-    return (
-      <p className={styles.success}>
-        Listo. Te mandamos un correo para confirmar la suscripción: hacé click en el enlace y
-        empezás a recibir el resumen. Si no lo ves, revisá la carpeta de spam.
-      </p>
-    );
-  }
-
+  // Las regiones vivas (status/alert) existen desde el primer render: si se
+  // montaran recién con el mensaje, los lectores de pantalla no lo anuncian.
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <input
-        type="email"
-        required
-        maxLength={254}
-        placeholder="tu@email.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        disabled={status === "loading"}
-        className={styles.input}
-        aria-label="Email para suscribirte al newsletter"
-      />
-      {/* Honeypot: invisible para humanos y lectores de pantalla; los bots
-          que completan todos los campos lo llenan y se descartan. */}
-      <input
-        type="text"
-        name="website"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        value={website}
-        onChange={(e) => setWebsite(e.target.value)}
-        className={styles.honeypot}
-      />
-      <button type="submit" disabled={status === "loading"} className={styles.button}>
-        {status === "loading" ? "Enviando..." : "Recibir por email"}
-      </button>
-      {turnstileSiteKey && (
-        <>
-          <Script
-            src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-            strategy="afterInteractive"
-            onReady={renderTurnstile}
+    <div>
+      <div role="status">
+        {status === "success" && (
+          <p className={styles.success}>
+            Listo. Te mandamos un correo para confirmar la suscripción: hacé click en el enlace y
+            empezás a recibir el resumen. Si no lo ves, revisá la carpeta de spam.
+          </p>
+        )}
+      </div>
+      {status !== "success" && (
+        <form className={styles.form} onSubmit={handleSubmit} aria-busy={status === "loading"}>
+          <label htmlFor={inputId} className={styles.label}>
+            Recibí el informe diario por email
+          </label>
+          <input
+            id={inputId}
+            type="email"
+            name="email"
+            required
+            maxLength={254}
+            autoComplete="email"
+            inputMode="email"
+            placeholder="tu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={status === "loading"}
+            className={styles.input}
+            aria-invalid={status === "error" ? true : undefined}
+            aria-describedby={status === "error" ? errorId : undefined}
           />
-          <div ref={widgetRef} className={styles.captcha} />
-        </>
+          {/* Honeypot: invisible para humanos y lectores de pantalla; los bots
+              que completan todos los campos lo llenan y se descartan. */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            className={styles.honeypot}
+          />
+          <button type="submit" disabled={status === "loading"} className={styles.button}>
+            {status === "loading" ? "Enviando..." : "Recibir por email"}
+          </button>
+          {turnstileSiteKey && (
+            <>
+              <Script
+                src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                strategy="afterInteractive"
+                onReady={renderTurnstile}
+              />
+              <div ref={widgetRef} className={styles.captcha} />
+            </>
+          )}
+          <div role="alert" id={errorId} className={styles.error}>
+            {status === "error" ? errorMessage : ""}
+          </div>
+        </form>
       )}
-      {status === "error" && <p className={styles.error}>{errorMessage}</p>}
-    </form>
+    </div>
   );
 }

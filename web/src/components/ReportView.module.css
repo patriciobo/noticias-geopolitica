@@ -4,13 +4,24 @@
   padding: 2rem 1rem 4rem;
 }
 
+@media (max-width: 480px) {
+  .markdown h2 {
+    font-size: 1.1rem;
+  }
+}
+
 .date {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   color: var(--muted);
   font-size: 0.85rem;
   letter-spacing: 0.04em;
+  font-weight: 400;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
+}
+
+.readingTime {
+  white-space: nowrap;
 }
 
 .markdown section + section {
@@ -56,6 +67,19 @@
   width: 6px;
   height: 6px;
   background: var(--accent);
+}
+
+/* Alto contraste de Windows: el fondo se descarta y la viñeta desaparece. */
+@media (forced-colors: active) {
+  .markdown li::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}
+
+.markdown a:not([aria-label]) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .noNews {

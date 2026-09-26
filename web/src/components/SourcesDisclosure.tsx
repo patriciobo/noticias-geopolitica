@@ -22,7 +22,7 @@ export default function SourcesDisclosure({ sources }: { sources: SourceSummary[
         {countries.map((country) => (
           <div key={country} className={styles.countryBlock}>
             <p className={styles.countryName}>
-              {flagFor(country)} {country}
+              <span aria-hidden="true">{flagFor(country)}</span> {country}
             </p>
             <ul className={styles.mediaList}>
               {byCountry.get(country)!.map((name) => (

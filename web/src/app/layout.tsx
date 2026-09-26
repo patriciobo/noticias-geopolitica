@@ -23,6 +23,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
+        <a href="#contenido" className="skip-link">
+          Saltar al contenido
+        </a>
         <SiteHeader />
         {children}
       </body>

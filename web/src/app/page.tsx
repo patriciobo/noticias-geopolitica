@@ -32,7 +32,7 @@ export default async function Home() {
   } catch (err) {
     if (err instanceof ReportNotFoundError) {
       return (
-        <main className={styles.empty}>
+        <main id="contenido" className={styles.empty}>
           <h1>Noticias Internacionales</h1>
           <p>
             Todavía no se generó ningún reporte. Corré el pipeline con{" "}
@@ -43,7 +43,7 @@ export default async function Home() {
       );
     }
     return (
-      <main className={styles.empty}>
+      <main id="contenido" className={styles.empty}>
         <h1>Noticias Internacionales</h1>
         <p>
           No se pudo conectar con la API del backend. Verificá que esté
@@ -57,11 +57,11 @@ export default async function Home() {
   const [latest, ...older] = reports;
 
   return (
-    <main className={styles.blog}>
+    <main id="contenido" className={styles.blog}>
       <header className={styles.masthead}>
         <div className={styles.mastheadBrand}>
-          <Image src="/logo.png" alt="Noticias Internacionales" width={1024} height={1024} className={styles.mastheadLogo} />
-          <Image src="/nombre-sf.png" alt="" aria-hidden={true} width={1536} height={1152} className={styles.mastheadName} />
+          <Image src="/logo.png" alt="" width={1024} height={1024} className={styles.mastheadLogo} />
+          <Image src="/nombre-sf.png" alt="" width={1536} height={1152} className={styles.mastheadName} />
         </div>
         <h1>Noticias Internacionales</h1>
         <p>
@@ -74,14 +74,14 @@ export default async function Home() {
       <div className={styles.feed}>
         <DayEntry report={latest} latest />
         {older.length > 0 && (
-          <div className={styles.archive} id="ediciones-anteriores">
-            <h2 className={styles.archiveTitle}>Ediciones anteriores</h2>
+          <section className={styles.archive} id="ediciones-anteriores" aria-labelledby="ediciones-anteriores-titulo">
+            <h2 className={styles.archiveTitle} id="ediciones-anteriores-titulo">Ediciones anteriores</h2>
             <div className={styles.archiveList}>
               {older.map((r) => (
                 <DayEntry key={r.date} report={r} />
               ))}
             </div>
-          </div>
+          </section>
         )}
       </div>
     </main>

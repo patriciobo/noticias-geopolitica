@@ -5,12 +5,22 @@
   margin-top: 1.25rem;
 }
 
+.label {
+  flex-basis: 100%;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* 1rem mínimo: con menos, iOS hace zoom al enfocar el campo. Borde con
+   contraste suficiente (3:1) para ubicar el campo con baja visión. */
 .input {
   flex: 1 1 14rem;
+  min-width: 0;
+  min-height: 44px;
   padding: 0.6rem 0.85rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--muted);
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   background: var(--paper);
   color: var(--ink);
 }
@@ -22,8 +32,15 @@
   background: var(--accent);
   color: var(--accent-ink);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  min-height: 44px;
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .button {
+    flex: 1 1 100%;
+  }
 }
 
 .button:disabled {
@@ -58,7 +75,8 @@
 
 .error {
   flex-basis: 100%;
-  margin: 0.35rem 0 0;
   color: var(--accent);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
+

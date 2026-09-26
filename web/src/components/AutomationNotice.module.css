@@ -10,5 +10,6 @@
 
 .notice a {
   color: var(--accent);
-  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
