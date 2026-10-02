@@ -35,7 +35,11 @@ features:
   - Empresas potencialmente afectadas por región
   - Newsletter gratuito por email con el resumen ejecutivo
   - Metodología y clasificación de los medios abiertas y verificables
-screenshots: [] # TODO: sumar capturas del blog (por ejemplo web/public/landing/*.png)
+screenshots: # capturas del sitio en celular (.promo/shots)
+  - .promo/shots/inicio.webp
+  - .promo/shots/resumen-por-region.webp
+  - .promo/shots/clima-internacional.webp
+  - .promo/shots/empresas-afectadas.webp
 pillars: [resumen del día, comercio y materias primas, empresas, regiones, metodología]
 hashtags: ["#comercioexterior", "#geopolitica", "#economiainternacional", "#noticiasinternacionales", "#materiasprimas"]
 avoid:
