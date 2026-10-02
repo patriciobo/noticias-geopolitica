@@ -1,0 +1,54 @@
+# Manifiesto para Promo Studio: describe Radar Global para generar su contenido de Instagram.
+# Ver github.com/patriciobo/promo-studio (asistente, validación y documentación de cada campo).
+name: Radar Global
+url: https://CAMBIAR-dominio-del-blog.vercel.app # TODO: URL pública del blog (SITE_URL)
+tagline: La actualidad internacional y su impacto en el comercio y las empresas, cada día
+description: >-
+  Resumen diario y gratuito de la actualidad internacional: rastrea 115 medios de 23 países,
+  filtra los titulares con alcance internacional y publica cada mañana un reporte en español con
+  tres secciones: resumen por región, clima internacional (comercio, industria y materias primas)
+  y empresas potencialmente afectadas. Se puede recibir por email suscribiéndose sólo con el correo.
+  La metodología, la lista de medios y su clasificación por propiedad son públicas.
+category: Medio digital de noticias internacionales
+audience:
+  countries: [AR, UY, CL]
+  age: [25, 60]
+  interests: [comercio exterior, geopolítica, economía internacional, relaciones internacionales, materias primas]
+  description: >-
+    profesionales de comercio exterior, analistas, empresarios y estudiantes de relaciones internacionales
+    que necesitan entender rápido qué pasa en el mundo y cómo afecta a los negocios
+languages: [es]
+tone: >-
+  español formal de Argentina con voseo, registro profesional y sobrio; claro y preciso,
+  sin sensacionalismo ni opinión política
+brand:
+  colors: ["#c81e1e", "#ffffff", "#171717", "#666666"]
+  font: Geist
+  logo: web/public/logo.png
+  imageStyle: >-
+    flat editorial illustration, world map fragments, cargo ships, ports, trade routes and simple charts,
+    clean geometric shapes, muted palette with red accents, calm and serious, not a photo, no flags with text
+features:
+  - Reporte diario con 115 medios de 23 países
+  - Resumen por región (Norteamérica, Latinoamérica, Europa, Asia, Eurasia, África y Oceanía)
+  - Clima internacional de comercio, industria y materias primas
+  - Empresas potencialmente afectadas por región
+  - Newsletter gratuito por email con el resumen ejecutivo
+  - Metodología y clasificación de los medios abiertas y verificables
+screenshots: [] # TODO: sumar capturas del blog (por ejemplo web/public/landing/*.png)
+pillars: [resumen del día, comercio y materias primas, empresas, regiones, metodología]
+hashtags: ["#comercioexterior", "#geopolitica", "#economiainternacional", "#noticiasinternacionales", "#materiasprimas"]
+avoid:
+  - tomar posición política o partidaria
+  - sensacionalismo o titulares alarmistas
+  - presentar el contenido como asesoramiento financiero o de inversión
+  - afirmar hechos que no estén en el reporte del día
+  - inventar cifras, testimonios o cantidad de suscriptores
+cta: Suscribite gratis al resumen diario (link en la bio)
+links:
+  - { label: Apoyar el proyecto, url: "https://cafecito.app/radarglobal" }
+sources:
+  # TODO: con la URL de la API (NOTICIAS_API_URL), el último reporte da los temas de cada semana:
+  # - { type: url, url: "https://CAMBIAR-api.onrender.com/reports/latest" }
+  - { type: url, url: "https://raw.githubusercontent.com/patriciobo/noticias-geopolitica/main/docs/clasificacion-medios.md" }
+cadence: { feed: 3, reels: 1, stories: 3 }
