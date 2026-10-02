@@ -1,7 +1,7 @@
 # Manifiesto para Promo Studio: describe Radar Global para generar su contenido de Instagram.
 # Ver github.com/patriciobo/promo-studio (asistente, validación y documentación de cada campo).
 name: Radar Global
-url: https://CAMBIAR-dominio-del-blog.vercel.app # TODO: URL pública del blog (SITE_URL)
+url: https://www.radarglobal.com.ar
 tagline: La actualidad internacional y su impacto en el comercio y las empresas, cada día
 description: >-
   Resumen diario y gratuito de la actualidad internacional: rastrea 115 medios de 23 países,
@@ -48,7 +48,7 @@ cta: Suscribite gratis al resumen diario (link en la bio)
 links:
   - { label: Apoyar el proyecto, url: "https://cafecito.app/radarglobal" }
 sources:
-  # TODO: con la URL de la API (NOTICIAS_API_URL), el último reporte da los temas de cada semana:
-  # - { type: url, url: "https://CAMBIAR-api.onrender.com/reports/latest" }
+  # Opcional: con la URL de la API (NOTICIAS_API_URL), el último reporte da los temas de cada semana:
+  # - { type: url, url: "https://<api>.onrender.com/reports/latest" }
   - { type: url, url: "https://raw.githubusercontent.com/patriciobo/noticias-geopolitica/main/docs/clasificacion-medios.md" }
 cadence: { feed: 3, reels: 1, stories: 3 }
