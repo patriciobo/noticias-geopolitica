@@ -55,4 +55,10 @@ sources:
   # Opcional: con la URL de la API (NOTICIAS_API_URL), el último reporte da los temas de cada semana:
   # - { type: url, url: "https://<api>.onrender.com/reports/latest" }
   - { type: url, url: "https://raw.githubusercontent.com/patriciobo/noticias-geopolitica/main/docs/clasificacion-medios.md" }
-cadence: { feed: 3, reels: 1, stories: 3 }
+# El día a día lo cubre la edición diaria; el lote semanal suma un carrusel y un reel atemporales (metodología, cómo leer el reporte, etc.).
+cadence: { feed: 2, reels: 1, stories: 0 }
+# Edición diaria: cada mañana toma el reporte del día y publica un carrusel y una story a las 08:00 (hora de Argentina).
+daily:
+  source: "https://raw.githubusercontent.com/patriciobo/noticias-geopolitica/main/reports/{fecha}.md"
+  time: "08:00"
+  types: [CAROUSEL, STORY]
