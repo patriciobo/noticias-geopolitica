@@ -201,7 +201,9 @@ jobs:
         # En un cron no hay inputs: se manda siempre. Ojo, no usar
         # `inputs.enviar_newsletter != false`: null y false se comparan
         # como iguales en las expresiones de Actions.
-        if: steps.commit.outputs.committed == 'true' && (github.event_name != 'workflow_dispatch' || inputs.enviar_newsletter)
+        # PAUSADO desde 2026-10-21 hasta nuevo aviso: el `false &&` apaga el
+        # envío (cron y manual). Para reactivar, sacar `false && `.
+        if: false && steps.commit.outputs.committed == 'true' && (github.event_name != 'workflow_dispatch' || inputs.enviar_newsletter)
         working-directory: core
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
