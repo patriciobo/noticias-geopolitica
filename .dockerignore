@@ -1,0 +1,13 @@
+# Solo lo usa core/Dockerfile (contexto = raíz del repo). Lo que no
+# necesita la imagen del API queda afuera; los .env nunca entran.
+**/.env
+**/.env.local
+**/.DS_Store
+.git
+.github
+.claude
+.promo
+web
+eval
+docs
+core/out

@@ -132,6 +132,51 @@ tarda ~1 min. El home del blog hace un request por edición (hasta 31), así que
 la primera visita en frío es lenta. Opcional: un ping cada 10 min a `/health`
 desde un monitor gratis (UptimeRobot, cron-job.org) lo mantiene despierto.
 
+### Alternativa: API en Coolify (VPS propio)
+
+Reemplaza a Render con el contenedor de `core/Dockerfile`. El resto
+(Actions, Vercel, Neon, Brevo) queda igual. La imagen lleva `reports/` y
+`config/sources.yaml` adentro, así que cada edición nueva llega con un
+redeploy, igual que en Render; no hace falta volumen.
+
+1. Coolify → *Projects → New resource → Public/Private Repository* →
+   este repo, rama `main`.
+   - **Build Pack:** Dockerfile
+   - **Base Directory:** `/` (el contexto es la raíz del repo, no `core/`)
+   - **Dockerfile Location:** `/core/Dockerfile`
+   - **Ports Exposes:** `8080`
+   - **Domains:** `https://api.tu-dominio` (Coolify saca el certificado
+     de Let's Encrypt; el DNS tiene que apuntar al VPS antes).
+   - **Health Check:** path `/health`, puerto `8080`.
+   - Si el repo está conectado con la GitHub App, desactivá *Auto Deploy*:
+     el deploy lo dispara el workflow (paso 3), y así un push que solo toca
+     `web/` no reconstruye el API.
+2. *Environment Variables*: las mismas que tenía Render (paso 4, si usás
+   el newsletter): `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
+   `INTERNAL_API_SECRET`, `SITE_URL` y **`API_BASE_URL` = el dominio
+   nuevo, obligatoria**: fuera de Render no existe `RENDER_EXTERNAL_URL`
+   y los links de los mails caerían a localhost (sin aviso en el log, que
+   solo se activa en Render). `API_ADDR`, `OUT_DIR` y `SOURCES_PATH` ya
+   vienen en la imagen.
+3. *Webhooks* del recurso → copiá la URL de *Deploy Webhook*. *Keys &
+   Tokens → API tokens* → token con permiso **deploy** (nada más). En
+   GitHub (mismo lugar que `GEMINI_API_KEY`): `COOLIFY_DEPLOY_WEBHOOK` y
+   `COOLIFY_API_TOKEN`. El workflow lo llama al final de "Commitear
+   reporte", junto al de Render si sigue configurado.
+4. Deploy y probá `https://api.tu-dominio/reports/latest`.
+5. **Vercel** → `NOTICIAS_API_URL` = `https://api.tu-dominio` → Redeploy.
+   **GitHub → Variables** → `API_BASE_URL` = el mismo dominio.
+
+IP del cliente: el proxy de Coolify (Traefik) agrega la IP real al final
+de `X-Forwarded-For`, que es la que usa `clientIP` — no cambia nada. Si
+ponés Cloudflare con proxy (nube naranja) delante, la última entrada pasa
+a ser la IP de Cloudflare y todo el tráfico comparte un solo bucket del
+rate limit: dejá el DNS en *DNS only* o hay que adaptar `clientIP`.
+
+Corte: dejá Render andando unos días. Los mails de confirmación y baja
+que ya salieron enlazan a `*.onrender.com`; cuando lo apagues, esos links
+dejan de funcionar. Recién ahí borrá el secret `RENDER_DEPLOY_HOOK_URL`.
+
 ## Paso 3 — Blog (Vercel)
 
 1. vercel.com → *Add New → Project* → importá el repo.

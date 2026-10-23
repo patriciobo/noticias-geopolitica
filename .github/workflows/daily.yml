@@ -236,3 +236,21 @@ jobs:
           fi
           curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
           echo "deploy disparado en Render"
+
+      # Mismo esquema para el API en Coolify (core/Dockerfile): el webhook de
+      # deploy reconstruye la imagen con el reporte nuevo adentro. Opcional
+      # igual que el de Render — mientras dure la migración pueden convivir
+      # los dos.
+      - name: Disparar deploy en Coolify
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          COOLIFY_DEPLOY_WEBHOOK: ${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+        run: |
+          if [ -z "$COOLIFY_DEPLOY_WEBHOOK" ] || [ -z "$COOLIFY_API_TOKEN" ]; then
+            echo "COOLIFY_DEPLOY_WEBHOOK/COOLIFY_API_TOKEN no configurados, salteo"
+            exit 0
+          fi
+          curl -fsS -H "Authorization: Bearer $COOLIFY_API_TOKEN" "$COOLIFY_DEPLOY_WEBHOOK"
+          echo
+          echo "deploy disparado en Coolify"
