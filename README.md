@@ -310,7 +310,7 @@ DATABASE_URL=postgres://...          # connection string de Neon (o cualquier Po
 BREVO_API_KEY=                       # API key de Brevo (transactional) — en cmd/api, para el mail de confirmación
 BREVO_SENDER_EMAIL=                  # remitente verificado en Brevo
 BREVO_SENDER_NAME=Radar Global
-API_BASE_URL=https://tu-api.onrender.com   # host de los links de confirmación y baja
+API_BASE_URL=https://api.tu-dominio      # host de los links de confirmación y baja
 SITE_URL=https://tu-blog.vercel.app        # host del header/CTA y del link a la edición completa
 
 # core/cmd/api — protección de las altas
@@ -331,7 +331,7 @@ TURNSTILE_SECRET_KEY=
 ```
 
 `DATABASE_URL` tiene que estar seteada en **dos lugares** por separado: en el
-servicio de Render (para que `cmd/api` sirva `/subscribers`) y como secret de
+contenedor del API en Coolify (para que `cmd/api` sirva `/subscribers`) y como secret de
 GitHub Actions (para que `cmd/newsletter` corra en el cron diario) — cargar
 solo uno de los dos deja la otra mitad rota en silencio.
 
@@ -397,7 +397,7 @@ Ver `SECURITY.md` para reportar vulnerabilidades. Resumen de lo que hay:
   IP, tope diario global y doble opt-in en `cmd/api`.
 - **Blog**: CSP, HSTS, `X-Frame-Options`, `Permissions-Policy`; páginas
   cacheadas con ISR (5 minutos), así un pico de tráfico lo absorbe el CDN de
-  Vercel y no la instancia gratis de Render.
+  Vercel y no el contenedor del API.
 - **Repo**: actions fijadas por SHA, permisos mínimos por job, CodeQL y
   Dependabot.
 
