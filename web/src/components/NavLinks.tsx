@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/#ediciones-anteriores", label: "Ediciones" },
+  { href: "/archivo", label: "Archivo" },
   { href: "/#resumen-por-region", label: "Regiones" },
   { href: "/#fuentes-consultadas", label: "Fuentes" },
   { href: "/metodologia", label: "Metodología" },

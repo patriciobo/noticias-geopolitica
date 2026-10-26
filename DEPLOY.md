@@ -280,8 +280,8 @@ sin tocar el resto de la API.
 
 1. Actions → *Run workflow* → esperá el commit del reporte.
 2. Coolify muestra un deploy nuevo; `/reports` lista la fecha de hoy.
-3. Abrí el blog: última edición arriba, anteriores plegadas, y "Noticias
-   utilizadas" con links.
+3. Abrí el blog: última edición arriba, las de la última semana plegadas
+   (el resto en `/archivo`), y "Noticias utilizadas" con links.
 
 ## Problemas comunes
 

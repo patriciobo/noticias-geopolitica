@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   fetchReportByDate,
   fetchReportDates,
@@ -20,14 +21,24 @@ export const metadata = {
 // Ver REVALIDATE_SECONDS en lib/api.ts (acá tiene que ser un literal).
 export const revalidate = 300;
 
-// Cuántas ediciones muestra el feed (más recientes primero).
-const MAX_EDITIONS = 30;
+// El feed muestra las ediciones de los últimos 7 días, contados desde la
+// edición más reciente (no desde hoy: si el pipeline se frena unos días, el
+// home no queda vacío). Las anteriores están en /archivo.
+const FEED_DAYS = 7;
+
+function withinFeed(dates: string[]): string[] {
+  if (dates.length === 0) return dates;
+  const cutoff = new Date(`${dates[0]}T00:00:00Z`);
+  cutoff.setUTCDate(cutoff.getUTCDate() - (FEED_DAYS - 1));
+  const min = cutoff.toISOString().slice(0, 10);
+  return dates.filter((d) => d >= min);
+}
 
 export default async function Home() {
   let reports: ReportResponse[] = [];
 
   try {
-    const dates = (await fetchReportDates()).slice(0, MAX_EDITIONS);
+    const dates = withinFeed(await fetchReportDates());
     if (dates.length === 0) throw new ReportNotFoundError("sin reportes");
     reports = await Promise.all(dates.map(fetchReportByDate));
   } catch (err) {
@@ -83,7 +94,15 @@ export default async function Home() {
                 <DayEntry key={r.date} report={r} />
               ))}
             </div>
+            <Link href="/archivo" className={styles.archiveMore}>
+              Ver todas las ediciones en el archivo →
+            </Link>
           </section>
+        )}
+        {older.length === 0 && (
+          <Link href="/archivo" className={styles.archiveMore}>
+            Ver todas las ediciones en el archivo →
+          </Link>
         )}
       </div>
     </main>
