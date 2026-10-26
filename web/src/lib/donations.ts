@@ -1,6 +1,7 @@
 // Links de donación configurables por entorno. Los placeholders apuntan a
 // perfiles todavía no creados — al tener las cuentas reales alcanza con
-// definir las env en Vercel / el pipeline, sin cambiar código.
+// definir las env en el blog (como variables de build: NEXT_PUBLIC_ se
+// incrusta al compilar) / el pipeline, sin cambiar código.
 const CAFECITO_URL =
 	process.env.NEXT_PUBLIC_CAFECITO_URL ?? 'https://cafecito.app/radarglobal';
 const TECITO_URL =

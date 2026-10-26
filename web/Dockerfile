@@ -18,9 +18,13 @@ COPY . .
 # /metodologia) pegándole al API. Sin NOTICIAS_API_URL en el build igual
 # compila, pero quedan horneadas con el mensaje de "no se pudo conectar"
 # hasta la primera revalidación (5 minutos después de la primera visita).
-# En Coolify: marcar las dos como disponibles en build.
+# Las NEXT_PUBLIC_* se incrustan en el JS en este paso: cambiarlas en
+# runtime no hace nada, hay que reconstruir. En Coolify: marcar todas como
+# disponibles en build.
 ARG NOTICIAS_API_URL
 ARG TURNSTILE_SITE_KEY
+ARG NEXT_PUBLIC_CAFECITO_URL
+ARG NEXT_PUBLIC_TECITO_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

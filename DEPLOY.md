@@ -176,6 +176,10 @@ cuando se apaga ese servicio. Después de apagarlo, borrá el secret
      conectar" hasta la primera revalidación.
    - Las del newsletter (paso 4.5), si lo usás. `TURNSTILE_SITE_KEY`
      también en build, por lo mismo.
+   - `NEXT_PUBLIC_CAFECITO_URL` y `NEXT_PUBLIC_TECITO_URL` (links de
+     donación; sin ellas usan `cafecito.app/radarglobal` y
+     `tecito.app/radarglobal`). **Solo en build**: Next las incrusta en el
+     JS al compilar, así que cambiarlas requiere redeploy.
 3. Deploy y probá `https://tu-dominio`.
 
 El blog cachea las páginas 5 minutos (ISR, `revalidate = 300`): la edición
