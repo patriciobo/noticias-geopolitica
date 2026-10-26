@@ -189,18 +189,6 @@ entrada de `X-Forwarded-For` (la que agrega Traefik). Con Cloudflare en
 modo proxy delante pasaría a ser la IP de Cloudflare: dejá el DNS en *DNS
 only*.
 
-### Migración desde Vercel
-
-1. Levantá el recurso del paso 3 con un dominio de prueba y verificá que
-   ande (home, una edición vieja, el form de suscripción).
-2. Pasá el dominio del blog al recurso de Coolify: apuntá el DNS al VPS y
-   cargalo en *Domains*.
-3. Si el newsletter está activo: `SITE_URL` no cambia si el dominio es el
-   mismo. Si cambia, actualizalo en Coolify (API) y en GitHub → Variables.
-   En Cloudflare Turnstile agregá el dominio nuevo al widget.
-4. Recién con el tráfico en Coolify, borrá el proyecto de Vercel (o
-   desconectá el repo, para que no siga buildeando en cada push).
-
 ## Paso 4 — Newsletter (Neon + Brevo, opcional)
 
 Sin esto, todo lo de arriba sigue funcionando igual — el newsletter es
@@ -316,3 +304,15 @@ sin tocar el resto de la API.
   lugar del de Coolify.
 - **Todo en un solo host** (una VM gratuita tipo Oracle Cloud Always Free) con
   cron + `cmd/api` + `next start`: más control, pero más mantenimiento.
+
+## Migración del blog desde Vercel (una sola vez)
+
+1. Levantá el recurso del paso 3 con un dominio de prueba y verificá que
+   ande (home, una edición vieja, el form de suscripción).
+2. Pasá el dominio del blog al recurso de Coolify: apuntá el DNS al VPS y
+   cargalo en *Domains*.
+3. Si el newsletter está activo: `SITE_URL` no cambia si el dominio es el
+   mismo. Si cambia, actualizalo en Coolify (API) y en GitHub → Variables.
+   En Cloudflare Turnstile agregá el dominio nuevo al widget.
+4. Recién con el tráfico en Coolify, borrá el proyecto de Vercel (o
+   desconectá el repo, para que no siga buildeando en cada push).
