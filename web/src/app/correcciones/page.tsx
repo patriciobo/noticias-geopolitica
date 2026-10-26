@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchCorrections, type Correction } from "@/lib/api";
+import { fetchCorrections, rethrowOutsideBuild, type Correction } from "@/lib/api";
 import { REPO_URL } from "@/lib/transparency";
 import { formatDate } from "@/components/ReportView";
 import styles from "../metodologia/page.module.css";
@@ -25,7 +25,8 @@ export default async function CorreccionesPage() {
   let corrections: Correction[] | null = null;
   try {
     corrections = await fetchCorrections();
-  } catch {
+  } catch (err) {
+    rethrowOutsideBuild(err);
     corrections = null;
   }
 

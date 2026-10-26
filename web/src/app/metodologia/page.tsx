@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fetchSources, type PublicSource } from "@/lib/api";
+import { fetchSources, rethrowOutsideBuild, type PublicSource } from "@/lib/api";
 import { REGION_LABELS } from "@/lib/regionTheme";
 import { REPO_SLUG, REPO_URL, repoFileURL } from "@/lib/transparency";
 import ExternalLink from "@/components/ExternalLink";
@@ -50,7 +50,8 @@ export default async function MetodologiaPage() {
   let sources: PublicSource[] | null = null;
   try {
     sources = await fetchSources();
-  } catch {
+  } catch (err) {
+    rethrowOutsideBuild(err);
     sources = null;
   }
   const summary = sources ? summarize(sources) : null;

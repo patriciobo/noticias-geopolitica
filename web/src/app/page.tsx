@@ -3,6 +3,7 @@ import {
   fetchReportByDate,
   fetchReportDates,
   ReportNotFoundError,
+  rethrowOutsideBuild,
   type ReportResponse,
 } from "@/lib/api";
 import DayEntry from "@/components/DayEntry";
@@ -42,6 +43,7 @@ export default async function Home() {
         </main>
       );
     }
+    rethrowOutsideBuild(err);
     return (
       <main id="contenido" className={styles.empty}>
         <h1>Noticias Internacionales</h1>

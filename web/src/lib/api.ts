@@ -92,11 +92,22 @@ export class ReportNotFoundError extends Error {}
 
 // Cada cuántos segundos se revalidan las páginas y los fetches a la API.
 // Los reportes salen una vez por día: con 5 minutos de cache, un pico de
-// visitas (ej. un posteo que se viraliza) lo absorbe el CDN de Vercel en
-// vez de pegarle a Render (instancia gratis que se duerme) por cada
-// visitante. Las páginas exportan el mismo valor como `revalidate` —
-// tiene que ser un literal ahí, por eso no se importa esta constante.
+// visitas (ej. un posteo que se viraliza) lo absorbe la cache de Next en
+// vez de pegarle al API por cada visitante. Las páginas exportan el mismo
+// valor como `revalidate` — tiene que ser un literal ahí, por eso no se
+// importa esta constante.
 export const REVALIDATE_SECONDS = 300;
+
+// Las páginas con ISR muestran un mensaje de "no se pudo conectar" si el API
+// falla, pero solo durante `next build`: ahí tirar la excepción rompería el
+// build cada vez que el API no responde. En runtime la excepción se relanza
+// para que ISR siga sirviendo la última versión buena en vez de cachear la
+// página de error (y reintente en el request siguiente).
+export function rethrowOutsideBuild(err: unknown): void {
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    throw err;
+  }
+}
 
 async function apiFetch(path: string): Promise<Response> {
   const res = await fetch(`${API_BASE_URL}${path}`, { next: { revalidate: REVALIDATE_SECONDS } });
