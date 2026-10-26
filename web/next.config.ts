@@ -35,6 +35,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // server.js autocontenido para la imagen de Docker (web/Dockerfile).
+  output: "standalone",
   turbopack: {
     root: path.join(__dirname),
   },

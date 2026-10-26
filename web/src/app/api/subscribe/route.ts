@@ -18,9 +18,11 @@ const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? "";
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY ?? "";
 
 function clientIP(request: Request): string {
-  // En Vercel, x-forwarded-for lo pone la plataforma (pisa lo que mande el
-  // cliente); la primera entrada es la IP real del navegador.
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  // Detrás del proxy de Coolify (Traefik) la IP real va al final de
+  // x-forwarded-for; lo que viene antes lo puede inventar el cliente. Mismo
+  // criterio que clientIP en core/cmd/api. (En Vercel el header trae una
+  // sola entrada, así que también sirve ahí.)
+  return request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ?? "";
 }
 
 function sameOrigin(request: Request): boolean {
@@ -97,11 +99,11 @@ export async function POST(request: Request) {
 
   if (!upstream.ok) {
     // 400/429/503 tienen un mensaje específico para mostrarle al usuario.
-    // Un 403 de Go significa INTERNAL_API_SECRET distinto entre Vercel y
-    // Render (error de config nuestro, no del usuario): se reporta como 502.
+    // Un 403 de Go significa INTERNAL_API_SECRET distinto entre el blog y
+    // el API (error de config nuestro, no del usuario): se reporta como 502.
     const status = [400, 429, 503].includes(upstream.status) ? upstream.status : 502;
     if (upstream.status === 403) {
-      console.error("POST /subscribers devolvió 403: INTERNAL_API_SECRET no coincide entre Vercel y Render");
+      console.error("POST /subscribers devolvió 403: INTERNAL_API_SECRET no coincide entre el blog y el API");
     }
     return NextResponse.json({ error: "no se pudo completar la suscripción" }, { status });
   }

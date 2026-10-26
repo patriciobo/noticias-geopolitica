@@ -3,11 +3,13 @@
 ## Arquitectura de producción
 
 ```
-GitHub Actions (cron diario)          Coolify (VPS)               Vercel (free)
+GitHub Actions (cron diario)          Coolify (VPS)
   go run ./cmd/ingest      webhook    cmd/api sirve       fetch     web/ (Next.js)
   escribe reports/*.md    ───────►    reports/ de la     ◄───────   NOTICIAS_API_URL
-  y commitea al repo      redeploy    imagen en :8080
+  y commitea al repo      redeploy    imagen en :8080               imagen en :3000
 ```
+
+API y blog son dos recursos del mismo Coolify, cada uno con su Dockerfile.
 
 Por qué así: el pipeline es un job diario (no un servidor) y la API lee
 archivos de disco. Los reportes viven **en el repo**: Actions los commitea y
@@ -18,7 +20,7 @@ adentro (`core/Dockerfile`). Sin base de datos ni volúmenes.
 |---|---|---|
 | Job diario | GitHub Actions | gratis (repos públicos sin límite; privados ~2000 min/mes) |
 | API Go | Coolify en VPS propio (contenedor de `core/Dockerfile`) | lo que cueste el VPS |
-| Blog Next.js | Vercel (Hobby) | gratis, uso no comercial |
+| Blog Next.js | Coolify en el mismo VPS (contenedor de `web/Dockerfile`) | incluido en el VPS |
 | LLM | Gemini free tier (aistudio.google.com) | gratis, con límites de uso |
 | DB de suscriptores | Neon (Postgres free tier) | gratis, sostenido |
 | Envío de newsletter | Brevo (transactional) | gratis, 300 emails/día para siempre |
@@ -30,9 +32,8 @@ de depender de ellos.
 
 - Repo en GitHub (ver `git push -u origin main`).
 - Key de Gemini: aistudio.google.com → *Get API key*.
-- Un VPS con Coolify instalado y un dominio (o subdominio) para el API
-  apuntando a ese VPS.
-- Cuenta en Vercel con login de GitHub.
+- Un VPS con Coolify instalado y dos dominios (o subdominios), uno para el
+  API y otro para el blog, apuntando a ese VPS.
 - Opcional (solo si querés el newsletter): cuenta en neon.tech y en brevo.com.
 
 > Ollama no sirve en producción gratis (necesita una máquina propia) y la API
@@ -153,18 +154,52 @@ cuando se apaga ese servicio. Después de apagarlo, borrá el secret
 `RENDER_DEPLOY_HOOK_URL` (el paso "Disparar deploy en Render" de
 `daily.yml` se saltea solo sin él).
 
-## Paso 3 — Blog (Vercel)
+## Paso 3 — Blog (Coolify)
 
-1. vercel.com → *Add New → Project* → importá el repo.
-2. **Root Directory:** `web` (Framework: Next.js, se detecta solo).
-3. *Environment Variables:* `NOTICIAS_API_URL` = `https://api.tu-dominio`
-   (sin `/` final).
-4. Deploy.
+1. Coolify → mismo proyecto que el API → *New resource → Public/Private
+   Repository* → este repo, rama `main`.
+   - **Build Pack:** Dockerfile
+   - **Base Directory:** `/web` (el contexto es `web/`, no la raíz)
+   - **Dockerfile Location:** `/Dockerfile`
+   - **Ports Exposes:** `3000`
+   - **Domains:** `https://tu-dominio` (el del blog).
+   - **Health Check:** path `/api/health`, puerto `3000`.
+   - **Watch Paths:** `web/**`. El commit diario del informe solo toca
+     `reports/` y no hace falta reconstruir el blog: la edición nueva le
+     llega por ISR desde el API.
+2. *Environment Variables*:
+   - `NOTICIAS_API_URL` = `https://api.tu-dominio` (sin `/` final).
+     Marcala también como **disponible en build** (*Build Variable* /
+     *Available at Buildtime*): el build prerenderiza el home,
+     `/correcciones` y `/metodologia` contra el API. Sin ella igual
+     compila, pero esas páginas arrancan con el mensaje de "no se pudo
+     conectar" hasta la primera revalidación.
+   - Las del newsletter (paso 4.5), si lo usás. `TURNSTILE_SITE_KEY`
+     también en build, por lo mismo.
+3. Deploy y probá `https://tu-dominio`.
 
 El blog cachea las páginas 5 minutos (ISR, `revalidate = 300`): la edición
 nueva aparece a más tardar 5 minutos después de que Coolify termina de
-redeployar, sin redeployar Vercel. Esa cache es lo que evita que un pico de
-visitas le pegue al API una vez por visitante.
+redeployar el API, sin redeployar el blog. Esa cache vive en el disco del
+contenedor: se pierde en cada redeploy del blog y se rearma sola. Es lo que
+evita que un pico de visitas le pegue al API una vez por visitante.
+
+IP del cliente: igual que en el API, `/api/subscribe` toma la última
+entrada de `X-Forwarded-For` (la que agrega Traefik). Con Cloudflare en
+modo proxy delante pasaría a ser la IP de Cloudflare: dejá el DNS en *DNS
+only*.
+
+### Migración desde Vercel
+
+1. Levantá el recurso del paso 3 con un dominio de prueba y verificá que
+   ande (home, una edición vieja, el form de suscripción).
+2. Pasá el dominio del blog al recurso de Coolify: apuntá el DNS al VPS y
+   cargalo en *Domains*.
+3. Si el newsletter está activo: `SITE_URL` no cambia si el dominio es el
+   mismo. Si cambia, actualizalo en Coolify (API) y en GitHub → Variables.
+   En Cloudflare Turnstile agregá el dominio nuevo al widget.
+4. Recién con el tráfico en Coolify, borrá el proyecto de Vercel (o
+   desconectá el repo, para que no siga buildeando en cada push).
 
 ## Paso 4 — Newsletter (Neon + Brevo, opcional)
 
@@ -188,7 +223,7 @@ enteramente opcional. Si querés habilitarlo:
      localhost) y `SITE_URL` = la URL del blog (obligatoria: sin ella los
      mails de confirmación enlazan a localhost).
    - `INTERNAL_API_SECRET` = un valor aleatorio largo (por ejemplo, la
-     salida de `openssl rand -hex 32`). El mismo valor va en Vercel (paso 5).
+     salida de `openssl rand -hex 32`). El mismo valor va en el blog (paso 5).
 4. **GitHub** (Settings → Secrets and variables → Actions) → agregá, además
    de los secrets del paso 1:
    - `DATABASE_URL` = el mismo connection string de Neon (sí, otra vez —
@@ -198,17 +233,17 @@ enteramente opcional. Si querés habilitarlo:
    - *Settings → Secrets and variables → Actions → Variables* (no
      *Secrets* — no son sensibles) → `API_BASE_URL` = la URL del API
      (para armar el link de baja en el email) y `SITE_URL` = la URL de
-     tu blog en Vercel (para el header, el botón de suscripción y el link
+     tu blog (para el header, el botón de suscripción y el link
      "Ver edición completa" del email).
 
-5. **Vercel** → *Settings → Environment Variables* → agregá:
+5. **Coolify** (recurso del blog) → *Environment Variables* → agregá:
    - `INTERNAL_API_SECRET` = el mismo valor que en Coolify. Si no coinciden,
      el API rechaza las altas (403) y el form muestra un error genérico.
    - `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` = de Cloudflare →
      *Turnstile → Add widget* (gratis; dominio: el de tu blog, modo
      *Managed*). Sin las dos, el form funciona sin captcha — no recomendado
      en producción.
-   Redeployá Vercel después de cargarlas.
+   Redeployá el blog después de cargarlas.
 
 El form de suscripción pega a una route interna de Next.js
 (`web/src/app/api/subscribe/route.ts`, mismo origen, sin CORS) que verifica
@@ -234,7 +269,7 @@ Lo que el código no puede configurar solo:
    *Require a pull request*: el bot pushea el informe directo a `main`.
 3. **GitHub → Settings → Actions → General**: *Require approval for all
    outside collaborators* en los workflows de forks.
-4. **2FA** en GitHub, Coolify, Vercel, Neon, Brevo, Cloudflare y Google AI
+4. **2FA** en GitHub, Coolify, Neon, Brevo, Cloudflare y Google AI
    Studio. Límites de gasto o cuota en las keys de LLM (Gemini, OpenRouter).
 5. **Dominio del remitente en Brevo**: autenticá SPF, DKIM y DMARC
    (*Senders, Domains & Dedicated IPs → Domains*). Sin eso, Gmail y Yahoo
@@ -263,16 +298,19 @@ sin tocar el resto de la API.
 | El job falla con `GEMINI_API_KEY no está configurada` | Falta el secret o está mal escrito. |
 | El reporte se generó y commiteó pero no aparece en el blog | Coolify no redeployó. Revisá el paso "Disparar deploy en Coolify" del job (si dice "salteo", faltan `COOLIFY_DEPLOY_WEBHOOK`/`COOLIFY_API_TOKEN`; 401, token vencido o sin permiso deploy) y *Deployments* del recurso en Coolify. Para el reporte pendiente, *Redeploy* a mano. |
 | `git push` rechazado en el job | Permisos de workflow en *Read only* (paso 1.2) o rama protegida. |
-| El blog dice "No se pudo conectar con la API" | `NOTICIAS_API_URL` mal seteada, o el contenedor caído (revisá *Logs* del recurso en Coolify). |
+| El blog dice "No se pudo conectar con la API" | `NOTICIAS_API_URL` mal seteada, o el contenedor del API caído (revisá *Logs* del recurso en Coolify). Si pasa solo después de un deploy del blog, faltó marcarla como variable de build (paso 3.2); se arregla sola a los 5 minutos de la primera visita. |
 | El blog dice "Todavía no se generó ningún reporte" | `reports/` vacío en el repo o `OUT_DIR` pisado en las variables de Coolify (la imagen ya trae `/app/reports`). |
 | Muchos `fetch <medio>` con error en el log | El medio bloquea IPs de GitHub; ver `config/sources_rss.yaml`. |
-| El form de suscripción tira "No se pudo conectar con el servidor" | `NOTICIAS_API_URL` mal seteada en Vercel, o el API caído — revisá los logs de la función `/api/subscribe` en Vercel. |
+| El form de suscripción tira "No se pudo conectar con el servidor" | `NOTICIAS_API_URL` mal seteada en el blog, o el API caído — revisá *Logs* del recurso del blog en Coolify. |
 | La gente se suscribe bien pero nunca recibe el correo | `DATABASE_URL` está seteada en Coolify pero no en GitHub Actions (o al revés) — tiene que estar en los dos, ver paso 4. |
 | `cmd/newsletter` loguea "no configurados, no se envía" | Falta `DATABASE_URL` o `BREVO_API_KEY` como secret de GitHub Actions. |
 
 ## Alternativas
 
-- **Cloudflare Pages / Netlify** en lugar de Vercel para el blog: mismo esquema.
+- **Vercel / Netlify** para el blog: Root Directory `web`, las mismas
+  variables de entorno. Ojo con el costo de ISR en Vercel: cada
+  regeneración cuyo HTML cambia se cobra como *ISR write*, y el home pesa
+  varios MB.
 - **Render / Koyeb / Railway** en lugar de Coolify para la API: cualquier
   host que construya `core/Dockerfile` sirve, con su propio deploy hook en
   lugar del de Coolify.

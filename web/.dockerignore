@@ -1,0 +1,10 @@
+# Solo lo usa web/Dockerfile (contexto = web/). Los .env nunca entran.
+.env
+.env.*
+!.env.example
+**/.DS_Store
+.next
+node_modules
+tsconfig.tsbuildinfo
+Dockerfile
+.dockerignore

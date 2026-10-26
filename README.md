@@ -311,10 +311,10 @@ BREVO_API_KEY=                       # API key de Brevo (transactional) — en c
 BREVO_SENDER_EMAIL=                  # remitente verificado en Brevo
 BREVO_SENDER_NAME=Radar Global
 API_BASE_URL=https://api.tu-dominio      # host de los links de confirmación y baja
-SITE_URL=https://tu-blog.vercel.app        # host del header/CTA y del link a la edición completa
+SITE_URL=https://tu-blog.example          # host del header/CTA y del link a la edición completa
 
 # core/cmd/api — protección de las altas
-INTERNAL_API_SECRET=                 # secreto compartido con web/ (el mismo valor en Vercel); sin él, POST /subscribers acepta cualquier origen
+INTERNAL_API_SECRET=                 # secreto compartido con web/ (el mismo valor en el blog); sin él, POST /subscribers acepta cualquier origen
 SUBSCRIPTIONS_ENABLED=true           # "false" pausa las altas nuevas (kill switch ante abuso)
 CONFIRM_EMAILS_PER_DAY=100           # tope global de mails de confirmación por 24h (protege la cuota de Brevo)
 CONFIRM_RESEND_AFTER_MINUTES=60      # mínimo entre dos mails de confirmación al mismo email
@@ -324,7 +324,7 @@ RATE_LIMIT_PER_MINUTE=120            # requests por IP por minuto, toda la API
 # core/cmd/newsletter
 REPORT_DATE=2026-09-23                     # opcional; sin setear usa "hoy" (UTC)
 
-# web/ (Vercel)
+# web/ (contenedor del blog en Coolify)
 INTERNAL_API_SECRET=                 # el mismo valor que en cmd/api
 TURNSTILE_SITE_KEY=                  # Cloudflare Turnstile (captcha); sin las dos keys, el form anda sin captcha
 TURNSTILE_SECRET_KEY=
@@ -396,8 +396,8 @@ Ver `SECURITY.md` para reportar vulnerabilidades. Resumen de lo que hay:
   `web/src/app/api/subscribe/route.ts`; secreto compartido, rate limit por
   IP, tope diario global y doble opt-in en `cmd/api`.
 - **Blog**: CSP, HSTS, `X-Frame-Options`, `Permissions-Policy`; páginas
-  cacheadas con ISR (5 minutos), así un pico de tráfico lo absorbe el CDN de
-  Vercel y no el contenedor del API.
+  cacheadas con ISR (5 minutos), así un pico de tráfico lo absorbe la cache
+  de Next y no el contenedor del API.
 - **Repo**: actions fijadas por SHA, permisos mínimos por job, CodeQL y
   Dependabot.
 
